@@ -238,8 +238,9 @@ public class CountMatrix {
 	}
 
 	public AcceptingPetriNet convert(DiscoverPetriNetFromCountMatrixParameters parameters) {
-		Petrinet net = PetrinetFactory.newPetrinet("Petri net discovered usign S2M2");
+		Petrinet net = PetrinetFactory.newPetrinet("Petri net DiSCovered");
 
+		System.out.println("[CountMatrix]\n" + toString());
 		Transition tStart = net.addTransition("\u25BA");
 		tStart.setInvisible(true);
 		Place pStart = net.addPlace("i");
@@ -265,6 +266,7 @@ public class CountMatrix {
 		}
 		
 		Set<Set<Integer>> solutions = getSolutions(parameters);
+		System.out.println("[CountMatrix] " + solutions);
 		for (Set<Integer> solution : solutions) {
 			if (!parameters.isMerge()) {
 				for (int index : solution) {
@@ -275,6 +277,7 @@ public class CountMatrix {
 			Set<Integer> ignore = new HashSet<>(indices.values());
 			ignore.removeAll(solution);
 			subMatrix.discoverFromEventLog(ignore, parameters);
+			System.out.println("[CountMatrix] " + solution + "\n" + subMatrix.toString());
 			Place[] piClass = new Place[indices.size()];
 			Place[] poClass = new Place[indices.size()];
 			for (int index : solution) {

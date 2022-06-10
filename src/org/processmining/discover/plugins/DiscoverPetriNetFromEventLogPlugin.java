@@ -67,7 +67,9 @@ public class DiscoverPetriNetFromEventLogPlugin {
 		netParameters.setMatrix(matrix);
 		int maxCount = matrix.getMaxCount();
 		for (int absThreshold = 0; absThreshold < 5; absThreshold++) {
-			for (int relThreshold = maxCount; relThreshold > 0; relThreshold /= 2) {
+			int penalty = 2*absThreshold;
+			for (int relThreshold = 2*maxCount; relThreshold > 0; relThreshold /= 2) {
+				penalty += 2;
 				netParameters.setAbsoluteThreshold(absThreshold);
 				netParameters.setRelativeThreshold(relThreshold);
 				matrix.clean(netParameters);
@@ -88,7 +90,7 @@ public class DiscoverPetriNetFromEventLogPlugin {
 					}
 				}
 				if (inputTransitions.size() == transitions.size() && outputTransitions.size() == transitions.size()) {
-					int edges = apn.getNet().getEdges().size();
+					int edges = apn.getNet().getEdges().size() + penalty;
 					System.out.println("[DiscoverPetriNetFromEventLogPlugin] " + absThreshold + ", " + relThreshold
 							+ ": " + edges);
 					if (bestApn == null || edges < bestEdges) {
