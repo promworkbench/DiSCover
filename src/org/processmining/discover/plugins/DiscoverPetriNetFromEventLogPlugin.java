@@ -149,4 +149,49 @@ public class DiscoverPetriNetFromEventLogPlugin {
 		apn = redAlgorithm.apply(context, apn, redParameters);
 		return apn;
 	}
+
+	@Plugin( //
+			name = "DiSCover Petri net (Specific noise)", //
+			parameterLabels = { "Event log" }, //
+			returnLabels = { "DiSCovered Accepting Petri net" }, //
+			returnTypes = { AcceptingPetriNet.class }, //
+			userAccessible = true, //
+			icon = "prom_duck.png", //
+			url = "http://www.win.tue.nl/~hverbeek/", //
+			help = "" //
+	) //
+	@UITopiaVariant( //
+			affiliation = UITopiaVariant.EHV, //
+			author = "H.M.W. Verbeek", //
+			email = "h.m.w.verbeek@tue.nl" //
+	) //
+	@PluginVariant( //
+			variantLabel = "DiSCover Petri net (Specific noise)", //
+			requiredParameterLabels = { 0 } //
+	) //
+	public AcceptingPetriNet runSpecificNoise(PluginContext context, XLog log) {
+		XEventClassifier classifier = new XEventAndClassifier(new XEventNameClassifier(),
+				new XEventLifeTransClassifier());
+		if (!log.getClassifiers().isEmpty()) {
+			classifier = log.getClassifiers().get(0);
+		}
+		DiscoverCountMatrixFromEventLogParameters matrixParameters = new DiscoverCountMatrixFromEventLogParameters();
+		matrixParameters.setLog(log);
+		matrixParameters.setClassifier(classifier);
+		DiscoverCountMatrixFromEventLogAlgorithm matrixAlgorithm = new DiscoverCountMatrixFromEventLogAlgorithm();
+		CountMatrix matrix = matrixAlgorithm.apply(context, matrixParameters);
+
+		DiscoverPetriNetFromCountMatrixParameters netParameters = new DiscoverPetriNetFromCountMatrixParameters();
+		DiscoverPetriNetFromCountMatrixAlgorithm netAlgorithm = new DiscoverPetriNetFromCountMatrixAlgorithm();
+		ReduceUsingMurataRulesAlgorithm redAlgorithm = new ReduceUsingMurataRulesAlgorithm();
+		ReduceUsingMurataRulesParameters redParameters = new ReduceUsingMurataRulesParameters();
+
+		netParameters.setAbsoluteThreshold(2);
+		netParameters.setRelativeThreshold(29);
+		netParameters.setMatrix(matrix);
+		matrix.clean(netParameters);
+		AcceptingPetriNet apn = netAlgorithm.apply(context, netParameters);
+		apn = redAlgorithm.apply(context, apn, redParameters);
+		return apn;
+	}
 }
