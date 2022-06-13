@@ -267,7 +267,7 @@ public class CountMatrix {
 		}
 
 		Set<Set<Integer>> solutions = getSolutions(parameters);
-		//		System.out.println("[CountMatrix] " + solutions);
+		System.out.println("[CountMatrix] Found " + solutions + " possible solutions.");
 		for (Set<Integer> solution : solutions) {
 			if (!parameters.isMerge()) {
 				for (int index : solution) {
@@ -279,7 +279,7 @@ public class CountMatrix {
 			Set<Integer> ignore = new HashSet<>(indices.values());
 			ignore.removeAll(solution);
 			subMatrix.discoverFromEventLog(ignore, parameters);
-			System.out.println("[CountMatrix] " + solution); // + "\n" + subMatrix.toString());
+//			System.out.println("[CountMatrix] " + solution); // + "\n" + subMatrix.toString());
 
 			Set<Integer> starters = new TreeSet<Integer>();
 			Set<Integer> enders = new TreeSet<Integer>();
@@ -444,6 +444,9 @@ public class CountMatrix {
 		return AcceptingPetriNetFactory.createAcceptingPetriNet(net, mi, mfs);
 	}
 
+	/*
+	 * Return all indices of the provided solution that are on some path from start to end.
+	 */
 	private Set<Integer> getCoveredIndices(Set<Integer> solution, int startIndex, int endIndex) {
 		Set<Integer> indicesOnPath = new HashSet<Integer>();
 		Set<Integer> coveredIndices = new HashSet<Integer>();
@@ -453,13 +456,18 @@ public class CountMatrix {
 
 	private void addCoveredIndices(Set<Integer> solution, int fromIndex, int toIndex, Set<Integer> indicesOnPath,
 			Set<Integer> coveredIndices) {
-		System.out.println("[CountMatrix] Path " + indicesOnPath + "@" + fromIndex);
+//		System.out.println("[CountMatrix] Path " + indicesOnPath + "@" + fromIndex);
 		if (isAbsolute(fromIndex, toIndex)) {
-			// Found a path. All nodes on this path are covered.
+			/*
+			 *  Found a path. All indices on this path are covered.
+			 */
 			coveredIndices.addAll(indicesOnPath);
 		}
 		for (int nextIndex : solution) {
 			if (indicesOnPath.contains(nextIndex)) {
+				/*
+				 * Avoid cycles.
+				 */
 				continue;
 			}
 			if (isAbsolute(fromIndex, nextIndex)) {
