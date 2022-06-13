@@ -91,7 +91,7 @@ public class CountMatrix {
 	public int getMaxCount() {
 		return maxCount;
 	}
-	
+
 	public void discoverFromEventLog(DiscoverPetriNetFromCountMatrixParameters parameters) {
 		discoverFromEventLog(new HashSet<Integer>(), parameters);
 	}
@@ -240,7 +240,7 @@ public class CountMatrix {
 	public AcceptingPetriNet convert(DiscoverPetriNetFromCountMatrixParameters parameters) {
 		Petrinet net = PetrinetFactory.newPetrinet("Petri net DiSCovered");
 
-		System.out.println("[CountMatrix]\n" + toString());
+//		System.out.println("[CountMatrix]\n" + toString());
 		Transition tStart = net.addTransition("\u25BA");
 		tStart.setInvisible(true);
 		Place pStart = net.addPlace("i");
@@ -264,9 +264,9 @@ public class CountMatrix {
 				tClass[index] = net.addTransition(eventClass);
 			}
 		}
-		
+
 		Set<Set<Integer>> solutions = getSolutions(parameters);
-		System.out.println("[CountMatrix] " + solutions);
+//		System.out.println("[CountMatrix] " + solutions);
 		for (Set<Integer> solution : solutions) {
 			if (!parameters.isMerge()) {
 				for (int index : solution) {
@@ -274,18 +274,41 @@ public class CountMatrix {
 				}
 			}
 			CountMatrix subMatrix = new CountMatrix(log, classifier);
+
 			Set<Integer> ignore = new HashSet<>(indices.values());
 			ignore.removeAll(solution);
 			subMatrix.discoverFromEventLog(ignore, parameters);
-			System.out.println("[CountMatrix] " + solution + "\n" + subMatrix.toString());
+			System.out.println("[CountMatrix] " + solution); // + "\n" + subMatrix.toString());
+
+			Map<Set<Integer>, Integer> representatives = new HashMap<Set<Integer>, Integer>();
+			Map<Integer, Integer> aliases = new HashMap<Integer, Integer>();
+			for (int fromIndex : solution) {
+				Set<Integer> toIndices = new HashSet<Integer>();
+				for (int toIndex : solution) {
+					if (subMatrix.isAbsolute(fromIndex, toIndex)) {
+						toIndices.add(toIndex);
+					}
+				}
+				if (representatives.containsKey(toIndices)) {
+					aliases.put(fromIndex, representatives.get(toIndices));
+				} else {
+					representatives.put(toIndices, fromIndex);
+				}
+			}
+
 			Place[] piClass = new Place[indices.size()];
 			Place[] poClass = new Place[indices.size()];
 			for (int index : solution) {
 				piClass[index] = net.addPlace("pi_" + solution + "@" + index);
 				net.addArc(piClass[index], tClass[index]);
-				poClass[index] = net.addPlace("po_" + solution + "@" + index);
-				net.addArc(tClass[index], poClass[index]);
+				if (aliases.containsKey(index)) {
+					net.addArc(tClass[index], poClass[aliases.get(index)]);
+				} else {
+					poClass[index] = net.addPlace("po_" + solution + "@" + index);
+					net.addArc(tClass[index], poClass[index]);
+				}
 			}
+			
 			Set<Integer> starters = new TreeSet<Integer>();
 			Set<Integer> enders = new TreeSet<Integer>();
 			for (int index : solution) {
@@ -296,6 +319,7 @@ public class CountMatrix {
 					enders.add(index);
 				}
 			}
+			
 			Place pi = net.addPlace("pi_s->" + solution);
 			net.addArc(tStart, pi);
 			for (int index : starters) {
@@ -304,15 +328,23 @@ public class CountMatrix {
 				net.addArc(pi, t);
 				net.addArc(t, piClass[index]);
 			}
+			
 			Place po = net.addPlace("po_" + solution + "->e");
 			net.addArc(po, tEnd);
 			for (int index : enders) {
+				if (aliases.containsKey(index)) {
+					continue;
+				}
 				Transition t = net.addTransition("t_" + solution + "@" + index + "->e");
 				t.setInvisible(true);
 				net.addArc(poClass[index], t);
 				net.addArc(t, po);
 			}
+			
 			for (int fromIndex : solution) {
+				if (aliases.containsKey(fromIndex)) {
+					continue;
+				}
 				for (int toIndex : solution) {
 					if (subMatrix.isAbsolute(fromIndex, toIndex)) {
 						Transition t = net.addTransition("t_" + solution + "@" + fromIndex + "->" + toIndex);
@@ -322,6 +354,7 @@ public class CountMatrix {
 					}
 				}
 			}
+			
 			/*
 			 * Remove semi-connected places.
 			 */
@@ -342,9 +375,11 @@ public class CountMatrix {
 		}
 
 		/*
-		 * Replace by a sequence of a place and an invisible transition by an edge, to simplify the net.
+		 * Replace a sequence of a place and an invisible transition by an edge,
+		 * to simplify the net.
 		 */
-		Set<PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode>> edges = new HashSet<PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode>>(net.getEdges());
+		Set<PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode>> edges = new HashSet<PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode>>(
+				net.getEdges());
 		for (PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode> edge : edges) {
 			if (!net.getEdges().contains(edge)) {
 				continue;
@@ -356,7 +391,8 @@ public class CountMatrix {
 				}
 				Place p = (Place) edge.getTarget();
 				if (net.getInEdges(t).size() == 1 && net.getOutEdges(t).size() == 1 && net.getInEdges(p).size() == 1
-						&& net.getOutEdges(p).size() == 1 && net.getInEdges(t).iterator().next() != net.getOutEdges(p).iterator().next()) {
+						&& net.getOutEdges(p).size() == 1
+						&& net.getInEdges(t).iterator().next() != net.getOutEdges(p).iterator().next()) {
 					net.addArc((Place) net.getInEdges(t).iterator().next().getSource(),
 							(Transition) net.getOutEdges(p).iterator().next().getTarget());
 					net.removeEdge(net.getInEdges(t).iterator().next());
@@ -372,7 +408,8 @@ public class CountMatrix {
 				}
 				Place p = (Place) edge.getSource();
 				if (net.getInEdges(t).size() == 1 && net.getOutEdges(t).size() == 1 && net.getInEdges(p).size() == 1
-						&& net.getOutEdges(p).size() == 1 && net.getInEdges(p).iterator().next() != net.getOutEdges(t).iterator().next()) {
+						&& net.getOutEdges(p).size() == 1
+						&& net.getInEdges(p).iterator().next() != net.getOutEdges(t).iterator().next()) {
 					net.addArc((Transition) net.getInEdges(p).iterator().next().getSource(),
 							(Place) net.getOutEdges(t).iterator().next().getTarget());
 					net.removeEdge(net.getInEdges(p).iterator().next());
