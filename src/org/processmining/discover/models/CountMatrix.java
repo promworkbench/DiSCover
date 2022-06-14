@@ -40,7 +40,7 @@ public class CountMatrix {
 	 */
 	private int[][] dfCounts;
 	private int maxCount;
-
+	
 	private XLog log;
 	private XEventClassifier classifier;
 
@@ -218,6 +218,11 @@ public class CountMatrix {
 				}
 			}
 		}
+		/*
+		 * Restrict the candidate to those node indices that are on some path from start to end.
+		 */
+		candidate = getCoveredIndices(candidate, classes.length, classes.length);
+		
 		//		System.out.println("[CountMatrix] Found candidate " + candidate);
 		for (Set<Integer> solution : solutions) {
 			if (solution.containsAll(candidate)) {
@@ -235,7 +240,7 @@ public class CountMatrix {
 		solutions.removeAll(subSolutions);
 
 		//		System.out.println("[CountMatrix] Adding solution " + candidate);
-		solutions.add(getCoveredIndices(candidate, classes.length, classes.length));
+		solutions.add(candidate);
 	}
 
 	public AcceptingPetriNet convert(DiscoverPetriNetFromCountMatrixParameters parameters) {
@@ -267,7 +272,12 @@ public class CountMatrix {
 		}
 
 		Set<Set<Integer>> solutions = getSolutions(parameters);
-		System.out.println("[CountMatrix] Found " + solutions + " possible solutions.");
+		if (solutions.size() > parameters.getMaxNofSolutions()) {
+			return null;
+		}
+		parameters.setMaxNofSolutions(solutions.size());
+		
+		System.out.println("[CountMatrix] Found " + solutions.size() + " possible solutions.");
 		for (Set<Integer> solution : solutions) {
 			if (!parameters.isMerge()) {
 				for (int index : solution) {
@@ -292,8 +302,8 @@ public class CountMatrix {
 				}
 			}
 
-			Map<Set<Integer>, Integer> representatives = new HashMap<Set<Integer>, Integer>();
-			Map<Integer, Integer> aliases = new HashMap<Integer, Integer>();
+			Map<Set<Integer>, Integer> inRepresentative = new HashMap<Set<Integer>, Integer>();
+			Map<Integer, Integer> inReplacement = new HashMap<Integer, Integer>();
 			for (int fromIndex : solution) {
 				//				if (enders.contains(fromIndex)) {
 				//					continue;
@@ -304,22 +314,55 @@ public class CountMatrix {
 						toIndices.add(toIndex);
 					}
 				}
-				if (representatives.containsKey(toIndices)) {
-					aliases.put(fromIndex, representatives.get(toIndices));
+				if (inRepresentative.containsKey(toIndices)) {
+					inReplacement.put(fromIndex, inRepresentative.get(toIndices));
 				} else {
-					representatives.put(toIndices, fromIndex);
+					inRepresentative.put(toIndices, fromIndex);
+				}
+			}
+
+			Map<Set<Integer>, Integer> outRepresentative = new HashMap<Set<Integer>, Integer>();
+			Map<Integer, Integer> outReplacement = new HashMap<Integer, Integer>();
+			for (int toIndex : solution) {
+				//				if (enders.contains(fromIndex)) {
+				//					continue;
+				//				}
+				Set<Integer> fromIndices = new HashSet<Integer>();
+				for (int fromIndex : solution) {
+					if (subMatrix.isAbsolute(fromIndex, toIndex)) {
+						fromIndices.add(fromIndex);
+					}
+				}
+				if (outRepresentative.containsKey(fromIndices)) {
+					outReplacement.put(toIndex, outRepresentative.get(fromIndices));
+				} else {
+					outRepresentative.put(fromIndices, toIndex);
 				}
 			}
 
 			Place[] piClass = new Place[indices.size()];
 			Place[] poClass = new Place[indices.size()];
 			for (int index : solution) {
-				piClass[index] = net.addPlace("pi_" + solution + "@" + index);
-				net.addArc(piClass[index], tClass[index]);
-				if (aliases.containsKey(index)) {
-					net.addArc(tClass[index], poClass[aliases.get(index)]);
+				if (outReplacement.containsKey(index)) {
+					if (piClass[outReplacement.get(index)] == null) {
+						piClass[outReplacement.get(index)] = net.addPlace("pi_" + solution + "@" + outReplacement.get(index));
+					}
+					net.addArc(piClass[outReplacement.get(index)], tClass[index]);
 				} else {
-					poClass[index] = net.addPlace("po_" + solution + "@" + index);
+					if (piClass[index] == null) {
+						piClass[index] = net.addPlace("pi_" + solution + "@" + index);
+					}
+					net.addArc(piClass[index], tClass[index]);
+				}
+				if (inReplacement.containsKey(index)) {
+					if (poClass[inReplacement.get(index)] == null) {
+						poClass[inReplacement.get(index)] = net.addPlace("po_" + solution + "@" + inReplacement.get(index));
+					}
+					net.addArc(tClass[index], poClass[inReplacement.get(index)]);
+				} else {
+					if (poClass[index] == null) {
+						poClass[index] = net.addPlace("po_" + solution + "@" + index);
+					}
 					net.addArc(tClass[index], poClass[index]);
 				}
 			}
@@ -327,6 +370,9 @@ public class CountMatrix {
 			Place pi = net.addPlace("pi_s->" + solution);
 			net.addArc(tStart, pi);
 			for (int index : starters) {
+				if (outReplacement.containsKey(index)) {
+					continue;
+				}
 				Transition t = net.addTransition("t_" + solution + "@s->" + index);
 				t.setInvisible(true);
 				net.addArc(pi, t);
@@ -336,7 +382,7 @@ public class CountMatrix {
 			Place po = net.addPlace("po_" + solution + "->e");
 			net.addArc(po, tEnd);
 			for (int index : enders) {
-				if (aliases.containsKey(index)) {
+				if (inReplacement.containsKey(index)) {
 					continue;
 				}
 				Transition t = net.addTransition("t_" + solution + "@" + index + "->e");
@@ -346,10 +392,13 @@ public class CountMatrix {
 			}
 
 			for (int fromIndex : solution) {
-				if (aliases.containsKey(fromIndex)) {
+				if (inReplacement.containsKey(fromIndex)) {
 					continue;
 				}
 				for (int toIndex : solution) {
+					if (outReplacement.containsKey(toIndex)) {
+						continue;
+					}
 					if (subMatrix.isAbsolute(fromIndex, toIndex)) {
 						Transition t = net.addTransition("t_" + solution + "@" + fromIndex + "->" + toIndex);
 						t.setInvisible(true);

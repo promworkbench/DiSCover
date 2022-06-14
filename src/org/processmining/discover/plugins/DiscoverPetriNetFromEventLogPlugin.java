@@ -74,6 +74,9 @@ public class DiscoverPetriNetFromEventLogPlugin {
 				netParameters.setRelativeThreshold(relThreshold);
 				matrix.clean(netParameters);
 				AcceptingPetriNet apn = netAlgorithm.apply(context, netParameters);
+				if (apn == null) {
+					continue;
+				}
 				apn = redAlgorithm.apply(context, apn, redParameters);
 				if (firstApn == null) {
 					firstApn = apn;
