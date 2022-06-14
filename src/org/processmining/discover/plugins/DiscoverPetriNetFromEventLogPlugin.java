@@ -63,12 +63,12 @@ public class DiscoverPetriNetFromEventLogPlugin {
 		ReduceUsingMurataRulesParameters redParameters = new ReduceUsingMurataRulesParameters();
 		AcceptingPetriNet bestApn = null;
 		AcceptingPetriNet firstApn = null;
-		int bestEdges = 0;
+		int bestScore = 0;
 		netParameters.setMatrix(matrix);
 		int maxCount = matrix.getMaxCount();
 		for (int absThreshold = 0; absThreshold < 5; absThreshold++) {
-			int penalty = 2*absThreshold;
-			for (int relThreshold = 2*maxCount; relThreshold > 0; relThreshold /= 2) {
+			int penalty = 2 * absThreshold;
+			for (int relThreshold = 2 * maxCount; relThreshold > 0; relThreshold /= 2) {
 				penalty += 2;
 				netParameters.setAbsoluteThreshold(absThreshold);
 				netParameters.setRelativeThreshold(relThreshold);
@@ -92,21 +92,20 @@ public class DiscoverPetriNetFromEventLogPlugin {
 						inputTransitions.add((Transition) edge.getTarget());
 					}
 				}
-				if (inputTransitions.size() == transitions.size() && outputTransitions.size() == transitions.size()) {
-					int edges = apn.getNet().getEdges().size() + penalty;
-					System.out.println("[DiscoverPetriNetFromEventLogPlugin] " + absThreshold + ", " + relThreshold
-							+ ": " + edges);
-					if (bestApn == null || edges < bestEdges) {
-						bestApn = apn;
-						bestEdges = edges;
-					}
+				int score = apn.getNet().getEdges().size() + penalty
+						+ 2 * (2 * transitions.size() - inputTransitions.size() - outputTransitions.size());
+				System.out.println(
+						"[DiscoverPetriNetFromEventLogPlugin] " + absThreshold + ", " + relThreshold + ": " + score);
+				if (bestApn == null || score < bestScore) {
+					bestApn = apn;
+					bestScore = score;
 				}
 			}
 		}
-		System.out.println("[DiscoverPetriNetFromEventLogPlugin] " + bestEdges);
+		System.out.println("[DiscoverPetriNetFromEventLogPlugin] " + bestScore);
 		return bestApn != null ? bestApn : firstApn;
 	}
-	
+
 	@Plugin( //
 			name = "DiSCover Petri net (No noise)", //
 			parameterLabels = { "Event log" }, //
@@ -145,7 +144,7 @@ public class DiscoverPetriNetFromEventLogPlugin {
 
 		int maxCount = matrix.getMaxCount();
 		netParameters.setAbsoluteThreshold(0);
-		netParameters.setRelativeThreshold(2*maxCount);
+		netParameters.setRelativeThreshold(2 * maxCount);
 		netParameters.setMatrix(matrix);
 		matrix.clean(netParameters);
 		AcceptingPetriNet apn = netAlgorithm.apply(context, netParameters);

@@ -191,14 +191,14 @@ public class CountMatrix {
 	private Set<Set<Integer>> getSolutions(DiscoverPetriNetFromCountMatrixParameters parameters) {
 		Set<Set<Integer>> solutions = new HashSet<Set<Integer>>();
 		Set<Integer> candidateSolution = new HashSet<Integer>(indices.values());
-		searchSolutions(candidateSolution, new HashSet<Set<Integer>>(), solutions, parameters);
+		searchSolutions(candidateSolution, new HashSet<Set<Integer>>(), solutions, parameters, "");
 		return solutions;
 	}
 
 	private void searchSolutions(Set<Integer> candidate, Set<Set<Integer>> candidatesDone, Set<Set<Integer>> solutions,
-			DiscoverPetriNetFromCountMatrixParameters parameters) {
+			DiscoverPetriNetFromCountMatrixParameters parameters, String prefix) {
 		if (candidatesDone.contains(candidate)) {
-			//			System.out.println("[CountMatrix] Skipping candidate " + candidate);
+//			System.out.println("[CountMatrix] " + prefix + "Skipping candidate " + candidate);
 			return;
 		}
 		candidatesDone.add(candidate);
@@ -206,13 +206,13 @@ public class CountMatrix {
 			for (int toIndex : candidate) {
 				if (toIndex < fromIndex) {
 					if (isBoth(fromIndex, toIndex)) {
-						//						System.out.println("[CountMatrix] " + candidate + " Both " + fromIndex + " " + toIndex);
+//						System.out.println("[CountMatrix] " + prefix + candidate + " Both " + fromIndex + " " + toIndex);
 						Set<Integer> firstCandidateSolution = new HashSet<Integer>(candidate);
 						firstCandidateSolution.remove(fromIndex);
-						searchSolutions(firstCandidateSolution, candidatesDone, solutions, parameters);
+						searchSolutions(firstCandidateSolution, candidatesDone, solutions, parameters, prefix + " ");
 						Set<Integer> secondCandidateSolution = new HashSet<Integer>(candidate);
 						secondCandidateSolution.remove(toIndex);
-						searchSolutions(secondCandidateSolution, candidatesDone, solutions, parameters);
+						searchSolutions(secondCandidateSolution, candidatesDone, solutions, parameters, prefix + " ");
 						return;
 					}
 				}
@@ -223,10 +223,10 @@ public class CountMatrix {
 		 */
 		candidate = getCoveredIndices(candidate, classes.length, classes.length);
 		
-		//		System.out.println("[CountMatrix] Found candidate " + candidate);
+//		System.out.println("[CountMatrix] " + prefix + "Found candidate " + candidate);
 		for (Set<Integer> solution : solutions) {
 			if (solution.containsAll(candidate)) {
-				//				System.out.println("[CountMatrix] Candidate is not maximal " + candidate);
+//				System.out.println("[CountMatrix] " + prefix + "Candidate is not maximal " + candidate);
 				return;
 			}
 		}
@@ -236,10 +236,10 @@ public class CountMatrix {
 				subSolutions.add(solution);
 			}
 		}
-		//		System.out.println("[CountMatrix] Removing subsolutions " + subSolutions);
+//		System.out.println("[CountMatrix] " + prefix + "Removing subsolutions " + subSolutions);
 		solutions.removeAll(subSolutions);
 
-		//		System.out.println("[CountMatrix] Adding solution " + candidate);
+//		System.out.println("[CountMatrix] " + prefix + "Adding solution " + candidate);
 		solutions.add(candidate);
 	}
 
