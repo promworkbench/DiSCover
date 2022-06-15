@@ -51,7 +51,7 @@ public class DiscoverPetriNetFromCountMatrixWidget extends JPanel {
 		}
 		final int max = m;
 		final NiceSlider relSlider = SlickerFactory.instance().createNiceIntegerSlider(
-				"Relative threshold (0 if no noise)", 0, ctr, 0, Orientation.HORIZONTAL);
+				"Noise level (0 means no noise)", 0, ctr, 0, Orientation.HORIZONTAL);
 		relSlider.addChangeListener(new ChangeListener() {
 
 			public void stateChanged(ChangeEvent e) {
