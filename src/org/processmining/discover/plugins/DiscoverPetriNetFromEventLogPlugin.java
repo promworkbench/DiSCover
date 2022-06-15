@@ -93,7 +93,7 @@ public class DiscoverPetriNetFromEventLogPlugin {
 					}
 				}
 				int score = apn.getNet().getEdges().size() + penalty
-						+ 2 * (2 * transitions.size() - inputTransitions.size() - outputTransitions.size());
+						+ 20 * (2 * transitions.size() - inputTransitions.size() - outputTransitions.size());
 				System.out.println(
 						"[DiscoverPetriNetFromEventLogPlugin] " + absThreshold + ", " + relThreshold + ": " + score);
 				if (bestApn == null || score < bestScore) {
@@ -144,7 +144,7 @@ public class DiscoverPetriNetFromEventLogPlugin {
 
 		int maxCount = matrix.getMaxCount();
 		netParameters.setAbsoluteThreshold(0);
-		netParameters.setRelativeThreshold(2 * maxCount);
+		netParameters.setRelativeThreshold(3 * maxCount);
 		netParameters.setMatrix(matrix);
 		matrix.clean(netParameters);
 		AcceptingPetriNet apn = netAlgorithm.apply(context, netParameters);

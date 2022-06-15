@@ -62,8 +62,8 @@ public class CountMatrix {
 		for (int i = 0; i < classes.length + 1; i++) {
 			for (int j = 0; j < classes.length + 1; j++) {
 				if (dfCounts[i][j] > 0) {
-					int maxi = 0;
-					int maxj = 0;
+					long maxi = 0; // To make sure the product below does not suffer from integer overflow.
+					long maxj = 0;
 					for (int k = 0; k < classes.length; k++) {
 						if (Math.abs(dfCounts[i][k]) > maxi) {
 							maxi = Math.abs(dfCounts[i][k]);
@@ -181,7 +181,7 @@ public class CountMatrix {
 	}
 
 	private boolean isBoth(int fromIndex, int toIndex) {
-		return dfCounts[fromIndex][toIndex] > 0 && dfCounts[toIndex][fromIndex] > 0;
+		return fromIndex != toIndex && dfCounts[fromIndex][toIndex] > 0 && dfCounts[toIndex][fromIndex] > 0;
 	}
 
 	private boolean isAbsolute(int fromIndex, int toIndex) {
