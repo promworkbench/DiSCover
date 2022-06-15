@@ -21,6 +21,13 @@ public class DiscoverPetriNetFromCountMatrixParameters {
 		setMaxNofSolutions(Integer.MAX_VALUE);
 	}
 	
+	public DiscoverPetriNetFromCountMatrixParameters(DiscoverPetriNetFromCountMatrixParameters parameters) {
+		setAbsoluteThreshold(parameters.getAbsoluteThreshold()); // 4, 0
+		setRelativeThreshold(parameters.getRelativeThreshold()); // 16, 1000
+		setMerge(parameters.isMerge());
+		setMaxNofSolutions(parameters.getMaxNofSolutions());
+	}
+	
 	public int getAbsoluteThreshold() {
 		return absoluteThreshold;
 	}

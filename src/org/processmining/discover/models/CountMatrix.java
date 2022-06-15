@@ -40,25 +40,17 @@ public class CountMatrix {
 	 */
 	private int[][] dfCounts;
 	private int maxCount;
-	
+
 	private XLog log;
 	private XEventClassifier classifier;
 
 	public CountMatrix(XLog log, XEventClassifier classifier) {
 		this.log = log;
 		this.classifier = classifier;
+		this.maxCount = 0;
 	}
 
 	public void clean(DiscoverPetriNetFromCountMatrixParameters parameters) {
-		maxCount = dfCounts[0][0];
-		for (int i = 0; i < classes.length + 1; i++) {
-			for (int j = 0; j < classes.length + 1; j++) {
-				if (dfCounts[i][j] < 0) {
-					dfCounts[i][j] = -dfCounts[i][j];
-				}
-				maxCount = Math.max(maxCount, dfCounts[i][j]);
-			}
-		}
 		for (int i = 0; i < classes.length + 1; i++) {
 			for (int j = 0; j < classes.length + 1; j++) {
 				if (dfCounts[i][j] > 0) {
@@ -89,6 +81,17 @@ public class CountMatrix {
 	}
 
 	public int getMaxCount() {
+		if (maxCount == 0) {
+			maxCount = dfCounts[0][0];
+			for (int i = 0; i < classes.length + 1; i++) {
+				for (int j = 0; j < classes.length + 1; j++) {
+					if (dfCounts[i][j] < 0) {
+						dfCounts[i][j] = -dfCounts[i][j];
+					}
+					maxCount = Math.max(maxCount, dfCounts[i][j]);
+				}
+			}
+		}
 		return maxCount;
 	}
 
@@ -198,7 +201,7 @@ public class CountMatrix {
 	private void searchSolutions(Set<Integer> candidate, Set<Set<Integer>> candidatesDone, Set<Set<Integer>> solutions,
 			DiscoverPetriNetFromCountMatrixParameters parameters, String prefix) {
 		if (candidatesDone.contains(candidate)) {
-//			System.out.println("[CountMatrix] " + prefix + "Skipping candidate " + candidate);
+			//			System.out.println("[CountMatrix] " + prefix + "Skipping candidate " + candidate);
 			return;
 		}
 		candidatesDone.add(candidate);
@@ -206,7 +209,7 @@ public class CountMatrix {
 			for (int toIndex : candidate) {
 				if (toIndex < fromIndex) {
 					if (isBoth(fromIndex, toIndex)) {
-//						System.out.println("[CountMatrix] " + prefix + candidate + " Both " + fromIndex + " " + toIndex);
+						//						System.out.println("[CountMatrix] " + prefix + candidate + " Both " + fromIndex + " " + toIndex);
 						Set<Integer> firstCandidateSolution = new HashSet<Integer>(candidate);
 						firstCandidateSolution.remove(fromIndex);
 						searchSolutions(firstCandidateSolution, candidatesDone, solutions, parameters, prefix + " ");
@@ -219,14 +222,15 @@ public class CountMatrix {
 			}
 		}
 		/*
-		 * Restrict the candidate to those node indices that are on some path from start to end.
+		 * Restrict the candidate to those node indices that are on some path
+		 * from start to end.
 		 */
-		candidate = getCoveredIndices(candidate, classes.length, classes.length);
-		
-//		System.out.println("[CountMatrix] " + prefix + "Found candidate " + candidate);
+//		candidate = getCoveredIndices(candidate, classes.length, classes.length);
+
+		//		System.out.println("[CountMatrix] " + prefix + "Found candidate " + candidate);
 		for (Set<Integer> solution : solutions) {
 			if (solution.containsAll(candidate)) {
-//				System.out.println("[CountMatrix] " + prefix + "Candidate is not maximal " + candidate);
+				//				System.out.println("[CountMatrix] " + prefix + "Candidate is not maximal " + candidate);
 				return;
 			}
 		}
@@ -236,10 +240,10 @@ public class CountMatrix {
 				subSolutions.add(solution);
 			}
 		}
-//		System.out.println("[CountMatrix] " + prefix + "Removing subsolutions " + subSolutions);
+		//		System.out.println("[CountMatrix] " + prefix + "Removing subsolutions " + subSolutions);
 		solutions.removeAll(subSolutions);
 
-//		System.out.println("[CountMatrix] " + prefix + "Adding solution " + candidate);
+		//		System.out.println("[CountMatrix] " + prefix + "Adding solution " + candidate);
 		solutions.add(candidate);
 	}
 
@@ -276,7 +280,7 @@ public class CountMatrix {
 			return null;
 		}
 		parameters.setMaxNofSolutions(solutions.size());
-		
+
 		System.out.println("[CountMatrix] Found " + solutions.size() + " possible solutions.");
 		for (Set<Integer> solution : solutions) {
 			if (!parameters.isMerge()) {
@@ -288,16 +292,23 @@ public class CountMatrix {
 
 			Set<Integer> ignore = new HashSet<>(indices.values());
 			ignore.removeAll(solution);
-			subMatrix.discoverFromEventLog(ignore, parameters);
-//			System.out.println("[CountMatrix] " + solution); // + "\n" + subMatrix.toString());
+			DiscoverPetriNetFromCountMatrixParameters subParameters = new DiscoverPetriNetFromCountMatrixParameters(
+					parameters);
+			subMatrix.discoverFromEventLog(ignore, subParameters);
+//			subParameters.setAbsoluteThreshold(0);
+//			subParameters.setRelativeThreshold(3 * subMatrix.getMaxCount());
+			subParameters.setMatrix(subMatrix);
+			subMatrix.clean(subParameters);
+			//			solution = subMatrix.getCoveredIndices(solution, classes.length, classes.length);
+			System.out.println("[CountMatrix] " + solution + "\n" + subMatrix.toString());
 
 			Set<Integer> starters = new TreeSet<Integer>();
 			Set<Integer> enders = new TreeSet<Integer>();
 			for (int index : solution) {
-				if (dfCounts[classes.length][index] > 0) {
+				if (subMatrix.isAbsolute(classes.length, index)) {
 					starters.add(index);
 				}
-				if (dfCounts[index][classes.length] > 0) {
+				if (subMatrix.isAbsolute(index, classes.length)) {
 					enders.add(index);
 				}
 			}
@@ -345,7 +356,8 @@ public class CountMatrix {
 			for (int index : solution) {
 				if (outReplacement.containsKey(index)) {
 					if (piClass[outReplacement.get(index)] == null) {
-						piClass[outReplacement.get(index)] = net.addPlace("pi_" + solution + "@" + outReplacement.get(index));
+						piClass[outReplacement.get(index)] = net
+								.addPlace("pi_" + solution + "@" + outReplacement.get(index));
 					}
 					net.addArc(piClass[outReplacement.get(index)], tClass[index]);
 				} else {
@@ -356,7 +368,8 @@ public class CountMatrix {
 				}
 				if (inReplacement.containsKey(index)) {
 					if (poClass[inReplacement.get(index)] == null) {
-						poClass[inReplacement.get(index)] = net.addPlace("po_" + solution + "@" + inReplacement.get(index));
+						poClass[inReplacement.get(index)] = net
+								.addPlace("po_" + solution + "@" + inReplacement.get(index));
 					}
 					net.addArc(tClass[index], poClass[inReplacement.get(index)]);
 				} else {
@@ -494,7 +507,8 @@ public class CountMatrix {
 	}
 
 	/*
-	 * Return all indices of the provided solution that are on some path from start to end.
+	 * Return all indices of the provided solution that are on some path from
+	 * start to end.
 	 */
 	private Set<Integer> getCoveredIndices(Set<Integer> solution, int startIndex, int endIndex) {
 		Set<Integer> indicesOnPath = new HashSet<Integer>();
@@ -505,10 +519,10 @@ public class CountMatrix {
 
 	private void addCoveredIndices(Set<Integer> solution, int fromIndex, int toIndex, Set<Integer> indicesOnPath,
 			Set<Integer> coveredIndices) {
-//		System.out.println("[CountMatrix] Path " + indicesOnPath + "@" + fromIndex);
+		//		System.out.println("[CountMatrix] Path " + indicesOnPath + "@" + fromIndex);
 		if (isAbsolute(fromIndex, toIndex)) {
 			/*
-			 *  Found a path. All indices on this path are covered.
+			 * Found a path. All indices on this path are covered.
 			 */
 			coveredIndices.addAll(indicesOnPath);
 		}
