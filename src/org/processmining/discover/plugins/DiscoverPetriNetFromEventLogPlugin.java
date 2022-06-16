@@ -35,7 +35,6 @@ public class DiscoverPetriNetFromEventLogPlugin {
 			returnLabels = { "DiSCovered Accepting Petri net" }, //
 			returnTypes = { AcceptingPetriNet.class }, //
 			userAccessible = true, //
-			icon = "prom_duck.png", //
 			url = "http://www.win.tue.nl/~hverbeek/", //
 			help = "" //
 	) //
@@ -115,7 +114,6 @@ public class DiscoverPetriNetFromEventLogPlugin {
 			returnLabels = { "DiSCovered Accepting Petri net" }, //
 			returnTypes = { AcceptingPetriNet.class }, //
 			userAccessible = true, //
-			icon = "prom_duck.png", //
 			url = "http://www.win.tue.nl/~hverbeek/", //
 			help = "" //
 	) //
@@ -160,7 +158,6 @@ public class DiscoverPetriNetFromEventLogPlugin {
 			returnLabels = { "DiSCovered Accepting Petri net" }, //
 			returnTypes = { AcceptingPetriNet.class }, //
 			userAccessible = true, //
-			icon = "prom_duck.png", //
 			url = "http://www.win.tue.nl/~hverbeek/", //
 			help = "" //
 	) //
@@ -205,7 +202,6 @@ public class DiscoverPetriNetFromEventLogPlugin {
 			returnLabels = { "DiSCovered Accepting Petri net" }, //
 			returnTypes = { AcceptingPetriNet.class }, //
 			userAccessible = true, //
-			icon = "prom_duck.png", //
 			url = "http://www.win.tue.nl/~hverbeek/", //
 			help = "" //
 	) //
