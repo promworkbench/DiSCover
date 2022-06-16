@@ -3,6 +3,8 @@ package org.processmining.discover.widgets;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
@@ -43,25 +45,18 @@ public class DiscoverPetriNetFromCountMatrixWidget extends JPanel {
 //		absSlider.setPreferredSize(new Dimension(100, 30));
 //		add(absSlider, "0, 0");
 
-		int m = 1;
-		int ctr = 0;
-		while (m < 3*matrix.getMaxCount()) {
-			m *= 2;
-			ctr++;
+		List<Integer> thresholds = new ArrayList<Integer>();
+		for (int m = matrix.getMaxRelThreshold(); m > 0; m /= 2) {
+			thresholds.add(m);
 		}
-		final int max = m;
+		thresholds.add(0);
 		final NiceSlider relSlider = SlickerFactory.instance().createNiceIntegerSlider(
-				"Noise level (0 means no noise)", 0, ctr, 0, Orientation.HORIZONTAL);
+				"Noise level (0 means no noise)", 0, thresholds.size() - 1, 0, Orientation.HORIZONTAL);
 		relSlider.addChangeListener(new ChangeListener() {
 
 			public void stateChanged(ChangeEvent e) {
 				int value = relSlider.getSlider().getValue();
-				int j = max;
-				for (int i = 0; i < value; i++) {
-					j /= 2;
-				}
-//				System.out.println("[] " + max + " " + j);
-				parameters.setRelativeThreshold(j);
+				parameters.setRelativeThreshold(thresholds.get(value));
 			}
 		});
 		relSlider.setPreferredSize(new Dimension(100, 30));

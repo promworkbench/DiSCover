@@ -80,7 +80,7 @@ public class CountMatrix {
 		}
 	}
 
-	public int getMaxCount() {
+	public int getMaxRelThreshold() {
 		if (maxCount == 0) {
 			maxCount = dfCounts[0][0];
 			for (int i = 0; i < classes.length + 1; i++) {
@@ -92,7 +92,7 @@ public class CountMatrix {
 				}
 			}
 		}
-		return maxCount;
+		return 3*maxCount;
 	}
 
 	public void discoverFromEventLog(DiscoverPetriNetFromCountMatrixParameters parameters) {

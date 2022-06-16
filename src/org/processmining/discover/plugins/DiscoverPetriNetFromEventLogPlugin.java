@@ -45,7 +45,7 @@ public class DiscoverPetriNetFromEventLogPlugin {
 			email = "h.m.w.verbeek@tue.nl" //
 	) //
 	@PluginVariant( //
-			variantLabel = "DiSCover Petri net (Fullyautomatix)", //
+			variantLabel = "DiSCover Petri net (auto moise)", //
 			requiredParameterLabels = { 0 } //
 	) //
 	public AcceptingPetriNet runAuto(PluginContext context, XLog log) {
@@ -68,10 +68,10 @@ public class DiscoverPetriNetFromEventLogPlugin {
 		AcceptingPetriNet firstApn = null;
 		int bestScore = 0;
 		netParameters.setMatrix(matrix);
-		int maxCount = matrix.getMaxCount();
+		int maxRelThreshold = matrix.getMaxRelThreshold();
 		for (int absThreshold = 0; absThreshold < 1; absThreshold++) {
 			int penalty = 2 * absThreshold;
-			for (int relThreshold = 2 * maxCount; relThreshold > 0; relThreshold /= 2) {
+			for (int relThreshold = maxRelThreshold; relThreshold > 0; relThreshold /= 2) {
 				penalty += 2;
 				netParameters.setAbsoluteThreshold(absThreshold);
 				netParameters.setRelativeThreshold(relThreshold);
@@ -145,9 +145,8 @@ public class DiscoverPetriNetFromEventLogPlugin {
 		ReduceUsingMurataRulesAlgorithm redAlgorithm = new ReduceUsingMurataRulesAlgorithm();
 		ReduceUsingMurataRulesParameters redParameters = new ReduceUsingMurataRulesParameters();
 
-		int maxCount = matrix.getMaxCount();
 		netParameters.setAbsoluteThreshold(0);
-		netParameters.setRelativeThreshold(3 * maxCount);
+		netParameters.setRelativeThreshold(matrix.getMaxRelThreshold());
 		netParameters.setMatrix(matrix);
 		matrix.clean(netParameters);
 		AcceptingPetriNet apn = netAlgorithm.apply(context, netParameters);
@@ -237,7 +236,7 @@ public class DiscoverPetriNetFromEventLogPlugin {
 		ReduceUsingMurataRulesParameters redParameters = new ReduceUsingMurataRulesParameters();
 
 		netParameters.setAbsoluteThreshold(0);
-		netParameters.setRelativeThreshold(3*matrix.getMaxCount());
+		netParameters.setRelativeThreshold(matrix.getMaxRelThreshold());
 		netParameters.setMatrix(matrix);
 		
 		DiscoverPetriNetFromCountMatrixWidget widget = new DiscoverPetriNetFromCountMatrixWidget(matrix, netParameters);
