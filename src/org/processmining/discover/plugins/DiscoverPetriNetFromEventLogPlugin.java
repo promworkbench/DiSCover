@@ -30,7 +30,7 @@ import org.processmining.models.graphbased.directed.petrinet.elements.Transition
 public class DiscoverPetriNetFromEventLogPlugin {
 
 	@Plugin( //
-			name = "DiSCover Petri net (Fullyautomatix)", //
+			name = "DiSCover Petri net (Auto noise)", //
 			parameterLabels = { "Event log" }, //
 			returnLabels = { "DiSCovered Accepting Petri net" }, //
 			returnTypes = { AcceptingPetriNet.class }, //
@@ -45,7 +45,7 @@ public class DiscoverPetriNetFromEventLogPlugin {
 			email = "h.m.w.verbeek@tue.nl" //
 	) //
 	@PluginVariant( //
-			variantLabel = "DiSCover Petri net (auto moise)", //
+			variantLabel = "DiSCover Petri net (Suto moise)", //
 			requiredParameterLabels = { 0 } //
 	) //
 	public AcceptingPetriNet runAuto(PluginContext context, XLog log) {
