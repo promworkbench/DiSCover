@@ -44,7 +44,7 @@ public class DiscoverPetriNetFromEventLogPlugin {
 			email = "h.m.w.verbeek@tue.nl" //
 	) //
 	@PluginVariant( //
-			variantLabel = "DiSCover Petri net (Suto moise)", //
+			variantLabel = "DiSCover Petri net (Auto noise)", //
 			requiredParameterLabels = { 0 } //
 	) //
 	public AcceptingPetriNet runAuto(PluginContext context, XLog log) {
