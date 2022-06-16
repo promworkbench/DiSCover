@@ -96,7 +96,7 @@ public class DiscoverPetriNetFromEventLogPlugin {
 					}
 				}
 				int score = apn.getNet().getEdges().size() + penalty
-						+ 20 * (2 * transitions.size() - inputTransitions.size() - outputTransitions.size());
+						+ 100 * (2 * transitions.size() - inputTransitions.size() - outputTransitions.size());
 				System.out.println(
 						"[DiscoverPetriNetFromEventLogPlugin] " + absThreshold + ", " + relThreshold + ": " + score);
 				if (bestApn == null || score < bestScore) {

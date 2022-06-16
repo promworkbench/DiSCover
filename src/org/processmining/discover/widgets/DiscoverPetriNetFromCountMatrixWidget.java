@@ -57,6 +57,7 @@ public class DiscoverPetriNetFromCountMatrixWidget extends JPanel {
 			public void stateChanged(ChangeEvent e) {
 				int value = relSlider.getSlider().getValue();
 				parameters.setRelativeThreshold(thresholds.get(value));
+				System.out.println("[DiscoverPetriNetFromCountMatrixWidget] Noise threshold set to " + thresholds.get(value));
 			}
 		});
 		relSlider.setPreferredSize(new Dimension(100, 30));
