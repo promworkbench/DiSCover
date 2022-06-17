@@ -56,13 +56,16 @@ public class CountMatrix {
 				if (dfCounts[i][j] > 0) {
 					long maxi = 0; // To make sure the product below does not suffer from integer overflow.
 					long maxj = 0;
-					for (int k = 0; k < classes.length; k++) {
+					for (int k = 0; k < classes.length + 1; k++) {
 						if (Math.abs(dfCounts[i][k]) > maxi) {
 							maxi = Math.abs(dfCounts[i][k]);
 						}
 						if (Math.abs(dfCounts[k][j]) > maxj) {
 							maxj = Math.abs(dfCounts[k][j]);
 						}
+					}
+					if (dfCounts[i][j] >= 0.95 * maxi || dfCounts[i][j] >= 0.95 * maxj) {
+						continue;
 					}
 					if ((dfCounts[i][j] <= parameters.getAbsoluteThreshold())
 							|| (dfCounts[i][j] < maxi && parameters.getRelativeThreshold() * maxi
@@ -158,28 +161,28 @@ public class CountMatrix {
 	public String toString() {
 		String s = "----\n";
 		String t = "";
-		for (int toIndex = 0; toIndex < classes.length; toIndex++) {
-			t += "\t" + dfCounts[classes.length][toIndex];
-		}
-		s += t + "\n----\n";
-		for (int fromIndex = 0; fromIndex < classes.length; fromIndex++) {
-			t = "";
-			for (int toIndex = 0; toIndex < classes.length; toIndex++) {
+//		for (int toIndex = 0; toIndex < classes.length; toIndex++) {
+//			t += "\t" + dfCounts[classes.length][toIndex];
+//		}
+//		s += t + "\n----\n";
+		for (int fromIndex = 0; fromIndex < classes.length + 1; fromIndex++) {
+			for (int toIndex = 0; toIndex < classes.length + 1; toIndex++) {
 				t += "\t" + dfCounts[fromIndex][toIndex];
 			}
-			s += t + "\n";
+			s += t + "\t"+ (fromIndex < classes.length ? classes[fromIndex] : "") + "\n";
+			t = "";
 		}
 		s += "----\n";
-		t = "";
-		for (int fromIndex = 0; fromIndex < classes.length; fromIndex++) {
-			t += "\t" + dfCounts[fromIndex][classes.length];
-		}
-		s += t + "\n----\n";
-		t = "";
-		for (int index = 0; index < classes.length; index++) {
-			t += classes[index] + "\n";
-		}
-		s += t + "----\n";
+//		t = "";
+//		for (int fromIndex = 0; fromIndex < classes.length; fromIndex++) {
+//			t += "\t" + dfCounts[fromIndex][classes.length];
+//		}
+//		s += t + "\n----\n";
+//		t = "";
+//		for (int index = 0; index < classes.length; index++) {
+//			t += classes[index] + "\n";
+//		}
+//		s += t + "----\n";
 		return s;
 	}
 
