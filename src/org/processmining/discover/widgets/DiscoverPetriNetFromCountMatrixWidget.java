@@ -30,20 +30,20 @@ public class DiscoverPetriNetFromCountMatrixWidget extends JPanel {
 
 	public DiscoverPetriNetFromCountMatrixWidget(CountMatrix matrix,
 			final DiscoverPetriNetFromCountMatrixParameters parameters) {
-		double size[][] = { { TableLayoutConstants.FILL }, { /*30,*/ 30, 30, TableLayoutConstants.FILL } };
+		double size[][] = { { TableLayoutConstants.FILL }, { 30, 30, 30, TableLayoutConstants.FILL } };
 		setLayout(new TableLayout(size));
 
-//		final NiceSlider absSlider = SlickerFactory.instance().createNiceIntegerSlider(
-//				"Absolute threshold (0 if no noise)", 0, 20, parameters.getAbsoluteThreshold(), Orientation.HORIZONTAL);
-//		absSlider.addChangeListener(new ChangeListener() {
-//
-//			public void stateChanged(ChangeEvent e) {
-//				int value = absSlider.getSlider().getValue();
-//				parameters.setAbsoluteThreshold(value);
-//			}
-//		});
-//		absSlider.setPreferredSize(new Dimension(100, 30));
-//		add(absSlider, "0, 0");
+		final NiceSlider absSlider = SlickerFactory.instance().createNiceIntegerSlider(
+				"Absolute threshold (0 if no noise)", 0, 20, parameters.getAbsoluteThreshold(), Orientation.HORIZONTAL);
+		absSlider.addChangeListener(new ChangeListener() {
+
+			public void stateChanged(ChangeEvent e) {
+				int value = absSlider.getSlider().getValue();
+				parameters.setAbsoluteThreshold(value);
+			}
+		});
+		absSlider.setPreferredSize(new Dimension(100, 30));
+		add(absSlider, "0, 0");
 
 		List<Integer> thresholds = new ArrayList<Integer>();
 		for (int m = matrix.getMaxRelThreshold(); m > 0; m /= 2) {
@@ -61,7 +61,7 @@ public class DiscoverPetriNetFromCountMatrixWidget extends JPanel {
 			}
 		});
 		relSlider.setPreferredSize(new Dimension(100, 30));
-		add(relSlider, "0, 0");
+		add(relSlider, "0, 1");
 
 		final JCheckBox mergeBox = SlickerFactory.instance().createCheckBox("Merge transitions systems",
 				parameters.isMerge());
@@ -73,7 +73,7 @@ public class DiscoverPetriNetFromCountMatrixWidget extends JPanel {
 
 		});
 		mergeBox.setOpaque(false);
-		add(mergeBox, "0, 1");
+		add(mergeBox, "0, 2");
 		
 		revalidate();
 		repaint();

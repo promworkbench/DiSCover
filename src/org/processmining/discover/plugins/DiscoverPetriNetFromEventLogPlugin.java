@@ -68,7 +68,7 @@ public class DiscoverPetriNetFromEventLogPlugin {
 		int bestScore = 0;
 		netParameters.setMatrix(matrix);
 		int maxRelThreshold = matrix.getMaxRelThreshold();
-		for (int absThreshold = 0; absThreshold < 1; absThreshold++) {
+		for (int absThreshold = 0; absThreshold < 3; absThreshold++) {
 			int penalty = 2 * absThreshold;
 			for (int relThreshold = maxRelThreshold; relThreshold > 0; relThreshold /= 2) {
 				penalty += 2;
@@ -143,7 +143,7 @@ public class DiscoverPetriNetFromEventLogPlugin {
 		ReduceUsingMurataRulesAlgorithm redAlgorithm = new ReduceUsingMurataRulesAlgorithm();
 		ReduceUsingMurataRulesParameters redParameters = new ReduceUsingMurataRulesParameters();
 
-		netParameters.setAbsoluteThreshold(0);
+		netParameters.setAbsoluteThreshold(2);
 		netParameters.setRelativeThreshold(matrix.getMaxRelThreshold());
 		netParameters.setMatrix(matrix);
 		matrix.clean(netParameters);
@@ -275,7 +275,7 @@ public class DiscoverPetriNetFromEventLogPlugin {
 		ReduceUsingMurataRulesAlgorithm redAlgorithm = new ReduceUsingMurataRulesAlgorithm();
 		ReduceUsingMurataRulesParameters redParameters = new ReduceUsingMurataRulesParameters();
 
-		netParameters.setAbsoluteThreshold(0);
+		netParameters.setAbsoluteThreshold(2);
 		netParameters.setRelativeThreshold(matrix.getMaxRelThreshold());
 		netParameters.setMatrix(matrix);
 		
