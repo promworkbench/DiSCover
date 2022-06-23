@@ -76,13 +76,9 @@ public class IndexMatrix {
 	public JComponent getComponent() {
 		Dot dotGraph = new Dot();
 
-		int nofTraces = 0;
-		for (int toIdx = 0; toIdx < activities.length; toIdx++) {
-			nofTraces += edgeCounts[0][toIdx];
-		}
-		DotNode startNode = dotGraph.addNode(getNodeLabel(IndexLog.START, nofTraces));
+		DotNode startNode = dotGraph.addNode(getNodeLabel(IndexLog.START, nodeCounts[0]));
 		startNode.setOption("shape", "none");
-		DotNode endNode = dotGraph.addNode(getNodeLabel(IndexLog.END, nofTraces));
+		DotNode endNode = dotGraph.addNode(getNodeLabel(IndexLog.END, nodeCounts[0]));
 		endNode.setOption("shape", "none");
 		addNodesAndEdges(dotGraph, startNode, endNode);
 		return new DotPanel(dotGraph);
