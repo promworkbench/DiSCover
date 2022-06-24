@@ -9,7 +9,7 @@ import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;
 import org.deckfour.xes.model.XTrace;
 
-public class IndexLog {
+public class TheLog {
 
 	private Map<String, Integer> activityMap;
 	private String[] activities;
@@ -27,7 +27,7 @@ public class IndexLog {
 	 * @param classifier
 	 *            The classifier.
 	 */
-	public IndexLog(XLog log, XEventClassifier classifier) {
+	public TheLog(XLog log, XEventClassifier classifier) {
 		int nofEvents = 1 + log.size(); // One START and as many ENDs as there are traces.
 
 		/*
@@ -68,6 +68,10 @@ public class IndexLog {
 			}
 			events[idx++] = 0; // END event
 		}
+		
+		for (int i = 0; i < activities.length; i++) {
+			System.out.println("[TheLog] activity["+ i + "]: "+ activities[i]);
+		}
 	}
 
 	/**
@@ -79,7 +83,7 @@ public class IndexLog {
 	 * @param indices
 	 *            The indices to filter out.
 	 */
-	public IndexLog(IndexLog log, Set<Integer> indices) {
+	public TheLog(TheLog log, Set<Integer> indices) {
 		activityMap = log.activityMap;
 		activities = log.activities;
 		int nofEvents = 0;
