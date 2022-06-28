@@ -23,8 +23,9 @@ import org.processmining.discover.models.ActivitySets;
 import org.processmining.discover.models.ConcurrentActivityPairs;
 import org.processmining.discover.parameters.DiscoverPetriNetParameters;
 import org.processmining.framework.plugin.PluginContext;
-import org.processmining.framework.util.Pair;
 import org.processmining.models.graphbased.directed.petrinet.Petrinet;
+import org.processmining.models.graphbased.directed.petrinet.PetrinetEdge;
+import org.processmining.models.graphbased.directed.petrinet.PetrinetNode;
 import org.processmining.models.graphbased.directed.petrinet.elements.Place;
 import org.processmining.models.graphbased.directed.petrinet.elements.Transition;
 import org.processmining.models.graphbased.directed.petrinet.impl.PetrinetFactory;
@@ -54,9 +55,23 @@ public class DiscoverPetriNetAlgorithm {
 			matrices.get(idx).filterRelative(parameters.getRelativeThreshold());
 		}
 
+		AcceptingPetriNet apn = createNet(matrices, alphabet, parameters);
+
+		if (parameters.isReduce()) {
+			System.out.println("[DiscoverPetriNetAlgorithm] Reducing the net, please be patient...");
+			ReduceUsingMurataRulesAlgorithm redAlgorithm = new ReduceUsingMurataRulesAlgorithm();
+			ReduceUsingMurataRulesParameters redParameters = new ReduceUsingMurataRulesParameters();
+			apn = redAlgorithm.apply(context, apn, redParameters);
+			reduceNet(apn);
+			apn = redAlgorithm.apply(context, apn, redParameters);
+			System.out.println("[DiscoverPetriNetAlgorithm] Reduced the net.");
+		}
+
+		return apn;
+	}
+	
+	private AcceptingPetriNet createNet(ActivityMatrixCollection matrices, ActivityAlphabet alphabet, DiscoverPetriNetParameters parameters) {
 		Petrinet net = PetrinetFactory.newPetrinet("Petri net DiSCovered");
-		Map<Pair<Integer, Set<Integer>>, Place> inputPlaces = new HashMap<Pair<Integer, Set<Integer>>, Place>();
-		Map<Pair<Integer, Set<Integer>>, Place> outputPlaces = new HashMap<Pair<Integer, Set<Integer>>, Place>();
 
 		// Add shared start and end
 		Transition startTransition = net.addTransition(ActivityAlphabet.START);
@@ -133,14 +148,36 @@ public class DiscoverPetriNetAlgorithm {
 			}
 		}
 
-		AcceptingPetriNet apn = AcceptingPetriNetFactory.createAcceptingPetriNet(net, initialMarking, finalMarkings);
-
-		if (parameters.isReduce()) {
-			ReduceUsingMurataRulesAlgorithm redAlgorithm = new ReduceUsingMurataRulesAlgorithm();
-			ReduceUsingMurataRulesParameters redParameters = new ReduceUsingMurataRulesParameters();
-			apn = redAlgorithm.apply(context, apn, redParameters);
+		return AcceptingPetriNetFactory.createAcceptingPetriNet(net, initialMarking, finalMarkings);
+	}
+	
+	private void reduceNet(AcceptingPetriNet apn) {
+		Map<PetrinetNode, Set<PetrinetNode>> preset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
+		Map<PetrinetNode, Set<PetrinetNode>> postset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
+		for (PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode> edge : apn.getNet().getEdges()) {
+			if (!preset.containsKey(edge.getTarget())) {
+				preset.put(edge.getTarget(), new HashSet<PetrinetNode>());
+			}
+			preset.get(edge.getTarget()).add(edge.getSource());
+			if (!postset.containsKey(edge.getSource())) {
+				postset.put(edge.getSource(), new HashSet<PetrinetNode>());
+			}
+			postset.get(edge.getSource()).add(edge.getTarget());
 		}
-
-		return apn;
+		Set<Transition> transitions = new HashSet<Transition>(apn.getNet().getTransitions());
+		for (Transition transition : transitions) {
+			if (!transition.isInvisible() || preset.get(transition).size() != 1 || postset.get(transition).size() != 1) {
+				continue;
+			}
+			Place place = (Place) postset.get(transition).iterator().next();
+			if (preset.get(place).size() != 1 && postset.get(place).size() != 0) {
+				continue;
+			}
+			for (PetrinetNode node : postset.get(place)) {
+				apn.getNet().addArc((Place) preset.get(transition).iterator().next(), (Transition) node);
+			}
+			apn.getNet().removeTransition(transition);
+			apn.getNet().removePlace(place);
+		}
 	}
 }

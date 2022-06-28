@@ -12,6 +12,7 @@ public class ActivitySets {
 		Set<ActivitySet> sets = new HashSet<ActivitySet>();
 		apply(pairs, 0, new ActivitySet(), sets);
 		size = sets.size();
+		System.out.println("[ActivitySets] " + size + " solutions.");
 		this.sets = new ActivitySet[size];
 		size = 0;
 		for (ActivitySet set : sets) {
@@ -36,6 +37,7 @@ public class ActivitySets {
 			ActivitySet set = new ActivitySet();
 			set.addAll(candidateSet);
 			sets.add(set);
+			System.out.println("[ActivitySets] " + sets.size() + " solutions found so far.");
 			return;
 		}
 		ActivityPair pair = pairs.get(idx);
