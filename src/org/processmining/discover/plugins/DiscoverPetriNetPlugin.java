@@ -15,7 +15,7 @@ import org.processmining.framework.plugin.annotations.PluginVariant;
 public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 
 	@Plugin( //
-			name = "DiSCover Petri net (default parameter values)", //
+			name = "DiSCover Petri net (last)", //
 			parameterLabels = { "Event log" }, //
 			returnLabels = { "DiSCovered Accepting Petri net" }, //
 			returnTypes = { AcceptingPetriNet.class }, //
@@ -29,17 +29,18 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 			email = "h.m.w.verbeek@tue.nl" //
 	) //
 	@PluginVariant( //
-			variantLabel = "DiSCover Petri net (default parameter values)", //
+			variantLabel = "DiSCover Petri net (last)", //
 			requiredParameterLabels = { 0 } //
 	) //
-	public AcceptingPetriNet runNoMerge(PluginContext context, XLog log) {
+	public AcceptingPetriNet runLast(PluginContext context, XLog log) {
+		// Get last parameter settings.
 		DiscoverPetriNetParameters parameters = new DiscoverPetriNetParameters();
-		
+		// Discover accepting Petri net.
 		return apply(context, log, parameters);
 	}
 
 	@Plugin( //
-			name = "DiSCover Petri net (provided parameter values)", //
+			name = "DiSCover Petri net (provided)", //
 			parameterLabels = { "Event log", "Parameter values" }, //
 			returnLabels = { "DiSCovered Accepting Petri net" }, //
 			returnTypes = { AcceptingPetriNet.class }, //
@@ -53,15 +54,16 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 			email = "h.m.w.verbeek@tue.nl" //
 	) //
 	@PluginVariant( //
-			variantLabel = "DiSCover Petri net (provided parameter values)", //
+			variantLabel = "DiSCover Petri net (provided)", //
 			requiredParameterLabels = { 0, 1 } //
 	) //
-	public AcceptingPetriNet runNoMerge(PluginContext context, XLog log, DiscoverPetriNetParameters parameters) {
+	public AcceptingPetriNet runProvided(PluginContext context, XLog log, DiscoverPetriNetParameters parameters) {
+		// Discover accepting Petri net.
 		return apply(context, log, parameters);
 	}
 
 	@Plugin( //
-			name = "DiSCover Petri net (User-selected parameter values)", //
+			name = "DiSCover Petri net (user)", //
 			parameterLabels = { "Event log" }, //
 			returnLabels = { "DiSCovered Accepting Petri net" }, //
 			returnTypes = { AcceptingPetriNet.class }, //
@@ -75,13 +77,14 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 			email = "h.m.w.verbeek@tue.nl" //
 	) //
 	@PluginVariant( //
-			variantLabel = "DiSCover Petri net (User-selected parameter values)", //
+			variantLabel = "DiSCover Petri net (user)", //
 			requiredParameterLabels = { 0 } //
 	) //
-	public AcceptingPetriNet runMerge(UIPluginContext context, XLog log) {
+	public AcceptingPetriNet runUser(UIPluginContext context, XLog log) {
+		// Get last parameter settings.
 		DiscoverPetriNetParameters parameters = new DiscoverPetriNetParameters();
-		parameters.setMerge(true);
 		
+		// Create widget to allow the user to change the settings, and show it.
 		DiscoverPetriNetWidget widget = new DiscoverPetriNetWidget(parameters);
 		InteractionResult result = context.showWizard("Configure DiSCovery", true, true, widget);
 		if (result != InteractionResult.FINISHED) {
@@ -89,6 +92,7 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 			return null;
 		}
 		
+		// Discover accepting Petri net.
 		return apply(context, log, parameters);
 	}
 

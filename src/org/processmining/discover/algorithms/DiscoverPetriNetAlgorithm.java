@@ -34,29 +34,78 @@ import org.processmining.models.semantics.petrinet.Marking;
 public class DiscoverPetriNetAlgorithm {
 
 	public AcceptingPetriNet apply(PluginContext context, XLog eventLog, DiscoverPetriNetParameters parameters) {
+		/*
+		 * Get the first classifier. If the event log has no classifier, use the
+		 * default classifier.
+		 */
 		XEventClassifier classifier = new XEventAndClassifier(new XEventNameClassifier(),
 				new XEventLifeTransClassifier());
 		if (!eventLog.getClassifiers().isEmpty()) {
 			classifier = eventLog.getClassifiers().get(0);
 		}
+
+		/*
+		 * Create the alphabet (set of activities) for the event log.
+		 */
 		ActivityAlphabet alphabet = new ActivityAlphabet(eventLog, classifier);
+
+		/*
+		 * Convert the event log to an activity log using the alphabet.
+		 */
 		ActivityLog log = new ActivityLog(eventLog, classifier, alphabet);
+
+		/*
+		 * Discover a directly-follows matrix from the activity log.
+		 */
 		ActivityMatrix matrix = new ActivityMatrix(log, alphabet);
 
+		/*
+		 * Filter the directly-follows matrix.
+		 */
 		matrix.filterAbsolute(parameters.getAbsoluteThreshold());
 		matrix.filterRelative(parameters.getRelativeThreshold());
 
+		/*
+		 * Discover pairs of concurrent activities.
+		 */
 		ConcurrentActivityPairs pairs = new ConcurrentActivityPairs(matrix, alphabet);
+
+		/*
+		 * Create sets of activities from these pairs. Every set covers at least
+		 * one activity for every pair. These sets will be minimal in the sense
+		 * that removing an activity from it will result in some pairs being
+		 * uncovered.
+		 * 
+		 * This may take some time.
+		 */
 		ActivitySets separated = new ActivitySets(pairs);
+
+		/*
+		 * For every activity set, filter these activities out of the activity
+		 * log and discover a directly-follows matrix for it.
+		 */
 		ActivityMatrixCollection matrices = new ActivityMatrixCollection(log, alphabet, separated);
 
+		/*
+		 * Filter all created matrices.
+		 */
 		for (int idx = 0; idx < matrices.size(); idx++) {
 			matrices.get(idx).filterAbsolute(parameters.getAbsoluteThreshold());
 			matrices.get(idx).filterRelative(parameters.getRelativeThreshold());
 		}
 
+		/*
+		 * Discover an accepting Petri net from the matrices. Every matrix
+		 * corresponds to a state machine WF-net. These WF-nets are merged on
+		 * the visible transitions, that is, on the transitions that represent
+		 * activities.
+		 */
 		AcceptingPetriNet apn = createNet(matrices, alphabet, parameters);
 
+		/*
+		 * If selected by the user, reduce the accepting Petri net as much as possible.
+		 * This may take considerable time.
+		 */
 		if (parameters.isReduce()) {
 			System.out.println("[DiscoverPetriNetAlgorithm] Reducing the net, please be patient...");
 			ReduceUsingMurataRulesAlgorithm redAlgorithm = new ReduceUsingMurataRulesAlgorithm();
@@ -67,10 +116,14 @@ public class DiscoverPetriNetAlgorithm {
 			System.out.println("[DiscoverPetriNetAlgorithm] Reduced the net.");
 		}
 
+		/*
+		 * Return the discovered accepting Petri net.
+		 */
 		return apn;
 	}
-	
-	private AcceptingPetriNet createNet(ActivityMatrixCollection matrices, ActivityAlphabet alphabet, DiscoverPetriNetParameters parameters) {
+
+	private AcceptingPetriNet createNet(ActivityMatrixCollection matrices, ActivityAlphabet alphabet,
+			DiscoverPetriNetParameters parameters) {
 		Petrinet net = PetrinetFactory.newPetrinet("Petri net DiSCovered");
 
 		// Add shared start and end
@@ -150,7 +203,7 @@ public class DiscoverPetriNetAlgorithm {
 
 		return AcceptingPetriNetFactory.createAcceptingPetriNet(net, initialMarking, finalMarkings);
 	}
-	
+
 	private void reduceNet(AcceptingPetriNet apn) {
 		Map<PetrinetNode, Set<PetrinetNode>> preset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
 		Map<PetrinetNode, Set<PetrinetNode>> postset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
@@ -166,7 +219,8 @@ public class DiscoverPetriNetAlgorithm {
 		}
 		Set<Transition> transitions = new HashSet<Transition>(apn.getNet().getTransitions());
 		for (Transition transition : transitions) {
-			if (!transition.isInvisible() || preset.get(transition).size() != 1 || postset.get(transition).size() != 1) {
+			if (!transition.isInvisible() || preset.get(transition).size() != 1
+					|| postset.get(transition).size() != 1) {
 				continue;
 			}
 			Place place = (Place) postset.get(transition).iterator().next();

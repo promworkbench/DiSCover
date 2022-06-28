@@ -5,9 +5,25 @@ import java.util.Set;
 
 public class ActivitySets {
 
+	/**
+	 * Array containing all minimal ignore sets.
+	 */
 	private ActivitySet sets[];
+
+	/**
+	 * Number of minimal ignore sets.
+	 */
 	private int size;
-	
+
+	/**
+	 * Discovers the minimal ignore sets from a set of concurrent pairs. An
+	 * ignore set should contain at least one activity from every pair. An
+	 * ignore set is minimal if removing any activity results in some pair not
+	 * being covered anymore.
+	 * 
+	 * @param pairs
+	 *            Set or concurrent pairs
+	 */
 	public ActivitySets(ConcurrentActivityPairs pairs) {
 		Set<ActivitySet> sets = new HashSet<ActivitySet>();
 		apply(pairs, 0, new ActivitySet(), sets);
@@ -19,44 +35,64 @@ public class ActivitySets {
 			this.sets[size++] = set;
 		}
 	}
-	
-	private void apply(ConcurrentActivityPairs pairs, int idx, ActivitySet candidateSet, Set<ActivitySet> sets) {
+
+	private void apply(ConcurrentActivityPairs pairs, int idx, ActivitySet candidateSet, Set<ActivitySet> ignoreSets) {
 		if (idx == pairs.size()) {
-			for (ActivitySet set : sets) {
+			// All pairs are now covered.
+			for (ActivitySet set : ignoreSets) {
 				if (candidateSet.containsAll(set)) {
+					// A smaller set is already present. Skip this canddiate.
 					return;
 				}
 			}
-			Set<ActivitySet> coveredSets = new HashSet<ActivitySet>();
-			for (ActivitySet set : sets) {
+			// Check whether there are any larger sets.
+			Set<ActivitySet> largerSets = new HashSet<ActivitySet>();
+			for (ActivitySet set : ignoreSets) {
 				if (set.containsAll(candidateSet)) {
-					coveredSets.add(set);
+					largerSets.add(set);
 				}
 			}
-			sets.removeAll(coveredSets);	
+			// Remove all the larger sets.
+			ignoreSets.removeAll(largerSets);
+			// Now add the candidate as a new set.
 			ActivitySet set = new ActivitySet();
 			set.addAll(candidateSet);
-			sets.add(set);
-			System.out.println("[ActivitySets] " + sets.size() + " solutions found so far.");
+			ignoreSets.add(set);
+			System.out.println("[ActivitySets] " + ignoreSets.size() + " solutions found so far.");
 			return;
 		}
+		// Cover the next pair.
 		ActivityPair pair = pairs.get(idx);
 		if (candidateSet.contains(pair.getFirst()) || candidateSet.contains(pair.getSecond())) {
-			apply(pairs, idx + 1, candidateSet, sets);
+			// Pair is already covered. Continue.
+			apply(pairs, idx + 1, candidateSet, ignoreSets);
 			return;
 		}
+		// First, try the first activity.
 		candidateSet.add(pair.getFirst());
-		apply(pairs, idx + 1, candidateSet, sets);
+		apply(pairs, idx + 1, candidateSet, ignoreSets);
 		candidateSet.remove(pair.getFirst());
+		// Second try, the second activity.
 		candidateSet.add(pair.getSecond());
-		apply(pairs, idx + 1, candidateSet, sets);
+		apply(pairs, idx + 1, candidateSet, ignoreSets);
 		candidateSet.remove(pair.getSecond());
 	}
-	
+
+	/**
+	 * Returns the number of minimal ignore sets.
+	 * 
+	 * @return The number of minimal ignore sets
+	 */
 	public int size() {
 		return size;
 	}
-	
+
+	/**
+	 * Returns the ignore set at the given index.
+	 * 
+	 * @param idx The given index
+	 * @return The ignore set at the given index
+	 */
 	public ActivitySet get(int idx) {
 		return sets[idx];
 	}
