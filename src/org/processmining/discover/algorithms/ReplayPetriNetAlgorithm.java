@@ -64,15 +64,12 @@ public class ReplayPetriNetAlgorithm {
 		postset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
 		activities = new HashMap<String, Transition>();
 
+		for (PetrinetNode node : apn.getNet().getNodes()) {
+			preset.put(node, new HashSet<PetrinetNode>());
+			postset.put(node, new HashSet<PetrinetNode>());
+		}
 		for (PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode> edge : apn.getNet().getEdges()) {
-
-			if (!postset.containsKey(edge.getSource())) {
-				postset.put(edge.getSource(), new HashSet<PetrinetNode>());
-			}
 			postset.get(edge.getSource()).add(edge.getTarget());
-			if (!preset.containsKey(edge.getTarget())) {
-				preset.put(edge.getTarget(), new HashSet<PetrinetNode>());
-			}
 			preset.get(edge.getTarget()).add(edge.getSource());
 		}
 
