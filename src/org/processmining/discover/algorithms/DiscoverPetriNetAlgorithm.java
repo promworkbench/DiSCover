@@ -207,15 +207,13 @@ public class DiscoverPetriNetAlgorithm {
 	private void reduceNet(AcceptingPetriNet apn) {
 		Map<PetrinetNode, Set<PetrinetNode>> preset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
 		Map<PetrinetNode, Set<PetrinetNode>> postset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
+		for (PetrinetNode node : apn.getNet().getNodes()) {
+			preset.put(node, new HashSet<PetrinetNode>());
+			postset.put(node, new HashSet<PetrinetNode>());
+		}
 		for (PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode> edge : apn.getNet().getEdges()) {
-			if (!preset.containsKey(edge.getTarget())) {
-				preset.put(edge.getTarget(), new HashSet<PetrinetNode>());
-			}
-			preset.get(edge.getTarget()).add(edge.getSource());
-			if (!postset.containsKey(edge.getSource())) {
-				postset.put(edge.getSource(), new HashSet<PetrinetNode>());
-			}
 			postset.get(edge.getSource()).add(edge.getTarget());
+			preset.get(edge.getTarget()).add(edge.getSource());
 		}
 		Set<Transition> transitions = new HashSet<Transition>(apn.getNet().getTransitions());
 		for (Transition transition : transitions) {
