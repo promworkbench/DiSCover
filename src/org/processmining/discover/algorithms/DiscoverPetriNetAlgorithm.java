@@ -225,6 +225,18 @@ public class DiscoverPetriNetAlgorithm {
 			if (preset.get(place).size() != 1 && postset.get(place).size() != 0) {
 				continue;
 			}
+			if (apn.getInitialMarking().contains(place)) {
+				continue;
+			}
+			boolean isFinal = false;
+			for (Marking finalMarking : apn.getFinalMarkings()) {
+				if (finalMarking.contains(place)) {
+					isFinal = true;
+				}
+			}
+			if (isFinal) {
+				continue;
+			}
 			for (PetrinetNode node : postset.get(place)) {
 				apn.getNet().addArc((Place) preset.get(transition).iterator().next(), (Transition) node);
 			}
