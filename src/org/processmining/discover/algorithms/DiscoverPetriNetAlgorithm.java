@@ -103,15 +103,20 @@ public class DiscoverPetriNetAlgorithm {
 		AcceptingPetriNet apn = createNet(matrices, alphabet, parameters);
 
 		/*
-		 * If selected by the user, reduce the accepting Petri net as much as possible.
-		 * This may take considerable time.
+		 * If selected by the user, reduce the accepting Petri net as much as
+		 * possible. This may take considerable time.
 		 */
 		if (parameters.isReduce()) {
 			System.out.println("[DiscoverPetriNetAlgorithm] Reducing the net, please be patient...");
 			ReduceUsingMurataRulesAlgorithm redAlgorithm = new ReduceUsingMurataRulesAlgorithm();
 			ReduceUsingMurataRulesParameters redParameters = new ReduceUsingMurataRulesParameters();
+			System.out.println("[DiscoverPetriNetAlgorithm] Reducing duplicates");
+			reduceDuplicates(apn);
+			System.out.println("[DiscoverPetriNetAlgorithm] Reducing using rules...");
 			apn = redAlgorithm.apply(context, apn, redParameters);
+			System.out.println("[DiscoverPetriNetAlgorithm] Reducing invisibles");
 			reduceNet(apn);
+			System.out.println("[DiscoverPetriNetAlgorithm] Reducing using rules...");
 			apn = redAlgorithm.apply(context, apn, redParameters);
 			System.out.println("[DiscoverPetriNetAlgorithm] Reduced the net.");
 		}
@@ -202,6 +207,70 @@ public class DiscoverPetriNetAlgorithm {
 		}
 
 		return AcceptingPetriNetFactory.createAcceptingPetriNet(net, initialMarking, finalMarkings);
+	}
+
+	private void reduceDuplicates(AcceptingPetriNet apn) {
+		Map<PetrinetNode, Set<PetrinetNode>> preset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
+		Map<PetrinetNode, Set<PetrinetNode>> postset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
+		for (PetrinetNode node : apn.getNet().getNodes()) {
+			preset.put(node, new HashSet<PetrinetNode>());
+			postset.put(node, new HashSet<PetrinetNode>());
+		}
+		for (PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode> edge : apn.getNet().getEdges()) {
+			postset.get(edge.getSource()).add(edge.getTarget());
+			preset.get(edge.getTarget()).add(edge.getSource());
+		}
+		Set<Transition> transitions = new HashSet<Transition>(apn.getNet().getTransitions());
+		Set<Transition> transitionsRemoved = new HashSet<Transition>();
+		for (Transition transition : transitions) {
+			if (!transition.isInvisible()) {
+				continue;
+			}
+			if(transitionsRemoved.contains(transition)) {
+				continue;
+			}
+			for (PetrinetNode node : postset.get(preset.get(transition).iterator().next())) {
+				Transition otherTransition = (Transition) node;
+				if (transition == otherTransition) {
+					continue;
+				}
+				if (!otherTransition.isInvisible()) {
+					continue;
+				}
+				if (!preset.get(transition).equals(preset.get(otherTransition))) {
+					continue;
+				}
+				if (!postset.get(transition).equals(postset.get(otherTransition))) {
+					continue;
+				}
+				apn.getNet().removeTransition(otherTransition);
+				transitionsRemoved.add(otherTransition);
+			}
+		}
+		Set<Place> places = new HashSet<Place>(apn.getNet().getPlaces());
+		Set<Place> placesRemoved = new HashSet<Place>();
+		for (Place place : places) {
+			if (placesRemoved.contains(place)) {
+				continue;
+			}
+			if (preset.get(place).isEmpty()) {
+				continue;
+			}
+			for (PetrinetNode node : postset.get(preset.get(place).iterator().next())) {
+				Place otherPlace = (Place) node;
+				if (place == otherPlace) {
+					continue;
+				}
+				if (!preset.get(place).equals(preset.get(otherPlace))) {
+					continue;
+				}
+				if (!postset.get(place).equals(postset.get(otherPlace))) {
+					continue;
+				}
+				apn.getNet().removePlace(otherPlace);
+				placesRemoved.add(otherPlace);
+			}
+		}
 	}
 
 	private void reduceNet(AcceptingPetriNet apn) {
