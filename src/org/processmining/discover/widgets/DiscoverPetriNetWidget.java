@@ -31,7 +31,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 	 * @param parameters The given parameter settings
 	 */
 	public DiscoverPetriNetWidget(final DiscoverPetriNetParameters parameters) {
-		double size[][] = { { TableLayoutConstants.FILL }, { 30, 30, 30, 30, TableLayoutConstants.FILL } };
+		double size[][] = { { TableLayoutConstants.FILL }, { 30, 30, 30, 30, 30, TableLayoutConstants.FILL } };
 		setLayout(new TableLayout(size));
 
 		// Slider for the absolute threshold. Ranges from 0 to 20.
@@ -85,6 +85,19 @@ public class DiscoverPetriNetWidget extends JPanel {
 		});
 		reduceBox.setOpaque(false);
 		add(reduceBox, "0, 3");
+		
+		// Check box for majority
+		final JCheckBox majorityBox = SlickerFactory.instance().createCheckBox("Use majority vote",
+				parameters.isMajority());
+		majorityBox.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				parameters.setMajority(majorityBox.isSelected());
+			}
+
+		});
+		majorityBox.setOpaque(false);
+		add(majorityBox, "0, 4");
 		
 		revalidate();
 		repaint();

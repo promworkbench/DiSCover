@@ -90,6 +90,10 @@ public class ActivityMatrix {
 		return edgeCounts[fromIdx][toIdx];
 	}
 
+	public void set(int fromIdx, int toIdx) {
+		edgeCounts[fromIdx][toIdx] = Math.abs(edgeCounts[fromIdx][toIdx]);
+	}
+
 	/**
 	 * Returns how often the index occurred in the activity log.
 	 * 

@@ -93,6 +93,13 @@ public class DiscoverPetriNetAlgorithm {
 			matrices.get(idx).filterAbsolute(parameters.getAbsoluteThreshold());
 			matrices.get(idx).filterRelative(parameters.getRelativeThreshold());
 		}
+		
+		/*
+		 * If selected, use majority vote for whether to consider some edge as noise.
+		 */
+		if (parameters.isMajority()) {
+			matrices.agree(alphabet);
+		}
 
 		/*
 		 * Discover an accepting Petri net from the matrices. Every matrix

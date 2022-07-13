@@ -13,6 +13,11 @@ public class DiscoverPetriNetParameters {
 	private boolean reduce;
 	
 	/**
+	 * Whether to use majority vote for noise. 
+	 */
+	private boolean majority;
+	
+	/**
 	 * The absolute threshold to use.
 	 */
 	private int relativeThreshold;
@@ -27,6 +32,7 @@ public class DiscoverPetriNetParameters {
 	 */
 	private static boolean lastMerge = true;
 	private static boolean lastReduce = true;
+	private static boolean lastMajority = false;
 	private static int lastAbsoluteThreshold = 0;
 	private static int lastRelativeThreshold = 0;
 	/**
@@ -35,6 +41,7 @@ public class DiscoverPetriNetParameters {
 	public DiscoverPetriNetParameters() {
 		setMerge(lastMerge);
 		setReduce(lastReduce);
+		setMajority(lastMajority);
 		setRelativeThreshold(lastRelativeThreshold);
 		setAbsoluteThreshold(lastAbsoluteThreshold);
 	}
@@ -77,5 +84,14 @@ public class DiscoverPetriNetParameters {
 	public void setReduce(boolean reduce) {
 		this.lastReduce = reduce;
 		this.reduce = reduce;
+	}
+
+	public boolean isMajority() {
+		return majority;
+	}
+
+	public void setMajority(boolean majority) {
+		this.lastMajority = majority;
+		this.majority = majority;
 	}
 }
