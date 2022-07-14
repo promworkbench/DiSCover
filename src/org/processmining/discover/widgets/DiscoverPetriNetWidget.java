@@ -87,12 +87,12 @@ public class DiscoverPetriNetWidget extends JPanel {
 		add(reduceBox, "0, 3");
 		
 		// Check box for majority
-		final JCheckBox majorityBox = SlickerFactory.instance().createCheckBox("Use majority vote",
-				parameters.isMajority());
+		final JCheckBox majorityBox = SlickerFactory.instance().createCheckBox("Use veto for noise",
+				parameters.isVetoNoise());
 		majorityBox.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
-				parameters.setMajority(majorityBox.isSelected());
+				parameters.setVetoNoise(majorityBox.isSelected());
 			}
 
 		});

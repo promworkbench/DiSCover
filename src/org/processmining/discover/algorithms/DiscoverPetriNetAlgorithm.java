@@ -97,7 +97,7 @@ public class DiscoverPetriNetAlgorithm {
 		/*
 		 * If selected, use majority vote for whether to consider some edge as noise.
 		 */
-		if (parameters.isMajority()) {
+		if (parameters.isVetoNoise()) {
 			matrices.agree(alphabet);
 		}
 

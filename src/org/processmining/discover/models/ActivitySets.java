@@ -26,7 +26,11 @@ public class ActivitySets {
 	 */
 	public ActivitySets(ConcurrentActivityPairs pairs) {
 		Set<ActivitySet> sets = new HashSet<ActivitySet>();
-		apply(pairs, 0, new ActivitySet(), sets);
+		Set[] seen = new Set[pairs.size()];
+		for (int idx = 0; idx < pairs.size(); idx++) {
+			seen[idx] = new HashSet();
+		}
+		apply(pairs, 0, new ActivitySet(), sets, seen);
 		size = sets.size();
 		System.out.println("[ActivitySets] " + size + " solutions.");
 		this.sets = new ActivitySet[size];
@@ -36,7 +40,7 @@ public class ActivitySets {
 		}
 	}
 
-	private void apply(ConcurrentActivityPairs pairs, int idx, ActivitySet candidateSet, Set<ActivitySet> ignoreSets) {
+	private void apply(ConcurrentActivityPairs pairs, int idx, ActivitySet candidateSet, Set<ActivitySet> ignoreSets, Set<ActivitySet> seen[]) {
 		if (idx == pairs.size()) {
 			// All pairs are now covered.
 			for (ActivitySet set : ignoreSets) {
@@ -61,20 +65,27 @@ public class ActivitySets {
 			System.out.println("[ActivitySets] " + ignoreSets.size() + " solutions found so far.");
 			return;
 		}
+		if (seen[idx].contains(candidateSet)) {
+			System.out.println("[ActivitySets] Already seen set " + candidateSet + " at index " + idx);
+			return;
+		}
+		ActivitySet candidateSetCopy = new ActivitySet();
+		candidateSetCopy.addAll(candidateSet);
+		seen[idx].add(candidateSetCopy);
 		// Cover the next pair.
 		ActivityPair pair = pairs.get(idx);
 		if (candidateSet.contains(pair.getFirst()) || candidateSet.contains(pair.getSecond())) {
 			// Pair is already covered. Continue.
-			apply(pairs, idx + 1, candidateSet, ignoreSets);
+			apply(pairs, idx + 1, candidateSet, ignoreSets, seen);
 			return;
 		}
 		// First, try the first activity.
 		candidateSet.add(pair.getFirst());
-		apply(pairs, idx + 1, candidateSet, ignoreSets);
+		apply(pairs, idx + 1, candidateSet, ignoreSets, seen);
 		candidateSet.remove(pair.getFirst());
 		// Second try, the second activity.
 		candidateSet.add(pair.getSecond());
-		apply(pairs, idx + 1, candidateSet, ignoreSets);
+		apply(pairs, idx + 1, candidateSet, ignoreSets, seen);
 		candidateSet.remove(pair.getSecond());
 	}
 
