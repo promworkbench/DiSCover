@@ -225,7 +225,10 @@ public class DiscoverPetriNetAlgorithm {
 				if (subMatrix.get(nodeIdx) == 0) {
 					continue;
 				}
-				for (int nextIdx : nextActivities.get(nodeIdx)) {
+				for (int nextIdx = 0; nextIdx < nextActivities.get(nodeIdx).length(); nextIdx++) {
+					if (!nextActivities.get(nodeIdx).get(nextIdx)) {
+						continue;
+					}
 					if (subMatrix.get(nextIdx) == 0) {
 						continue;
 					}
