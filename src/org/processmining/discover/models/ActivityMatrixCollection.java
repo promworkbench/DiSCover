@@ -87,14 +87,12 @@ public class ActivityMatrixCollection {
 	}
 
 	/**
-	 * Have all matrices agree on whether a transition from a first activity to
-	 * a second activity is noise or not. If one matrix says it is not noise,
-	 * then all matrices agree it is not noise.
+	 * Have all matrices veto any noise. If any matrix says it is not noise, the matrices will follow this.
 	 * 
 	 * @param alphabet
 	 *            The alphabet of activities.
 	 */
-	public void agree(ActivityAlphabet alphabet) {
+	public void vetoNoise(ActivityAlphabet alphabet) {
 		for (int fromIdx = 0; fromIdx < alphabet.size(); fromIdx++) {
 			for (int toIdx = 0; toIdx < alphabet.size(); toIdx++) {
 				int notNoise = 0;

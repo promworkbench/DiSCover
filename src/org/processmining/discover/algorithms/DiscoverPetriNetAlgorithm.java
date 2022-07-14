@@ -44,31 +44,43 @@ public class DiscoverPetriNetAlgorithm {
 			classifier = eventLog.getClassifiers().get(0);
 		}
 
+		long time = System.currentTimeMillis();
+		long time2 = time;
 		/*
 		 * Create the alphabet (set of activities) for the event log.
 		 */
 		ActivityAlphabet alphabet = new ActivityAlphabet(eventLog, classifier);
-
+		System.out.println("[DiscoverPetriNetAlgorithm] Creating alphabet took " + (System.currentTimeMillis() - time) + " milliseconds.");
+		time = System.currentTimeMillis();
+		
 		/*
 		 * Convert the event log to an activity log using the alphabet.
 		 */
 		ActivityLog log = new ActivityLog(eventLog, classifier, alphabet);
+		System.out.println("[DiscoverPetriNetAlgorithm] Creating activity log took " + (System.currentTimeMillis() - time) + " milliseconds.");
+		time = System.currentTimeMillis();
 
 		/*
 		 * Discover a directly-follows matrix from the activity log.
 		 */
 		ActivityMatrix matrix = new ActivityMatrix(log, alphabet);
+		System.out.println("[DiscoverPetriNetAlgorithm] Creating primary matrix took " + (System.currentTimeMillis() - time) + " milliseconds.");
+		time = System.currentTimeMillis();
 
 		/*
 		 * Filter the directly-follows matrix.
 		 */
 		matrix.filterAbsolute(parameters.getAbsoluteThreshold());
 		matrix.filterRelative(parameters.getRelativeThreshold());
+		System.out.println("[DiscoverPetriNetAlgorithm] Filtering primary matrix took " + (System.currentTimeMillis() - time) + " milliseconds.");
+		time = System.currentTimeMillis();
 
 		/*
 		 * Discover pairs of concurrent activities.
 		 */
 		ConcurrentActivityPairs pairs = new ConcurrentActivityPairs(matrix, alphabet);
+		System.out.println("[DiscoverPetriNetAlgorithm] Creating concurrent pairs took " + (System.currentTimeMillis() - time) + " milliseconds.");
+		time = System.currentTimeMillis();
 
 		/*
 		 * Create sets of activities from these pairs. Every set covers at least
@@ -79,12 +91,16 @@ public class DiscoverPetriNetAlgorithm {
 		 * This may take some time.
 		 */
 		ActivitySets separated = new ActivitySets(pairs);
+		System.out.println("[DiscoverPetriNetAlgorithm] Creating non-concurrent sets took " + (System.currentTimeMillis() - time) + " milliseconds.");
+		time = System.currentTimeMillis();
 
 		/*
 		 * For every activity set, filter these activities out of the activity
 		 * log and discover a directly-follows matrix for it.
 		 */
 		ActivityMatrixCollection matrices = new ActivityMatrixCollection(log, alphabet, separated);
+		System.out.println("[DiscoverPetriNetAlgorithm] Creating secondary matrices took " + (System.currentTimeMillis() - time) + " milliseconds.");
+		time = System.currentTimeMillis();
 
 		/*
 		 * Filter all created matrices.
@@ -93,12 +109,16 @@ public class DiscoverPetriNetAlgorithm {
 			matrices.get(idx).filterAbsolute(parameters.getAbsoluteThreshold());
 			matrices.get(idx).filterRelative(parameters.getRelativeThreshold());
 		}
+		System.out.println("[DiscoverPetriNetAlgorithm] Filtering secondary matrices took " + (System.currentTimeMillis() - time) + " milliseconds.");
+		time = System.currentTimeMillis();
 		
 		/*
 		 * If selected, use majority vote for whether to consider some edge as noise.
 		 */
 		if (parameters.isVetoNoise()) {
-			matrices.agree(alphabet);
+			matrices.vetoNoise(alphabet);
+			System.out.println("[DiscoverPetriNetAlgorithm] Vetoing noise took " + (System.currentTimeMillis() - time) + " milliseconds.");
+			time = System.currentTimeMillis();
 		}
 
 		/*
@@ -108,6 +128,8 @@ public class DiscoverPetriNetAlgorithm {
 		 * activities.
 		 */
 		AcceptingPetriNet apn = createNet(matrices, alphabet, parameters);
+		System.out.println("[DiscoverPetriNetAlgorithm] Creating accepting Petri net took " + (System.currentTimeMillis() - time) + " milliseconds.");
+		time = System.currentTimeMillis();
 
 		/*
 		 * If selected by the user, reduce the accepting Petri net as much as
@@ -126,11 +148,14 @@ public class DiscoverPetriNetAlgorithm {
 			System.out.println("[DiscoverPetriNetAlgorithm] Reducing using rules...");
 			apn = redAlgorithm.apply(context, apn, redParameters);
 			System.out.println("[DiscoverPetriNetAlgorithm] Reduced the net.");
+			System.out.println("[DiscoverPetriNetAlgorithm] Reducing accepting Petri net took " + (System.currentTimeMillis() - time) + " milliseconds.");
+			time = System.currentTimeMillis();
 		}
 
 		/*
 		 * Return the discovered accepting Petri net.
 		 */
+		System.out.println("[DiscoverPetriNetAlgorithm] Discovering accepting Petri net took " + (System.currentTimeMillis() - time2) + " milliseconds.");
 		return apn;
 	}
 
