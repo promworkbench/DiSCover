@@ -40,7 +40,7 @@ public class DiscoverPetriNetParameters {
 	private static boolean lastVetoNoise = false;
 	private static int lastAbsoluteThreshold = 0;
 	private static int lastRelativeThreshold = 0;
-	private static int LastNofSComponents = 0;
+	private static int LastNofSComponents = 20; // Seems more than enough.
 	/**
 	 * Creates default parameter settings.
 	 */
