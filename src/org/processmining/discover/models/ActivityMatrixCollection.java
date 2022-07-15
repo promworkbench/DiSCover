@@ -1,10 +1,17 @@
 package org.processmining.discover.models;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import javax.swing.JComponent;
 
+import org.processmining.lpengines.factories.LPEngineFactory;
+import org.processmining.lpengines.interfaces.LPEngine;
+import org.processmining.lpengines.interfaces.LPEngine.EngineType;
+import org.processmining.lpengines.interfaces.LPEngine.ObjectiveTargetType;
+import org.processmining.lpengines.interfaces.LPEngine.Operator;
 import org.processmining.plugins.graphviz.dot.Dot;
 import org.processmining.plugins.graphviz.dot.DotNode;
 import org.processmining.plugins.graphviz.visualisation.DotPanel;
@@ -116,14 +123,52 @@ public class ActivityMatrixCollection {
 		Set<ActivitySet> previousActivities = new HashSet<ActivitySet>();
 		Set<ActivityMatrix> selected = new HashSet<ActivityMatrix>();
 		for (ActivityMatrix matrix : matrices) {
-			if (nextActivities.addAll(matrix.getNextActivities().values())) {
-				selected.add(matrix);
+			nextActivities.addAll(matrix.getNextActivities().values());
+			previousActivities.addAll(matrix.getPreviousActivities().values());
+		}
+//		System.out.println("[ActivityMatrixCollection] Reduced from " + size + " to " + selected.size() + " matrices.");
+//		size = selected.size();
+//		matrices = new ActivityMatrix[size];
+//		int idx = 0;
+//		for (ActivityMatrix matrix : selected) {
+//			matrices[idx++] = matrix;
+//		}
+		
+		LPEngine engine = LPEngineFactory.createLPEngine(EngineType.LPSOLVE, 0, 0);
+		Map<Integer, Double> objective = new HashMap<Integer, Double>();
+		int variables[]= new int[matrices.length];
+		for (int i = 0; i < matrices.length; i++) {
+			variables[i] = engine.addVariable(new HashMap<Integer, Double>(), LPEngine.VariableType.INTEGER);
+			objective.put(variables[i], 1.0);
+		}
+		engine.setObjective(objective, ObjectiveTargetType.MIN);
+
+		for (ActivitySet set : nextActivities) {
+			Map<Integer, Double> constraint = new HashMap<Integer, Double>();
+			for (int i = 0; i < matrices.length; i++) {
+				constraint.put(variables[i], matrices[i].getNextActivities().containsValue(set) ? 1.0 : 0.0);
 			}
-			if (previousActivities.addAll(matrix.getPreviousActivities().values())) {
-				selected.add(matrix);
+			engine.addConstraint(constraint, Operator.GREATER_EQUAL, 1.0);
+		}
+
+		for (ActivitySet set : previousActivities) {
+			Map<Integer, Double> constraint = new HashMap<Integer, Double>();
+			for (int i = 0; i < matrices.length; i++) {
+				constraint.put(variables[i], matrices[i].getPreviousActivities().containsValue(set) ? 1.0 : 0.0);
+			}
+			engine.addConstraint(constraint, Operator.GREATER_EQUAL, 1.0);
+		}
+
+		Map<Integer, Double> solution = engine.solve();
+
+		for (int i = 0; i < matrices.length; i++) {
+			if (solution.containsKey(variables[i]) && solution.get(variables[i]) > 0.0) {
+				selected.add(matrices[i]);
 			}
 		}
+
 		System.out.println("[ActivityMatrixCollection] Reduced from " + size + " to " + selected.size() + " matrices.");
+
 		size = selected.size();
 		matrices = new ActivityMatrix[size];
 		int idx = 0;
