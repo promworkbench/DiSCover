@@ -44,8 +44,9 @@ public class ActivityMatrixCollection {
 	public ActivityMatrixCollection(ActivityLog log, ActivityAlphabet alphabet, ActivitySets ignoreSets) {
 		this(log, alphabet, ignoreSets, new DiscoverPetriNetParameters());
 	}
-	
-	public ActivityMatrixCollection(ActivityLog log, ActivityAlphabet alphabet, ActivitySets ignoreSets, DiscoverPetriNetParameters parameters) {
+
+	public ActivityMatrixCollection(ActivityLog log, ActivityAlphabet alphabet, ActivitySets ignoreSets,
+			DiscoverPetriNetParameters parameters) {
 		size = ignoreSets.size();
 		matrices = new ActivityMatrix[size];
 		for (int idx = 0; idx < size; idx++) {
@@ -99,7 +100,8 @@ public class ActivityMatrixCollection {
 	}
 
 	/**
-	 * Have all matrices veto any noise. If any matrix says it is not noise, the matrices will follow this.
+	 * Have all matrices veto any noise. If any matrix says it is not noise, the
+	 * matrices will follow this.
 	 * 
 	 * @param alphabet
 	 *            The alphabet of activities.
@@ -122,7 +124,7 @@ public class ActivityMatrixCollection {
 			}
 		}
 	}
-	
+
 	private void reduce(DiscoverPetriNetParameters parameters) {
 		Set<ActivitySet> nextActivities = new HashSet<ActivitySet>();
 		Set<ActivitySet> previousActivities = new HashSet<ActivitySet>();
@@ -131,17 +133,17 @@ public class ActivityMatrixCollection {
 			nextActivities.addAll(matrix.getNextActivities().values());
 			previousActivities.addAll(matrix.getPreviousActivities().values());
 		}
-//		System.out.println("[ActivityMatrixCollection] Reduced from " + size + " to " + selected.size() + " matrices.");
-//		size = selected.size();
-//		matrices = new ActivityMatrix[size];
-//		int idx = 0;
-//		for (ActivityMatrix matrix : selected) {
-//			matrices[idx++] = matrix;
-//		}
-		
+		//		System.out.println("[ActivityMatrixCollection] Reduced from " + size + " to " + selected.size() + " matrices.");
+		//		size = selected.size();
+		//		matrices = new ActivityMatrix[size];
+		//		int idx = 0;
+		//		for (ActivityMatrix matrix : selected) {
+		//			matrices[idx++] = matrix;
+		//		}
+
 		LPEngine engine = LPEngineFactory.createLPEngine(EngineType.LPSOLVE, 0, 0);
 		Map<Integer, Double> objective = new HashMap<Integer, Double>();
-		int variables[]= new int[matrices.length];
+		int variables[] = new int[matrices.length];
 		for (int i = 0; i < matrices.length; i++) {
 			variables[i] = engine.addVariable(new HashMap<Integer, Double>(), LPEngine.VariableType.INTEGER);
 			objective.put(variables[i], 1.0);
@@ -167,8 +169,19 @@ public class ActivityMatrixCollection {
 		Map<Integer, Double> solution = engine.solve();
 
 		int limit = parameters.getNofSComponents();
-		
-		for (int i = 0; i < matrices.length; i++) {
+		int step = 1;
+
+		if (limit > 0) {
+			int solutionSize = 0;
+			for (int i = 0; i < matrices.length; i++) {
+				if (solution.containsKey(variables[i]) && solution.get(variables[i]) > 0.0) {
+					solutionSize++;
+				}
+			}
+
+			step = Math.max(1, solutionSize / limit);
+		}
+		for (int i = 0; i < matrices.length; i += step) {
 			if (solution.containsKey(variables[i]) && solution.get(variables[i]) > 0.0) {
 				if (limit == 0 || selected.size() < limit) {
 					selected.add(matrices[i]);
