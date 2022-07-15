@@ -7,6 +7,7 @@ import java.util.Set;
 
 import javax.swing.JComponent;
 
+import org.processmining.discover.parameters.DiscoverPetriNetParameters;
 import org.processmining.lpengines.factories.LPEngineFactory;
 import org.processmining.lpengines.interfaces.LPEngine;
 import org.processmining.lpengines.interfaces.LPEngine.EngineType;
@@ -41,12 +42,16 @@ public class ActivityMatrixCollection {
 	 *            THe given activity sets to ignore
 	 */
 	public ActivityMatrixCollection(ActivityLog log, ActivityAlphabet alphabet, ActivitySets ignoreSets) {
+		this(log, alphabet, ignoreSets, new DiscoverPetriNetParameters());
+	}
+	
+	public ActivityMatrixCollection(ActivityLog log, ActivityAlphabet alphabet, ActivitySets ignoreSets, DiscoverPetriNetParameters parameters) {
 		size = ignoreSets.size();
 		matrices = new ActivityMatrix[size];
 		for (int idx = 0; idx < size; idx++) {
 			matrices[idx] = new ActivityMatrix(log, alphabet, ignoreSets.get(idx));
 		}
-		reduce();
+		reduce(parameters);
 	}
 
 	/**
@@ -118,7 +123,7 @@ public class ActivityMatrixCollection {
 		}
 	}
 	
-	private void reduce() {
+	private void reduce(DiscoverPetriNetParameters parameters) {
 		Set<ActivitySet> nextActivities = new HashSet<ActivitySet>();
 		Set<ActivitySet> previousActivities = new HashSet<ActivitySet>();
 		Set<ActivityMatrix> selected = new HashSet<ActivityMatrix>();
@@ -161,9 +166,13 @@ public class ActivityMatrixCollection {
 
 		Map<Integer, Double> solution = engine.solve();
 
+		int limit = parameters.getNofSComponents();
+		
 		for (int i = 0; i < matrices.length; i++) {
 			if (solution.containsKey(variables[i]) && solution.get(variables[i]) > 0.0) {
-				selected.add(matrices[i]);
+				if (limit == 0 || selected.size() < limit) {
+					selected.add(matrices[i]);
+				}
 			}
 		}
 

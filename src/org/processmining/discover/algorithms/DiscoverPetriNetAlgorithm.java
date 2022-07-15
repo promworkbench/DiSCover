@@ -98,7 +98,7 @@ public class DiscoverPetriNetAlgorithm {
 		 * For every activity set, filter these activities out of the activity
 		 * log and discover a directly-follows matrix for it.
 		 */
-		ActivityMatrixCollection matrices = new ActivityMatrixCollection(log, alphabet, separated);
+		ActivityMatrixCollection matrices = new ActivityMatrixCollection(log, alphabet, separated, parameters);
 		System.out.println("[DiscoverPetriNetAlgorithm] Creating secondary matrices took " + (System.currentTimeMillis() - time) + " milliseconds.");
 		time = System.currentTimeMillis();
 

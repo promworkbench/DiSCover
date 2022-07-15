@@ -31,7 +31,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 	 * @param parameters The given parameter settings
 	 */
 	public DiscoverPetriNetWidget(final DiscoverPetriNetParameters parameters) {
-		double size[][] = { { TableLayoutConstants.FILL }, { 30, 30, 30, 30, 30, TableLayoutConstants.FILL } };
+		double size[][] = { { TableLayoutConstants.FILL }, { 30, 30, 30, 30, 30, 30, TableLayoutConstants.FILL } };
 		setLayout(new TableLayout(size));
 
 		// Slider for the absolute threshold. Ranges from 0 to 20.
@@ -60,6 +60,19 @@ public class DiscoverPetriNetWidget extends JPanel {
 		relSlider.setPreferredSize(new Dimension(100, 30));
 		add(relSlider, "0, 1");
 
+		// Slider for the relative threshold. Ranges from 0 to 99 (percent).
+		final NiceSlider scomSlider = SlickerFactory.instance().createNiceIntegerSlider(
+				"Limit on number of components (0 if no limit)", 0, 99, parameters.getNofSComponents(), Orientation.HORIZONTAL);
+		scomSlider.addChangeListener(new ChangeListener() {
+
+			public void stateChanged(ChangeEvent e) {
+				int value = scomSlider.getSlider().getValue();
+				parameters.setNofSComponents(value);
+			}
+		});
+		scomSlider.setPreferredSize(new Dimension(100, 30));
+		add(scomSlider, "0, 2");
+
 		// Check box for merge
 		final JCheckBox mergeBox = SlickerFactory.instance().createCheckBox("Merge activities",
 				parameters.isMerge());
@@ -71,7 +84,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 
 		});
 		mergeBox.setOpaque(false);
-		add(mergeBox, "0, 2");
+		add(mergeBox, "0, 3");
 		
 		// Check box for reduce
 		final JCheckBox reduceBox = SlickerFactory.instance().createCheckBox("Reduce Petri net",
@@ -84,7 +97,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 
 		});
 		reduceBox.setOpaque(false);
-		add(reduceBox, "0, 3");
+		add(reduceBox, "0, 4");
 		
 		// Check box for majority
 		final JCheckBox majorityBox = SlickerFactory.instance().createCheckBox("Use veto for noise",
@@ -97,7 +110,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 
 		});
 		majorityBox.setOpaque(false);
-		add(majorityBox, "0, 4");
+		add(majorityBox, "0, 5");
 		
 		revalidate();
 		repaint();
