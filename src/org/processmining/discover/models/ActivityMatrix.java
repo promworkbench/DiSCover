@@ -273,6 +273,10 @@ public class ActivityMatrix {
 	 *            The given relative threshold
 	 */
 	public void filterRelative(int threshold) {
+		if (threshold == 0) {
+			return;
+		}
+		
 		// Arrays to hold the maximal values for any row (from) and any column (to).
 		int fromMax[] = new int[alphabet.size()];
 		int toMax[] = new int[alphabet.size()];
@@ -280,8 +284,8 @@ public class ActivityMatrix {
 		// Initialize these arrays.
 		for (int fromIdx = 0; fromIdx < alphabet.size(); fromIdx++) {
 			for (int toIdx = 0; toIdx < alphabet.size(); toIdx++) {
-				fromMax[fromIdx] = Math.max(fromMax[fromIdx], edgeCounts[fromIdx][toIdx]);
-				toMax[toIdx] = Math.max(toMax[toIdx], edgeCounts[fromIdx][toIdx]);
+				fromMax[fromIdx] = Math.max(fromMax[fromIdx], Math.abs(edgeCounts[fromIdx][toIdx]));
+				toMax[toIdx] = Math.max(toMax[toIdx], Math.abs(edgeCounts[fromIdx][toIdx]));
 			}
 		}
 
@@ -297,10 +301,14 @@ public class ActivityMatrix {
 				if (edgeCounts[fromIdx][toIdx] <= 0) {
 					continue;
 				}
-				if (edgeCounts[fromIdx][toIdx] == Math.min(fromMax[fromIdx], toMax[toIdx])) {
+				if (edgeCounts[fromIdx][toIdx] >= 0.95 * Math.min(fromMax[fromIdx], toMax[toIdx])) {
 					continue;
 				}
-				if (edgeCounts[fromIdx][toIdx] * 100 <= Math.max(fromMax[fromIdx], toMax[toIdx]) * threshold) {
+				if (((edgeCounts[fromIdx][toIdx] < fromMax[fromIdx] && 1000 * fromMax[fromIdx]
+								* edgeCounts[fromIdx][toIdx] < threshold * (fromMax[fromIdx] + edgeCounts[fromIdx][toIdx]) * (fromMax[fromIdx] + edgeCounts[fromIdx][toIdx]))
+						|| (edgeCounts[fromIdx][toIdx] < toMax[toIdx] && 1000 * toMax[toIdx]
+								* edgeCounts[fromIdx][toIdx] < threshold * (toMax[toIdx] + edgeCounts[fromIdx][toIdx]) * (toMax[toIdx] + edgeCounts[fromIdx][toIdx])))) {
+//				if (edgeCounts[fromIdx][toIdx] * 100 <= Math.max(fromMax[fromIdx], toMax[toIdx]) * threshold) {
 					// Does not exceed threshold percent, filter out.
 					edgeCounts[fromIdx][toIdx] = -Math.abs(edgeCounts[fromIdx][toIdx]);
 				}
