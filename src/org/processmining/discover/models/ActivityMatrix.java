@@ -297,7 +297,10 @@ public class ActivityMatrix {
 				if (edgeCounts[fromIdx][toIdx] <= 0) {
 					continue;
 				}
-				if (edgeCounts[fromIdx][toIdx] * 100 <= Math.min(fromMax[fromIdx], toMax[toIdx]) * threshold) {
+				if (edgeCounts[fromIdx][toIdx] == Math.min(fromMax[fromIdx], toMax[toIdx])) {
+					continue;
+				}
+				if (edgeCounts[fromIdx][toIdx] * 100 <= Math.max(fromMax[fromIdx], toMax[toIdx]) * threshold) {
 					// Does not exceed threshold percent, filter out.
 					edgeCounts[fromIdx][toIdx] = -Math.abs(edgeCounts[fromIdx][toIdx]);
 				}
