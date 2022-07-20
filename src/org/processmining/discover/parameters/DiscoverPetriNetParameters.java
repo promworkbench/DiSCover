@@ -44,8 +44,8 @@ public class DiscoverPetriNetParameters {
 	private static boolean lastMerge = true;
 	private static boolean lastReduce = true;
 	private static boolean lastVetoNoise = false;
-	private static int lastAbsoluteThreshold = 0;
-	private static int lastRelativeThreshold = 0;
+	private static int lastAbsoluteThreshold = 1; // These seem reasonable values.
+	private static int lastRelativeThreshold = 1;
 	private static int lastSafetyThreshold = 95;
 	private static int LastNofSComponents = 20; // Seems more than enough.
 	/**
