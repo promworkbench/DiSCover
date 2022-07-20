@@ -141,6 +141,9 @@ public class ActivityMatrixCollection {
 		//			matrices[idx++] = matrix;
 		//		}
 
+		/*
+		 * Create an ILP to get a minimal set of matrices that cover all next and previous sets.
+		 */
 		LPEngine engine = LPEngineFactory.createLPEngine(EngineType.LPSOLVE, 0, 0);
 		Map<Integer, Double> objective = new HashMap<Integer, Double>();
 		int variables[] = new int[matrices.length];
@@ -165,37 +168,39 @@ public class ActivityMatrixCollection {
 			}
 			engine.addConstraint(constraint, Operator.GREATER_EQUAL, 1.0);
 		}
-
+		// Solve the ILP
 		Map<Integer, Double> solution = engine.solve();
-
-		int limit = parameters.getNofSComponents();
-		int step = 1;
-
-		if (limit > 0) {
-			int solutionSize = 0;
-			for (int i = 0; i < matrices.length; i++) {
-				if (solution.containsKey(variables[i]) && solution.get(variables[i]) > 0.0) {
-					solutionSize++;
-				}
-			}
-
-			step = Math.max(1, solutionSize / limit);
-		}
-		for (int i = 0; i < matrices.length; i += step) {
+		// Select the matrices for the minimal set.
+		for (int i = 0; i < matrices.length; i++) {
 			if (solution.containsKey(variables[i]) && solution.get(variables[i]) > 0.0) {
-				if (limit == 0 || selected.size() < limit) {
-					selected.add(matrices[i]);
-				}
+				selected.add(matrices[i]);
 			}
 		}
-
-		System.out.println("[ActivityMatrixCollection] Reduced from " + size + " to " + selected.size() + " matrices.");
-
-		size = selected.size();
-		matrices = new ActivityMatrix[size];
+		// Set the matrices.
+		matrices = new ActivityMatrix[selected.size()];
 		int idx = 0;
 		for (ActivityMatrix matrix : selected) {
 			matrices[idx++] = matrix;
 		}
-	}
-}
+		System.out.println("[ActivityMatrixCollection] Reduced from " + size + " to " + selected.size() + " matrices.");
+		size = selected.size();
+
+		/*
+		 * Limit the number of matrices to the provided limit.
+		 */
+		selected.clear();
+		int limit = parameters.getNofSComponents();
+		if (limit > 0) {
+			for (int i = 0; i < limit; i++) {
+				selected.add(matrices[(i * size) / limit]);
+			}
+		}
+		// Set the matrices.
+		matrices = new ActivityMatrix[selected.size()];
+		idx = 0;
+		for (ActivityMatrix matrix : selected) {
+			matrices[idx++] = matrix;
+		}
+		System.out.println("[ActivityMatrixCollection] Limited to " + selected.size() + " matrices.");
+		size = selected.size();
+	}}
