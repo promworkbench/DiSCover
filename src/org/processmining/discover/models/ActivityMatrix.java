@@ -269,11 +269,11 @@ public class ActivityMatrix {
 	/**
 	 * Filters the matrix on the given relative threshold.
 	 * 
-	 * @param threshold
+	 * @param relativeThreshold
 	 *            The given relative threshold
 	 */
-	public void filterRelative(int threshold) {
-		if (threshold == 0) {
+	public void filterRelative(int relativeThreshold, int safetyThreshold) {
+		if (relativeThreshold == 0) {
 			return;
 		}
 		
@@ -301,14 +301,14 @@ public class ActivityMatrix {
 				if (edgeCounts[fromIdx][toIdx] <= 0) {
 					continue;
 				}
-				if (edgeCounts[fromIdx][toIdx] >= 0.95 * Math.min(fromMax[fromIdx], toMax[toIdx])) {
+				if (100 * edgeCounts[fromIdx][toIdx] >= safetyThreshold * Math.min(fromMax[fromIdx], toMax[toIdx])) {
 					continue;
 				}
 //				if (((edgeCounts[fromIdx][toIdx] < fromMax[fromIdx] && 1000 * fromMax[fromIdx]
 //								* edgeCounts[fromIdx][toIdx] < threshold * (fromMax[fromIdx] + edgeCounts[fromIdx][toIdx]) * (fromMax[fromIdx] + edgeCounts[fromIdx][toIdx]))
 //						|| (edgeCounts[fromIdx][toIdx] < toMax[toIdx] && 1000 * toMax[toIdx]
 //								* edgeCounts[fromIdx][toIdx] < threshold * (toMax[toIdx] + edgeCounts[fromIdx][toIdx]) * (toMax[toIdx] + edgeCounts[fromIdx][toIdx])))) {
-				if (edgeCounts[fromIdx][toIdx] * 100 <= Math.max(fromMax[fromIdx], toMax[toIdx]) * threshold) {
+				if (edgeCounts[fromIdx][toIdx] * 100 <= Math.max(fromMax[fromIdx], toMax[toIdx]) * relativeThreshold) {
 					// Does not exceed threshold percent, filter out.
 					edgeCounts[fromIdx][toIdx] = -Math.abs(edgeCounts[fromIdx][toIdx]);
 				}

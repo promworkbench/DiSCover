@@ -71,7 +71,7 @@ public class DiscoverPetriNetAlgorithm {
 		 * Filter the directly-follows matrix.
 		 */
 		matrix.filterAbsolute(parameters.getAbsoluteThreshold());
-		matrix.filterRelative(parameters.getRelativeThreshold());
+		matrix.filterRelative(parameters.getRelativeThreshold(), parameters.getSafetyThreshold());
 		System.out.println("[DiscoverPetriNetAlgorithm] Filtering primary matrix took " + (System.currentTimeMillis() - time) + " milliseconds.");
 		time = System.currentTimeMillis();
 
@@ -107,7 +107,7 @@ public class DiscoverPetriNetAlgorithm {
 		 */
 		for (int idx = 0; idx < matrices.size(); idx++) {
 			matrices.get(idx).filterAbsolute(parameters.getAbsoluteThreshold());
-			matrices.get(idx).filterRelative(parameters.getRelativeThreshold());
+			matrices.get(idx).filterRelative(parameters.getRelativeThreshold(), parameters.getSafetyThreshold());
 		}
 		System.out.println("[DiscoverPetriNetAlgorithm] Filtering secondary matrices took " + (System.currentTimeMillis() - time) + " milliseconds.");
 		time = System.currentTimeMillis();
@@ -182,6 +182,7 @@ public class DiscoverPetriNetAlgorithm {
 		finalMarkings.add(finalMarking);
 
 		Map<Integer, Transition> transitions = new HashMap<Integer, Transition>();
+//		Map<Pair<ActivitySet, ActivitySet>, Transition> silentTransitions = new HashMap<Pair<ActivitySet, ActivitySet>, Transition>();
 		// Add visible shared transitions.
 		if (parameters.isMerge()) {
 			for (int nodeIdx = 1; nodeIdx < alphabet.size(); nodeIdx++) {
@@ -198,6 +199,7 @@ public class DiscoverPetriNetAlgorithm {
 						transitions.put(nodeIdx, net.addTransition(alphabet.get(nodeIdx)));
 					}
 				}
+//				silentTransitions.clear();
 			}
 			// Add places
 			Map<ActivitySet, Place> nextPlaces = new HashMap<ActivitySet, Place>();
@@ -232,9 +234,14 @@ public class DiscoverPetriNetAlgorithm {
 					if (subMatrix.get(nextIdx) == 0) {
 						continue;
 					}
-					Transition transition = net
+//					Pair<ActivitySet, ActivitySet> pair = new Pair<ActivitySet, ActivitySet>(nextActivities.get(nodeIdx), previousActivities.get(nextIdx));
+//					Transition transition = silentTransitions.get(pair);
+//					if (transition == null) {
+						Transition transition = net
 							.addTransition("(" + alphabet.get(nodeIdx) + "," + alphabet.get(nextIdx) + ")");
-					transition.setInvisible(true);
+						transition.setInvisible(true);
+//						silentTransitions.put(pair, transition);
+//					}
 					net.addArc(nextPlaces.get(nextActivities.get(nodeIdx)), transition);
 					net.addArc(transition, previousPlaces.get(previousActivities.get(nextIdx)));
 				}

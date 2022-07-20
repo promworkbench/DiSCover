@@ -27,11 +27,17 @@ public class DiscoverPetriNetParameters {
 	 * The relative threshold to use.
 	 */
 	private int absoluteThreshold;
+
 	/*
 	 * The maximal number of S-components to take into account (use 0 for no limit).
 	 */
 	private int nofSComponents;
-	
+
+	/**
+	 * The safety threshold to use.
+	 */
+	private int safetyThreshold;
+
 	/**
 	 * Parameter settings selected last by the user.
 	 */
@@ -40,6 +46,7 @@ public class DiscoverPetriNetParameters {
 	private static boolean lastVetoNoise = false;
 	private static int lastAbsoluteThreshold = 0;
 	private static int lastRelativeThreshold = 0;
+	private static int lastSafetyThreshold = 95;
 	private static int LastNofSComponents = 20; // Seems more than enough.
 	/**
 	 * Creates default parameter settings.
@@ -50,6 +57,7 @@ public class DiscoverPetriNetParameters {
 		setVetoNoise(lastVetoNoise);
 		setRelativeThreshold(lastRelativeThreshold);
 		setAbsoluteThreshold(lastAbsoluteThreshold);
+		setSafetyThreshold(lastSafetyThreshold);
 		setNofSComponents(LastNofSComponents);
 	}
 	
@@ -109,5 +117,14 @@ public class DiscoverPetriNetParameters {
 	public void setNofSComponents(int nofSComponents) {
 		this.LastNofSComponents = nofSComponents;
 		this.nofSComponents = nofSComponents;
+	}
+
+	public int getSafetyThreshold() {
+		return safetyThreshold;
+	}
+
+	public void setSafetyThreshold(int safetyThreshold) {
+		this.lastSafetyThreshold = safetyThreshold;
+		this.safetyThreshold = safetyThreshold;
 	}
 }
