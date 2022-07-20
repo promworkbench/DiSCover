@@ -169,21 +169,16 @@ public class ReplayPetriNetAlgorithm {
 						// Transition is not invisible.
 						continue;
 					}
-//					if (preset.get(invisibleTransition).size() != 1 || postset.get(invisibleTransition).size() != 1) {
+					if (preset.get(invisibleTransition).size() != 1 || postset.get(invisibleTransition).size() != 1) {
 						// Transition is invisible, but has multiple inputs or multiple outputs. 
 						// Must be artificial start or end transition, which should not be taken into account here.
-//						continue;
-//					}
-					if (newMarking.containsAll(preset.get(invisibleTransition))) {
+						continue;
+					}
+					if (newMarking.contains(preset.get(invisibleTransition).iterator().next())) {
 						// Found an invisible transition of which the input place is marked.
-						// Fire this transition first.
+						// Remove this token (assume the invisible transition fires first).
 						ok = true;
-						newMarking.removeAll(preset.get(invisibleTransition));
-						for (PetrinetNode node : postset.get(invisibleTransition)) {
-							if (node instanceof Place && node != place) {
-								newMarking.add((Place) node);
-							}
-						}
+						newMarking.remove(preset.get(invisibleTransition).iterator().next());
 					}
 				}
 			}

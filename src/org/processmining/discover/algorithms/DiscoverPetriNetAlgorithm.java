@@ -23,7 +23,6 @@ import org.processmining.discover.models.ActivitySets;
 import org.processmining.discover.models.ConcurrentActivityPairs;
 import org.processmining.discover.parameters.DiscoverPetriNetParameters;
 import org.processmining.framework.plugin.PluginContext;
-import org.processmining.framework.util.Pair;
 import org.processmining.models.graphbased.directed.petrinet.Petrinet;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetEdge;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetNode;
@@ -183,7 +182,6 @@ public class DiscoverPetriNetAlgorithm {
 		finalMarkings.add(finalMarking);
 
 		Map<Integer, Transition> transitions = new HashMap<Integer, Transition>();
-		Map<Pair<Integer, Integer>, Transition> silentTransitions = new HashMap<Pair<Integer, Integer>, Transition>();
 		// Add visible shared transitions.
 		if (parameters.isMerge()) {
 			for (int nodeIdx = 1; nodeIdx < alphabet.size(); nodeIdx++) {
@@ -200,7 +198,6 @@ public class DiscoverPetriNetAlgorithm {
 						transitions.put(nodeIdx, net.addTransition(alphabet.get(nodeIdx)));
 					}
 				}
-				silentTransitions.clear();
 			}
 			// Add places
 			Map<ActivitySet, Place> nextPlaces = new HashMap<ActivitySet, Place>();
@@ -235,14 +232,9 @@ public class DiscoverPetriNetAlgorithm {
 					if (subMatrix.get(nextIdx) == 0) {
 						continue;
 					}
-					Pair<Integer, Integer> pair = new Pair<Integer, Integer>(nodeIdx, nextIdx);
-					Transition transition = silentTransitions.get(pair);
-					if (transition == null) {
-						transition = net
+					Transition transition = net
 							.addTransition("(" + alphabet.get(nodeIdx) + "," + alphabet.get(nextIdx) + ")");
-						transition.setInvisible(true);
-						silentTransitions.put(pair, transition);
-					}
+					transition.setInvisible(true);
 					net.addArc(nextPlaces.get(nextActivities.get(nodeIdx)), transition);
 					net.addArc(transition, previousPlaces.get(previousActivities.get(nextIdx)));
 				}
