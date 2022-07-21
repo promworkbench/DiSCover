@@ -38,21 +38,21 @@ public class ReplayPetriNetAlgorithm {
 	 */
 	private Map<String, Transition> activities;
 
-	private class ReplayResult{
+	private class ReplayResult {
 		int missing = 0;
-		int consumed = 0;
+		int consumed = 0; 
 		int remaining = 0;
-		int produced = 0;
-		
+		int produced = 1; // Initial token
+
 		boolean hasPerfectFitness() {
 			return missing == 0 && remaining == 0;
 		}
-		
+
 		double getFitness() {
-			return 1.0 - ((0.5*missing)/consumed) + ((0.5*remaining)/produced);
+			return 1.0 - ((0.5 * missing) / consumed) - ((0.5 * remaining) / produced);
 		}
 	};
-	
+
 	/**
 	 * Replay every trace of the log on the given net. If the replay of a trace
 	 * is successful, the "pdc:isPos" boolean attribute with the value true is
@@ -140,7 +140,8 @@ public class ReplayPetriNetAlgorithm {
 	 * @return The marking that results from the replay, or null if the replays
 	 *         has failed
 	 */
-	private Marking replay(XTrace trace, XEventClassifier classifier, Petrinet net, Marking initialMarking, ReplayResult result) {
+	private Marking replay(XTrace trace, XEventClassifier classifier, Petrinet net, Marking initialMarking,
+			ReplayResult result) {
 		Marking marking = initialMarking;
 		// If present, first try to fire the artificial start activity.
 		if (activities.containsKey(ActivityAlphabet.START)) {
@@ -202,7 +203,8 @@ public class ReplayPetriNetAlgorithm {
 						// Remove this token (assume the invisible transition fires first).
 						found = true;
 						newMarking.remove(preset.get(invisibleTransition).iterator().next());
-						result.consumed++;
+						result.consumed += 2;
+						result.produced++;
 					}
 				}
 				if (!found) {
@@ -211,7 +213,7 @@ public class ReplayPetriNetAlgorithm {
 				}
 			}
 		}
-		// All input places were marked. Not add tokens to all output places.
+		// All input places were marked. Now add tokens to all output places.
 		for (PetrinetNode place : postset.get(transition)) {
 			newMarking.add((Place) place);
 			result.produced++;
@@ -219,28 +221,31 @@ public class ReplayPetriNetAlgorithm {
 		// Return the new marking.
 		return newMarking;
 	}
-	
+
 	Marking cleanUp(Marking marking, Set<Marking> finalMarkings, ReplayResult result) {
 		Marking bestFinalMarking = null;
-		Marking bestMissingMarking = null;
-		Marking bestRemainingMarking = null;
+		ReplayResult bestResult = null;
 		for (Marking finalMarking : finalMarkings) {
 			Marking missingMarking = new Marking(finalMarking);
 			missingMarking.removeAll(marking);
 			Marking remainingMarking = new Marking(marking);
 			remainingMarking.removeAll(finalMarking);
+			ReplayResult newResult = new ReplayResult();
+			newResult.missing = result.missing + missingMarking.size();
+			newResult.consumed = result.consumed + finalMarking.size();
+			newResult.remaining = result.remaining + remainingMarking.size();
+			newResult.produced = result.produced;
 			if (bestFinalMarking == null) {
 				bestFinalMarking = finalMarking;
-				bestMissingMarking = missingMarking;
-				bestRemainingMarking = remainingMarking;
-			} else if (missingMarking.size() + remainingMarking.size() < bestMissingMarking.size() + bestRemainingMarking.size()) {
+				bestResult = newResult;
+			} else if (newResult.getFitness() > bestResult.getFitness()) {
 				bestFinalMarking = finalMarking;
-				bestMissingMarking = missingMarking;
-				bestRemainingMarking = remainingMarking;
+				bestResult = newResult;
 			}
 		}
-		result.missing += bestMissingMarking.size();
-		result.remaining += bestRemainingMarking.size();
+		result.missing = bestResult.missing;
+		result.consumed = bestResult.consumed;
+		result.remaining = bestResult.remaining;
 		return bestFinalMarking;
 	}
 }
