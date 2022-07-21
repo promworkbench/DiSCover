@@ -49,7 +49,7 @@ public class ReplayPetriNetAlgorithm {
 		}
 		
 		double getFitness() {
-			return ((0.5*missing)/consumed) + ((0.5*remaining)/produced);
+			return 1.0 - ((0.5*missing)/consumed) + ((0.5*remaining)/produced);
 		}
 	};
 	
