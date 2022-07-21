@@ -11,6 +11,7 @@ import org.deckfour.xes.classification.XEventLifeTransClassifier;
 import org.deckfour.xes.classification.XEventNameClassifier;
 import org.deckfour.xes.factory.XFactoryRegistry;
 import org.deckfour.xes.model.XAttributeBoolean;
+import org.deckfour.xes.model.XAttributeContinuous;
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;
 import org.deckfour.xes.model.XTrace;
@@ -37,6 +38,21 @@ public class ReplayPetriNetAlgorithm {
 	 */
 	private Map<String, Transition> activities;
 
+	private class ReplayResult{
+		int missing = 0;
+		int consumed = 0;
+		int remaining = 0;
+		int produced = 0;
+		
+		boolean hasPerfectFitness() {
+			return missing == 0 && remaining == 0;
+		}
+		
+		double getFitness() {
+			return ((0.5*missing)/consumed) + ((0.5*remaining)/produced);
+		}
+	};
+	
 	/**
 	 * Replay every trace of the log on the given net. If the replay of a trace
 	 * is successful, the "pdc:isPos" boolean attribute with the value true is
@@ -89,10 +105,18 @@ public class ReplayPetriNetAlgorithm {
 		Set<Marking> finalMarkings = apn.getFinalMarkings();
 
 		for (XTrace trace : log) {
-			Marking marking = replay(trace, classifier, apn.getNet(), initialMarking);
+			ReplayResult result = new ReplayResult();
+			// Replay the trace.
+			Marking marking = replay(trace, classifier, apn.getNet(), initialMarking, result);
+			// Clean up, that is, go to the best-fitting final marking.
+			marking = cleanUp(marking, finalMarkings, result);
 			XAttributeBoolean isPosAttribute = XFactoryRegistry.instance().currentDefault()
-					.createAttributeBoolean("pdc:isPos", marking != null && finalMarkings.contains(marking), null);
+					.createAttributeBoolean("pdc:isPos", result.hasPerfectFitness(), null);
 			trace.getAttributes().put("pdc:isPos", isPosAttribute);
+			XAttributeContinuous isFitnessAttribute = XFactoryRegistry.instance().currentDefault()
+					.createAttributeContinuous("pdc:fitness", result.getFitness(), null);
+			trace.getAttributes().put("pdc:isPos", isPosAttribute);
+			trace.getAttributes().put("pdc:fitness", isFitnessAttribute);
 		}
 
 		return log;
@@ -111,24 +135,24 @@ public class ReplayPetriNetAlgorithm {
 	 *            The given net
 	 * @param initialMarking
 	 *            The given initial marking
+	 * @param result
+	 *            The replay result
 	 * @return The marking that results from the replay, or null if the replays
 	 *         has failed
 	 */
-	private Marking replay(XTrace trace, XEventClassifier classifier, Petrinet net, Marking initialMarking) {
+	private Marking replay(XTrace trace, XEventClassifier classifier, Petrinet net, Marking initialMarking, ReplayResult result) {
 		Marking marking = initialMarking;
 		// If present, first try to fire the artificial start activity.
 		if (activities.containsKey(ActivityAlphabet.START)) {
-			marking = fire(net, marking, activities.get(ActivityAlphabet.START));
+			marking = fire(net, marking, activities.get(ActivityAlphabet.START), result);
 		}
 		// Then try to fire all activities in the trace.
 		for (XEvent event : trace) {
-			if (marking != null) {
-				marking = fire(net, marking, activities.get(classifier.getClassIdentity(event)));
-			}
+			marking = fire(net, marking, activities.get(classifier.getClassIdentity(event)), result);
 		}
 		// Finally, if present, try to fire the artificial end activity.
-		if (marking != null && activities.containsKey(ActivityAlphabet.END)) {
-			marking = fire(net, marking, activities.get(ActivityAlphabet.END));
+		if (activities.containsKey(ActivityAlphabet.END)) {
+			marking = fire(net, marking, activities.get(ActivityAlphabet.END), result);
 		}
 		// Return the resulting marking.
 		return marking;
@@ -148,21 +172,20 @@ public class ReplayPetriNetAlgorithm {
 	 * @return THe marking that results from firing the transition, or null if
 	 *         it could not be fired.
 	 */
-	private Marking fire(Petrinet net, Marking marking, Transition transition) {
+	private Marking fire(Petrinet net, Marking marking, Transition transition, ReplayResult result) {
 		Marking newMarking = new Marking(marking);
 		// Check all places in the preset of the transition.
 		for (PetrinetNode place : preset.get(transition)) {
 			// Variable ok indicates that the place is marked, or can be marked after firing an invisible transition first.
-			boolean ok = false;
 			if (newMarking.contains(place)) {
 				// Place is marked. Remove the token.
-				ok = true;
+				result.consumed++;
 				newMarking.remove(place);
 			} else {
 				// Place is not marked. Look for invisible transitions that can feed a token into the place. 
+				boolean found = false;
 				for (PetrinetNode invisibleTransition : preset.get(place)) {
-					if (ok) {
-						// Already found such an invisible transition.
+					if (found) {
 						continue;
 					}
 					if (!((Transition) invisibleTransition).isInvisible()) {
@@ -177,21 +200,47 @@ public class ReplayPetriNetAlgorithm {
 					if (newMarking.contains(preset.get(invisibleTransition).iterator().next())) {
 						// Found an invisible transition of which the input place is marked.
 						// Remove this token (assume the invisible transition fires first).
-						ok = true;
+						found = true;
 						newMarking.remove(preset.get(invisibleTransition).iterator().next());
+						result.consumed++;
 					}
 				}
-			}
-			if (!ok) {
-				// Some input place could not be marked. Replay fails.
-				return null;
+				if (!found) {
+					result.missing++;
+					result.consumed++;
+				}
 			}
 		}
 		// All input places were marked. Not add tokens to all output places.
 		for (PetrinetNode place : postset.get(transition)) {
 			newMarking.add((Place) place);
+			result.produced++;
 		}
 		// Return the new marking.
 		return newMarking;
+	}
+	
+	Marking cleanUp(Marking marking, Set<Marking> finalMarkings, ReplayResult result) {
+		Marking bestFinalMarking = null;
+		Marking bestMissingMarking = null;
+		Marking bestRemainingMarking = null;
+		for (Marking finalMarking : finalMarkings) {
+			Marking missingMarking = new Marking(finalMarking);
+			missingMarking.removeAll(marking);
+			Marking remainingMarking = new Marking(marking);
+			remainingMarking.removeAll(finalMarking);
+			if (bestFinalMarking == null) {
+				bestFinalMarking = finalMarking;
+				bestMissingMarking = missingMarking;
+				bestRemainingMarking = remainingMarking;
+			} else if (missingMarking.size() + remainingMarking.size() < bestMissingMarking.size() + bestRemainingMarking.size()) {
+				bestFinalMarking = finalMarking;
+				bestMissingMarking = missingMarking;
+				bestRemainingMarking = remainingMarking;
+			}
+		}
+		result.missing += bestMissingMarking.size();
+		result.remaining += bestRemainingMarking.size();
+		return bestFinalMarking;
 	}
 }
