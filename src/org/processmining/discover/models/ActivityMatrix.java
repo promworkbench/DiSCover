@@ -39,7 +39,7 @@ public class ActivityMatrix {
 	 *            The given alphabet
 	 */
 	public ActivityMatrix(ActivityLog log, ActivityAlphabet alphabet) {
-		this(log, alphabet, new ActivitySet());
+		this(log, alphabet, new ActivitySet(), null);
 	}
 
 	/**
@@ -53,7 +53,7 @@ public class ActivityMatrix {
 	 * @param fitleredOut
 	 *            The activities to ignore.
 	 */
-	public ActivityMatrix(ActivityLog log, ActivityAlphabet alphabet, ActivitySet ignoreSet) {
+	public ActivityMatrix(ActivityLog log, ActivityAlphabet alphabet, ActivitySet ignoreSet, ActivityMatrix rootMatrix) {
 
 		// Register the alphabet.
 		this.alphabet = alphabet;
@@ -66,10 +66,19 @@ public class ActivityMatrix {
 		int lastIdx = log.get(0);
 		// Do the counting.
 		for (int idx = 1; idx < log.size(); idx++) {
+			if (rootMatrix != null && rootMatrix.get(log.get(idx - 1), log.get(idx)) < 0) {
+				/*
+				 * This DF pair was filtered out of the root matrix. 
+				 * As a result, we should not add a DF pair in this matrix.
+				 */
+				lastIdx = -1;
+			}
 			if (!ignoreSet.contains(log.get(idx))) {
 				// Not ignored. Count.
 				nodeCounts[log.get(idx)]++;
-				edgeCounts[lastIdx][log.get(idx)]++;
+				if (lastIdx >= 0) {
+					edgeCounts[lastIdx][log.get(idx)]++;
+				}
 				lastIdx = log.get(idx);
 			}
 		}

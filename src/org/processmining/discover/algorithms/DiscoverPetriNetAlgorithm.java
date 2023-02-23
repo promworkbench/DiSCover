@@ -1,7 +1,9 @@
 package org.processmining.discover.algorithms;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -98,19 +100,19 @@ public class DiscoverPetriNetAlgorithm {
 		 * For every activity set, filter these activities out of the activity
 		 * log and discover a directly-follows matrix for it.
 		 */
-		ActivityMatrixCollection matrices = new ActivityMatrixCollection(log, alphabet, separated, parameters);
+		ActivityMatrixCollection matrices = new ActivityMatrixCollection(log, alphabet, separated, matrix, parameters);
 		System.out.println("[DiscoverPetriNetAlgorithm] Creating secondary matrices took " + (System.currentTimeMillis() - time) + " milliseconds.");
 		time = System.currentTimeMillis();
 
 		/*
 		 * Filter all created matrices.
 		 */
-		for (int idx = 0; idx < matrices.size(); idx++) {
-			matrices.get(idx).filterAbsolute(parameters.getAbsoluteThreshold());
-			matrices.get(idx).filterRelative(parameters.getRelativeThreshold(), parameters.getSafetyThreshold());
-		}
-		System.out.println("[DiscoverPetriNetAlgorithm] Filtering secondary matrices took " + (System.currentTimeMillis() - time) + " milliseconds.");
-		time = System.currentTimeMillis();
+//		for (int idx = 0; idx < matrices.size(); idx++) {
+//			matrices.get(idx).filterAbsolute(parameters.getAbsoluteThreshold());
+//			matrices.get(idx).filterRelative(parameters.getRelativeThreshold(), parameters.getSafetyThreshold());
+//		}
+//		System.out.println("[DiscoverPetriNetAlgorithm] Filtering secondary matrices took " + (System.currentTimeMillis() - time) + " milliseconds.");
+//		time = System.currentTimeMillis();
 		
 		/*
 		 * If selected, use majority vote for whether to consider some edge as noise.
@@ -147,6 +149,10 @@ public class DiscoverPetriNetAlgorithm {
 			reduceNet(apn);
 			System.out.println("[DiscoverPetriNetAlgorithm] Reducing using rules...");
 			apn = redAlgorithm.apply(context, apn, redParameters);
+//			System.out.println("[DiscoverPetriNetAlgorithm] Reducing same contexts...");
+//			reduceSameContext(apn);
+//			System.out.println("[DiscoverPetriNetAlgorithm] Reducing using rules...");
+//			apn = redAlgorithm.apply(context, apn, redParameters);
 			System.out.println("[DiscoverPetriNetAlgorithm] Reduced the net.");
 			System.out.println("[DiscoverPetriNetAlgorithm] Reducing accepting Petri net took " + (System.currentTimeMillis() - time) + " milliseconds.");
 			time = System.currentTimeMillis();
@@ -353,6 +359,67 @@ public class DiscoverPetriNetAlgorithm {
 			}
 			apn.getNet().removeTransition(transition);
 			apn.getNet().removePlace(place);
+		}
+		
+	}
+
+	private void reduceSameContext(AcceptingPetriNet apn) {
+		Map<PetrinetNode, Set<PetrinetNode>> preset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
+		Map<PetrinetNode, Set<PetrinetNode>> postset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
+		for (PetrinetNode node : apn.getNet().getNodes()) {
+			preset.put(node, new HashSet<PetrinetNode>());
+			postset.put(node, new HashSet<PetrinetNode>());
+		}
+		for (PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode> edge : apn.getNet().getEdges()) {
+			postset.get(edge.getSource()).add(edge.getTarget());
+			preset.get(edge.getTarget()).add(edge.getSource());
+		}
+		Set<Transition> transitions = new HashSet<Transition>(apn.getNet().getTransitions());
+		Map<List<Set<PetrinetNode>>,Transition> seen = new HashMap<List<Set<PetrinetNode>>,Transition>();
+		for (Transition transition : transitions) {
+			if (!transition.isInvisible() || preset.get(transition).size() != 1
+					|| postset.get(transition).size() != 1) {
+				continue;
+			}
+			Place prePlace = (Place) preset.get(transition).iterator().next();
+			if (preset.get(prePlace).size() != 1) {
+				continue;
+			}
+			Place postPlace = (Place) postset.get(transition).iterator().next();
+			if (postset.get(postPlace).size() != 1) {
+				continue;
+			}
+			
+			Set<PetrinetNode> postPrePlace = new HashSet<PetrinetNode>();
+			for (PetrinetNode node : postset.get(prePlace)) {
+				if (!((Transition) node).isInvisible()) {
+					postPrePlace.add(node);
+				}
+			}
+			Set<PetrinetNode> prePostPlace = new HashSet<PetrinetNode>();
+			for (PetrinetNode node : preset.get(postPlace)) {
+				if (!((Transition) node).isInvisible()) {
+					prePostPlace.add(node);
+				}
+			}
+			if (postPrePlace.size() == 0 && prePostPlace.size() == 0) {
+				continue;
+			}
+
+			List<Set<PetrinetNode>> context = new ArrayList<Set<PetrinetNode>>();
+			context.add(preset.get(prePlace));
+			context.add(postset.get(postPlace));
+			context.add(prePostPlace);
+			context.add(postPrePlace);
+			if (seen.containsKey(context)) {
+				apn.getNet().removeArc(prePlace, transition);
+				apn.getNet().removeArc(transition, postPlace);
+				apn.getNet().removeTransition(transition);
+				apn.getNet().addArc(prePlace, seen.get(context));
+				apn.getNet().addArc(seen.get(context), postPlace);
+			} else {
+				seen.put(context, transition);
+			}
 		}
 	}
 }

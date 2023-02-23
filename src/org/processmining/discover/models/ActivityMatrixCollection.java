@@ -41,16 +41,16 @@ public class ActivityMatrixCollection {
 	 * @param ignoreSets
 	 *            THe given activity sets to ignore
 	 */
-	public ActivityMatrixCollection(ActivityLog log, ActivityAlphabet alphabet, ActivitySets ignoreSets) {
-		this(log, alphabet, ignoreSets, new DiscoverPetriNetParameters());
+	public ActivityMatrixCollection(ActivityLog log, ActivityAlphabet alphabet, ActivitySets ignoreSets, ActivityMatrix rootMatrix) {
+		this(log, alphabet, ignoreSets, rootMatrix, new DiscoverPetriNetParameters());
 	}
 
-	public ActivityMatrixCollection(ActivityLog log, ActivityAlphabet alphabet, ActivitySets ignoreSets,
+	public ActivityMatrixCollection(ActivityLog log, ActivityAlphabet alphabet, ActivitySets ignoreSets, ActivityMatrix rootMatrix,
 			DiscoverPetriNetParameters parameters) {
 		size = ignoreSets.size();
 		matrices = new ActivityMatrix[size];
 		for (int idx = 0; idx < size; idx++) {
-			matrices[idx] = new ActivityMatrix(log, alphabet, ignoreSets.get(idx));
+			matrices[idx] = new ActivityMatrix(log, alphabet, ignoreSets.get(idx), rootMatrix);
 		}
 		reduce(parameters);
 	}

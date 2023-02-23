@@ -64,7 +64,7 @@ public class ActivityMatrixVisualizerPlugin {
 
 		ConcurrentActivityPairs pairs = new ConcurrentActivityPairs(matrix, alphabet);
 		ActivitySets separated = new ActivitySets(pairs);
-		ActivityMatrixCollection matrices = new ActivityMatrixCollection(log, alphabet, separated);
+		ActivityMatrixCollection matrices = new ActivityMatrixCollection(log, alphabet, separated, matrix);
 
 		return matrices.getComponent();
 	}
