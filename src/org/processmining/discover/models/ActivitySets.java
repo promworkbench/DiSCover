@@ -1,6 +1,8 @@
 package org.processmining.discover.models;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class ActivitySets {
@@ -8,7 +10,7 @@ public class ActivitySets {
 	/**
 	 * Array containing all minimal ignore sets.
 	 */
-	private ActivitySet sets[];
+	private ArrayList<ActivitySet> sets;
 
 	/**
 	 * Number of minimal ignore sets.
@@ -26,21 +28,21 @@ public class ActivitySets {
 	 */
 	public ActivitySets(ConcurrentActivityPairs pairs) {
 		Set<ActivitySet> sets = new HashSet<ActivitySet>();
-		Set[] seen = new Set[pairs.size()];
+		List<Set<ActivitySet>> seen = new ArrayList<Set<ActivitySet>>(pairs.size());
 		for (int idx = 0; idx < pairs.size(); idx++) {
-			seen[idx] = new HashSet();
+			seen.add(idx, new HashSet<ActivitySet>());
 		}
 		apply(pairs, 0, new ActivitySet(), sets, seen);
 		size = sets.size();
 		System.out.println("[ActivitySets] " + size + " solutions.");
-		this.sets = new ActivitySet[size];
+		this.sets = new ArrayList<ActivitySet>(size);
 		size = 0;
 		for (ActivitySet set : sets) {
-			this.sets[size++] = set;
+			this.sets.add(size++, set);
 		}
 	}
 
-	private void apply(ConcurrentActivityPairs pairs, int idx, ActivitySet candidateSet, Set<ActivitySet> ignoreSets, Set<ActivitySet> seen[]) {
+	private void apply(ConcurrentActivityPairs pairs, int idx, ActivitySet candidateSet, Set<ActivitySet> ignoreSets, List<Set<ActivitySet>> seen) {
 		if (idx == pairs.size()) {
 			// All pairs are now covered.
 			for (ActivitySet set : ignoreSets) {
@@ -65,13 +67,13 @@ public class ActivitySets {
 			System.out.println("[ActivitySets] " + ignoreSets.size() + " solutions found so far.");
 			return;
 		}
-		if (seen[idx].contains(candidateSet)) {
+		if (seen.get(idx).contains(candidateSet)) {
 			System.out.println("[ActivitySets] Already seen set " + candidateSet + " at index " + idx);
 			return;
 		}
 		ActivitySet candidateSetCopy = new ActivitySet();
 		candidateSetCopy.addAll(candidateSet);
-		seen[idx].add(candidateSetCopy);
+		seen.get(idx).add(candidateSetCopy);
 		// Cover the next pair.
 		ActivityPair pair = pairs.get(idx);
 		if (candidateSet.contains(pair.getFirst()) || candidateSet.contains(pair.getSecond())) {
@@ -105,6 +107,6 @@ public class ActivitySets {
 	 * @return The ignore set at the given index
 	 */
 	public ActivitySet get(int idx) {
-		return sets[idx];
+		return sets.get(idx);
 	}
 }

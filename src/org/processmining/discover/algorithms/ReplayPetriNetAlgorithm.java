@@ -59,13 +59,13 @@ public class ReplayPetriNetAlgorithm {
 	 * added to the trace, otherwise the "pdc:isPos" boolean attribute with the
 	 * value false is added.
 	 * 
-	 * @param log
-	 * @param apn
-	 * @return
+	 * @param log The log to be replayed.
+	 * @param apn The net to replay on.
+	 * @return The replayed and classified log.
 	 */
 	public XLog apply(XLog log, AcceptingPetriNet apn) {
 		/*
-		 * Get the classidier.
+		 * Get the classifier.
 		 */
 		XEventClassifier classifier = new XEventAndClassifier(new XEventNameClassifier(),
 				new XEventLifeTransClassifier());

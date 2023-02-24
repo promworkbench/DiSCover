@@ -40,6 +40,8 @@ public class ActivityMatrixCollection {
 	 *            The given alphabet
 	 * @param ignoreSets
 	 *            THe given activity sets to ignore
+	 * @param rootMatrix
+	 * 			  The matrix discovered earlier or the entire log
 	 */
 	public ActivityMatrixCollection(ActivityLog log, ActivityAlphabet alphabet, ActivitySets ignoreSets, ActivityMatrix rootMatrix) {
 		this(log, alphabet, ignoreSets, rootMatrix, new DiscoverPetriNetParameters());
@@ -58,7 +60,7 @@ public class ActivityMatrixCollection {
 	/**
 	 * Return the number of matrices.
 	 * 
-	 * @return
+	 * @return The number of matrices
 	 */
 	public int size() {
 		return size;

@@ -50,8 +50,10 @@ public class ActivityMatrix {
 	 *            The event log
 	 * @param alphabet
 	 *            The given alphabet
-	 * @param fitleredOut
-	 *            The activities to ignore.
+	 * @param ignoreSet
+	 *            The activities to ignore
+	 * @param rootMatrix
+	 * 			  The matrix discovered earlier or the entire log
 	 */
 	public ActivityMatrix(ActivityLog log, ActivityAlphabet alphabet, ActivitySet ignoreSet, ActivityMatrix rootMatrix) {
 
@@ -276,10 +278,12 @@ public class ActivityMatrix {
 	}
 
 	/**
-	 * Filters the matrix on the given relative threshold.
+	 * Filters the matrix on the given relative threshold and given safety threshold.
 	 * 
 	 * @param relativeThreshold
 	 *            The given relative threshold
+	 * @param safetyThreshold
+	 *            The given safety threshold
 	 */
 	public void filterRelative(int relativeThreshold, int safetyThreshold) {
 		if (relativeThreshold == 0) {
