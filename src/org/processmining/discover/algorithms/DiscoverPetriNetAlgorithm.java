@@ -196,8 +196,66 @@ public class DiscoverPetriNetAlgorithm {
 			}
 		}
 
+		/*
+		 * Set of tau-clusters that have already been produced. 
+		 */
+		Set<Set<String>> clustersProduced = new HashSet<Set<String>>();
+		
 		for (int idx = 0; idx < matrices.size(); idx++) {
 			ActivityMatrix subMatrix = matrices.get(idx);
+			Map<Integer, ActivitySet> nextActivities = subMatrix.getNextActivities();
+			Map<Integer, ActivitySet> previousActivities = subMatrix.getPreviousActivities();
+			
+			/*
+			 * Find the tau-clusters for this matrix. 
+			 * First, initialize the tau-clusters.
+			 */
+			Map<String,Set<String>> clusters = new HashMap<String, Set<String>>();
+			for (int nodeIdx = 0; nodeIdx < alphabet.size(); nodeIdx++) {
+				if (subMatrix.get(nodeIdx) == 0) {
+					continue;
+				}
+				for (int nextIdx = 0; nextIdx < nextActivities.get(nodeIdx).length(); nextIdx++) {
+					if (!nextActivities.get(nodeIdx).get(nextIdx)) {
+						continue;
+					}
+					if (subMatrix.get(nextIdx) == 0) {
+						continue;
+					}
+					Set<String> cluster = new HashSet<String>();
+					cluster.add("(" + alphabet.get(nodeIdx) + "," + alphabet.get(nextIdx) + ")");
+					cluster.add("n" + nextActivities.get(nodeIdx).toString());
+					cluster.add("p" + previousActivities.get(nextIdx).toString());
+					clusters.put("(" + alphabet.get(nodeIdx) + "," + alphabet.get(nextIdx) + ")", cluster);
+					clusters.put("n" + nextActivities.get(nodeIdx).toString(), cluster);
+					clusters.put("p" + previousActivities.get(nextIdx).toString(), cluster);
+				}
+			}
+			/*
+			 * Second, merge tau-clusters if they have an object (must be place) in common.
+			 */
+			boolean change = true;
+			while (change) {
+				change = false;
+				for (String clusterKey : clusters.keySet()) {
+					for (String otherClusterKey : clusters.keySet()) {
+						if (clusterKey.equals(otherClusterKey)) {
+							continue;
+						}
+						if (clusters.get(clusterKey).equals(clusters.get(otherClusterKey))) {
+							continue;
+						}
+						Set<String> otherCluster = new HashSet<String>(clusters.get(otherClusterKey));
+						otherCluster.retainAll(clusters.get(clusterKey));
+						if (!otherCluster.isEmpty()) {
+							change = true;
+							clusters.get(clusterKey).addAll(clusters.get(otherClusterKey));
+							clusters.get(otherClusterKey).addAll(clusters.get(clusterKey));
+						}
+					}
+				}
+			}
+						
 			if (!parameters.isMerge()) {
 				// Add visible non-shared transitions.
 				for (int nodeIdx = 1; nodeIdx < alphabet.size(); nodeIdx++) {
@@ -209,24 +267,36 @@ public class DiscoverPetriNetAlgorithm {
 			}
 			// Add places
 			Map<ActivitySet, Place> nextPlaces = new HashMap<ActivitySet, Place>();
-			Map<Integer, ActivitySet> nextActivities = subMatrix.getNextActivities();
-			for (ActivitySet next : new HashSet<ActivitySet>(nextActivities.values())) {
-				nextPlaces.put(next, net.addPlace(next.toString()));
-			}
 			Map<ActivitySet, Place> previousPlaces = new HashMap<ActivitySet, Place>();
-			Map<Integer, ActivitySet> previousActivities = subMatrix.getPreviousActivities();
+			for (ActivitySet next : new HashSet<ActivitySet>(nextActivities.values())) {
+				if (!clustersProduced.contains(clusters.get("n" + next.toString()))) {
+					/*
+					 * Not produced yet: add place.
+					 */
+					nextPlaces.put(next, net.addPlace(next.toString()));
+				}
+			}
 			for (ActivitySet previous : new HashSet<ActivitySet>(previousActivities.values())) {
-				previousPlaces.put(previous, net.addPlace(previous.toString()));
+				if (!clustersProduced.contains(clusters.get("p" + previous.toString()))) {
+					/*
+					 * Not produced yet: add place.
+					 */
+					previousPlaces.put(previous, net.addPlace(previous.toString()));
+				}
 			}
 			// Connect visible transitions to places
 			for (int nodeIdx = 0; nodeIdx < alphabet.size(); nodeIdx++) {
 				if (subMatrix.get(nodeIdx) == 0) {
 					continue;
 				}
-				net.addArc(nodeIdx == 0 ? startTransition : transitions.get(nodeIdx),
-						nextPlaces.get(nextActivities.get(nodeIdx)));
-				net.addArc(previousPlaces.get(previousActivities.get(nodeIdx)),
-						nodeIdx == 0 ? endTransition : transitions.get(nodeIdx));
+				if (nextPlaces.containsKey(nextActivities.get(nodeIdx))) {
+					net.addArc(nodeIdx == 0 ? startTransition : transitions.get(nodeIdx),
+							nextPlaces.get(nextActivities.get(nodeIdx)));
+				}
+				if (previousPlaces.containsKey(previousActivities.get(nodeIdx))) {
+					net.addArc(previousPlaces.get(previousActivities.get(nodeIdx)),
+							nodeIdx == 0 ? endTransition : transitions.get(nodeIdx));
+				}
 			}
 			// Add invisible transitions and connect them.
 			for (int nodeIdx = 0; nodeIdx < alphabet.size(); nodeIdx++) {
@@ -240,6 +310,12 @@ public class DiscoverPetriNetAlgorithm {
 					if (subMatrix.get(nextIdx) == 0) {
 						continue;
 					}
+					if (clustersProduced.contains(clusters.get("(" + alphabet.get(nodeIdx) + "," + alphabet.get(nextIdx) + ")"))) {
+						/*
+						 * Already produced. Skip here..
+						 */
+						continue;
+					}
 //					Pair<ActivitySet, ActivitySet> pair = new Pair<ActivitySet, ActivitySet>(nextActivities.get(nodeIdx), previousActivities.get(nextIdx));
 //					Transition transition = silentTransitions.get(pair);
 //					if (transition == null) {
@@ -251,6 +327,12 @@ public class DiscoverPetriNetAlgorithm {
 					net.addArc(nextPlaces.get(nextActivities.get(nodeIdx)), transition);
 					net.addArc(transition, previousPlaces.get(previousActivities.get(nextIdx)));
 				}
+			}
+			if (parameters.isMerge()) {
+				/*
+				 * Register all clusters that have been produced by now.
+				 */
+				clustersProduced.addAll(clusters.values());
 			}
 		}
 
