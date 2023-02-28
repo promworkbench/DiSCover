@@ -149,7 +149,21 @@ public class ReplayPetriNetAlgorithm {
 		}
 		// Then try to fire all activities in the trace.
 		for (XEvent event : trace) {
-			marking = fire(net, marking, activities.get(classifier.getClassIdentity(event)), result);
+			String id = classifier.getClassIdentity(event);
+			if (activities.containsKey(id)) {
+				marking = fire(net, marking, activities.get(id), result);
+			} else {
+				/*
+				 * We've encountered an event in the log that matches no transition in the net. 
+				 * Clearly, this is not fitting, but how bad is it?
+				 * 
+				 * Assumption: The missing transition has one input place and one output place.
+				 */
+				result.consumed++;
+				result.missing++;
+				result.produced++;
+				result.remaining++;
+			}
 		}
 		// Finally, if present, try to fire the artificial end activity.
 		if (activities.containsKey(ActivityAlphabet.END)) {
