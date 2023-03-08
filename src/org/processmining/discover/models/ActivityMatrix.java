@@ -64,8 +64,9 @@ public class ActivityMatrix {
 		edgeCounts = new int[alphabet.size()][alphabet.size()];
 		nodeCounts = new int[alphabet.size()];
 
-		// Get the index of the previous activity that was not ignored.
+		// Get the index of the previous activity that was not ignored (and the one before that).
 		int lastIdx = log.get(0);
+		int prevLastIdx = -1;
 		// Do the counting.
 		for (int idx = 1; idx < log.size(); idx++) {
 			if (rootMatrix != null && rootMatrix.get(log.get(idx - 1), log.get(idx)) < 0) {
@@ -81,6 +82,18 @@ public class ActivityMatrix {
 				if (lastIdx >= 0) {
 					edgeCounts[lastIdx][log.get(idx)]++;
 				}
+				if (rootMatrix == null && lastIdx > 0 && prevLastIdx >= 0) {
+					/*
+					 * We're discovering the root matrix here, which is only used to determine concurrency.
+					 * Count two-step follows as well.
+					 * 
+					 * Note that we need lastIdx > 0 here, as if lastIdx == 0 then prevLastIdx is from the
+					 * previous trace. 
+					 */
+					System.out.println("[ActivityMatrix] Adding " + alphabet.get(prevLastIdx) + "->" + alphabet.get(log.get(idx)));
+					edgeCounts[prevLastIdx][log.get(idx)]++;
+				}
+				prevLastIdx = lastIdx;
 				lastIdx = log.get(idx);
 			}
 		}
