@@ -32,10 +32,15 @@ import org.processmining.models.graphbased.directed.petrinet.elements.Place;
 import org.processmining.models.graphbased.directed.petrinet.elements.Transition;
 import org.processmining.models.graphbased.directed.petrinet.impl.PetrinetFactory;
 import org.processmining.models.semantics.petrinet.Marking;
+import org.processmining.processtree.ProcessTree;
 
 public class DiscoverPetriNetAlgorithm {
 
 	public AcceptingPetriNet apply(PluginContext context, XLog eventLog, DiscoverPetriNetParameters parameters) {
+		return apply(context, eventLog, null, parameters);
+	}
+	
+	public AcceptingPetriNet apply(PluginContext context, XLog eventLog, ProcessTree tree, DiscoverPetriNetParameters parameters) {
 		/*
 		 * Get the first classifier. If the event log has no classifier, use the
 		 * default classifier.
@@ -77,24 +82,39 @@ public class DiscoverPetriNetAlgorithm {
 		System.out.println("[DiscoverPetriNetAlgorithm] Filtering primary matrix took " + (System.currentTimeMillis() - time) + " milliseconds.");
 		time = System.currentTimeMillis();
 
-		/*
-		 * Discover pairs of concurrent activities.
-		 */
-		ConcurrentActivityPairs pairs = new ConcurrentActivityPairs(matrix, alphabet);
-		System.out.println("[DiscoverPetriNetAlgorithm] Creating concurrent pairs took " + (System.currentTimeMillis() - time) + " milliseconds.");
-		time = System.currentTimeMillis();
+		ActivitySets separated = null;
+		if (tree == null) {
+			/*
+			 * Discover pairs of concurrent activities.
+			 */
+			ConcurrentActivityPairs pairs = new ConcurrentActivityPairs(matrix, alphabet);
+			System.out.println("[DiscoverPetriNetAlgorithm] Creating concurrent pairs took "
+					+ (System.currentTimeMillis() - time) + " milliseconds.");
+			time = System.currentTimeMillis();
 
-		/*
-		 * Create sets of activities from these pairs. Every set covers at least
-		 * one activity for every pair. These sets will be minimal in the sense
-		 * that removing an activity from it will result in some pairs being
-		 * uncovered.
-		 * 
-		 * This may take some time.
-		 */
-		ActivitySets separated = new ActivitySets(pairs);
-		System.out.println("[DiscoverPetriNetAlgorithm] Creating non-concurrent sets took " + (System.currentTimeMillis() - time) + " milliseconds.");
-		time = System.currentTimeMillis();
+			/*
+			 * Create sets of activities from these pairs. Every set covers at
+			 * least one activity for every pair. These sets will be minimal in
+			 * the sense that removing an activity from it will result in some
+			 * pairs being uncovered.
+			 * 
+			 * This may take some time.
+			 */
+			separated = new ActivitySets(pairs);
+			System.out.println("[DiscoverPetriNetAlgorithm] Creating non-concurrent sets took "
+					+ (System.currentTimeMillis() - time) + " milliseconds.");
+			System.out.println("[DiscoverPetriNetAlgorithm] Created non-concurrent sets: " + separated);
+			time = System.currentTimeMillis();
+		} else {
+			/*
+			 * Create sets of activities using the provided process tree.
+			 */
+			separated = new ActivitySets(tree, alphabet);
+			System.out.println("[DiscoverPetriNetAlgorithm] Creating non-concurrent sets from process tree took "
+					+ (System.currentTimeMillis() - time) + " milliseconds.");
+			System.out.println("[DiscoverPetriNetAlgorithm] Created non-concurrent sets: " + separated);
+			time = System.currentTimeMillis();
+		}
 
 		/*
 		 * For every activity set, filter these activities out of the activity

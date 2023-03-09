@@ -11,8 +11,42 @@ import org.processmining.discover.widgets.DiscoverPetriNetWidget;
 import org.processmining.framework.plugin.PluginContext;
 import org.processmining.framework.plugin.annotations.Plugin;
 import org.processmining.framework.plugin.annotations.PluginVariant;
+import org.processmining.processtree.ProcessTree;
 
 public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
+
+	@Plugin( //
+			name = "DiSCover Petri net (process tree)", //
+			parameterLabels = { "Event log", "Process tree" }, //
+			returnLabels = { "DiSCovered Accepting Petri net" }, //
+			returnTypes = { AcceptingPetriNet.class }, //
+			userAccessible = true, //
+			url = "http://www.win.tue.nl/~hverbeek/", //
+			help = "" //
+	) //
+	@UITopiaVariant( //
+			affiliation = UITopiaVariant.EHV, //
+			author = "H.M.W. Verbeek", //
+			email = "h.m.w.verbeek@tue.nl" //
+	) //
+	@PluginVariant( //
+			variantLabel = "DiSCover Petri net (process tree)", //
+			requiredParameterLabels = { 0, 1 } //
+	) //
+	public AcceptingPetriNet runProcessTree(UIPluginContext context, XLog log, ProcessTree tree) {
+		// Get (last) parameter settings.
+		DiscoverPetriNetParameters parameters = new DiscoverPetriNetParameters();
+		// Create widget to allow the user to change the settings, and show it.
+		DiscoverPetriNetWidget widget = new DiscoverPetriNetWidget(parameters);
+		InteractionResult result = context.showWizard("Configure DiSCovery", true, true, widget);
+		if (result != InteractionResult.FINISHED) {
+			context.getFutureResult(0).cancel(true);
+			return null;
+		}
+		
+		// Discover accepting Petri net.
+		return apply(context, log, tree, parameters);
+	}
 
 	@Plugin( //
 			name = "DiSCover Petri net (last)", //

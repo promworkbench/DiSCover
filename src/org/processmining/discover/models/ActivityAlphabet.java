@@ -83,6 +83,16 @@ public class ActivityAlphabet {
 	public int get(String activity) {
 		return activity2Idx.get(activity);
 	}
+	
+	/**
+	 * Returns whether the set contains the given activity.
+	 * 
+	 * @param activity The given activity.
+	 * @return Whether the set contains the given activity.
+	 */
+	public boolean contains(String activity) {
+		return activity2Idx.containsKey(activity);
+	}
 
 	/**
 	 * Returns the size of the alphabet (where the artificial start and end activity
