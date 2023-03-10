@@ -7,10 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.deckfour.xes.classification.XEventAndClassifier;
 import org.deckfour.xes.classification.XEventClassifier;
-import org.deckfour.xes.classification.XEventLifeTransClassifier;
-import org.deckfour.xes.classification.XEventNameClassifier;
 import org.deckfour.xes.model.XLog;
 import org.processmining.acceptingpetrinet.models.AcceptingPetriNet;
 import org.processmining.acceptingpetrinet.models.impl.AcceptingPetriNetFactory;
@@ -45,18 +42,14 @@ public class DiscoverPetriNetAlgorithm {
 		 * Get the first classifier. If the event log has no classifier, use the
 		 * default classifier.
 		 */
-		XEventClassifier classifier = new XEventAndClassifier(new XEventNameClassifier(),
-				new XEventLifeTransClassifier());
-		if (!eventLog.getClassifiers().isEmpty()) {
-			classifier = eventLog.getClassifiers().get(0);
-		}
+		XEventClassifier classifier = parameters.getClassifier();
 
 		long time = System.currentTimeMillis();
 		long time2 = time;
 		/*
 		 * Create the alphabet (set of activities) for the event log.
 		 */
-		ActivityAlphabet alphabet = new ActivityAlphabet(eventLog, classifier);
+		ActivityAlphabet alphabet = parameters.getAlphabet(); //new ActivityAlphabet(eventLog, classifier);
 		System.out.println("[DiscoverPetriNetAlgorithm] Creating alphabet took " + (System.currentTimeMillis() - time) + " milliseconds.");
 		time = System.currentTimeMillis();
 		

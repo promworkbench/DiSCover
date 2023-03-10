@@ -31,47 +31,9 @@ public class DiscoverPetriNetWidget extends JPanel {
 	 * @param parameters The given parameter settings
 	 */
 	public DiscoverPetriNetWidget(final DiscoverPetriNetParameters parameters) {
-		double size[][] = { { TableLayoutConstants.FILL }, { 30, 30, 30, 30, 30, 30, 30, TableLayoutConstants.FILL } };
+		double size[][] = { { TableLayoutConstants.FILL }, { 30, 30, 30, TableLayoutConstants.FILL } };
 		setLayout(new TableLayout(size));
 
-		// Slider for the absolute threshold. Ranges from 0 to 20.
-		final NiceSlider absSlider = SlickerFactory.instance().createNiceIntegerSlider(
-				"Absolute threshold (0 if no noise)", 0, 20, parameters.getAbsoluteThreshold(), Orientation.HORIZONTAL);
-		absSlider.addChangeListener(new ChangeListener() {
-
-			public void stateChanged(ChangeEvent e) {
-				int value = absSlider.getSlider().getValue();
-				parameters.setAbsoluteThreshold(value);
-			}
-		});
-		absSlider.setPreferredSize(new Dimension(100, 30));
-		add(absSlider, "0, 0");
-
-		// Slider for the relative threshold. Ranges from 0 to 99 (percent).
-		final NiceSlider relSlider = SlickerFactory.instance().createNiceIntegerSlider(
-				"Relative threshold (0 if no noise)", 0, 99, parameters.getRelativeThreshold(), Orientation.HORIZONTAL);
-		relSlider.addChangeListener(new ChangeListener() {
-
-			public void stateChanged(ChangeEvent e) {
-				int value = relSlider.getSlider().getValue();
-				parameters.setRelativeThreshold(value);
-			}
-		});
-		relSlider.setPreferredSize(new Dimension(100, 30));
-		add(relSlider, "0, 1");
-
-		// Slider for the safety threshold. Ranges from 0 to 99 (percent).
-		final NiceSlider safSlider = SlickerFactory.instance().createNiceIntegerSlider(
-				"Safety threshold", 0, 99, parameters.getSafetyThreshold(), Orientation.HORIZONTAL);
-		safSlider.addChangeListener(new ChangeListener() {
-
-			public void stateChanged(ChangeEvent e) {
-				int value = safSlider.getSlider().getValue();
-				parameters.setSafetyThreshold(value);
-			}
-		});
-		safSlider.setPreferredSize(new Dimension(100, 30));
-		add(safSlider, "0, 2");
 
 		// Slider for the relative threshold. Ranges from 0 to 99 (percent).
 		final NiceSlider scomSlider = SlickerFactory.instance().createNiceIntegerSlider(
@@ -84,7 +46,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 			}
 		});
 		scomSlider.setPreferredSize(new Dimension(100, 30));
-		add(scomSlider, "0, 3");
+		add(scomSlider, "0, 0");
 
 		// Check box for merge
 		final JCheckBox mergeBox = SlickerFactory.instance().createCheckBox("Merge activities",
@@ -97,7 +59,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 
 		});
 		mergeBox.setOpaque(false);
-		add(mergeBox, "0, 4");
+		add(mergeBox, "0, 1");
 		
 		// Check box for reduce
 		final JCheckBox reduceBox = SlickerFactory.instance().createCheckBox("Reduce Petri net",
@@ -110,20 +72,20 @@ public class DiscoverPetriNetWidget extends JPanel {
 
 		});
 		reduceBox.setOpaque(false);
-		add(reduceBox, "0, 5");
+		add(reduceBox, "0, 2");
 		
 		// Check box for majority
-		final JCheckBox majorityBox = SlickerFactory.instance().createCheckBox("Use veto for noise",
-				parameters.isVetoNoise());
-		majorityBox.addActionListener(new ActionListener() {
-
-			public void actionPerformed(ActionEvent e) {
-				parameters.setVetoNoise(majorityBox.isSelected());
-			}
-
-		});
-		majorityBox.setOpaque(false);
-		add(majorityBox, "0, 6");
+//		final JCheckBox majorityBox = SlickerFactory.instance().createCheckBox("Use veto for noise",
+//				parameters.isVetoNoise());
+//		majorityBox.addActionListener(new ActionListener() {
+//
+//			public void actionPerformed(ActionEvent e) {
+//				parameters.setVetoNoise(majorityBox.isSelected());
+//			}
+//
+//		});
+//		majorityBox.setOpaque(false);
+//		add(majorityBox, "0, 6");
 		
 		revalidate();
 		repaint();

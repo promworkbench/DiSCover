@@ -1,5 +1,7 @@
 package org.processmining.discover.plugins;
 
+import javax.swing.JPanel;
+
 import org.deckfour.uitopia.api.event.TaskListener.InteractionResult;
 import org.deckfour.xes.model.XLog;
 import org.processmining.acceptingpetrinet.models.AcceptingPetriNet;
@@ -8,6 +10,9 @@ import org.processmining.contexts.uitopia.annotations.UITopiaVariant;
 import org.processmining.discover.algorithms.DiscoverPetriNetAlgorithm;
 import org.processmining.discover.parameters.DiscoverPetriNetParameters;
 import org.processmining.discover.widgets.DiscoverPetriNetWidget;
+import org.processmining.discover.widgets.FilterMatrixWidget;
+import org.processmining.discover.widgets.SelectActivitiesWidget;
+import org.processmining.discover.widgets.SelectClassifierWidget;
 import org.processmining.framework.plugin.PluginContext;
 import org.processmining.framework.plugin.annotations.Plugin;
 import org.processmining.framework.plugin.annotations.PluginVariant;
@@ -36,16 +41,45 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 	public AcceptingPetriNet runProcessTree(UIPluginContext context, XLog log, ProcessTree tree) {
 		// Get (last) parameter settings.
 		DiscoverPetriNetParameters parameters = new DiscoverPetriNetParameters();
-		// Create widget to allow the user to change the settings, and show it.
-		DiscoverPetriNetWidget widget = new DiscoverPetriNetWidget(parameters);
-		InteractionResult result = context.showWizard("Configure DiSCovery", true, true, widget);
-		if (result != InteractionResult.FINISHED) {
-			context.getFutureResult(0).cancel(true);
-			return null;
-		}
+		int step = 0;
 		
-		// Discover accepting Petri net.
-		return apply(context, log, tree, parameters);
+		while (true) {
+			JPanel widget;
+			switch (step) {
+				case 0:
+					widget = new SelectClassifierWidget(log, parameters);
+					break;
+				case 1:
+					widget = new SelectActivitiesWidget(log, parameters);
+					break;
+				case 2:
+					widget = new FilterMatrixWidget(log, parameters);
+					break;
+				default: 
+					widget = new DiscoverPetriNetWidget(parameters);
+					break;
+			}
+			InteractionResult result = context.showWizard("Configure DiSCovery", step == 0, step == 3, widget);
+			switch (result) {
+				case NEXT:
+					if (step == 0 && parameters.getClassifier() == null) {
+						// Ignore, need classifier to proceed.
+					} else if (step == 1 && parameters.getActivities().isEmpty()) {
+						// Ignore, need a non-empty alphabet.
+					} else {
+						step++;
+					}
+					break;
+				case PREV:
+					step--;
+					break;
+				case FINISHED:
+					return apply(context, log, tree, parameters);
+				default:
+					context.getFutureResult(0).cancel(true);
+					return null;
+			}
+		}
 	}
 
 	@Plugin( //
@@ -115,19 +149,7 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 			requiredParameterLabels = { 0 } //
 	) //
 	public AcceptingPetriNet runUser(UIPluginContext context, XLog log) {
-		// Get last parameter settings.
-		DiscoverPetriNetParameters parameters = new DiscoverPetriNetParameters();
-		
-		// Create widget to allow the user to change the settings, and show it.
-		DiscoverPetriNetWidget widget = new DiscoverPetriNetWidget(parameters);
-		InteractionResult result = context.showWizard("Configure DiSCovery", true, true, widget);
-		if (result != InteractionResult.FINISHED) {
-			context.getFutureResult(0).cancel(true);
-			return null;
-		}
-		
-		// Discover accepting Petri net.
-		return apply(context, log, parameters);
+		return runProcessTree(context, log, null);
 	}
 
 }

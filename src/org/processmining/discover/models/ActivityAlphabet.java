@@ -1,6 +1,7 @@
 package org.processmining.discover.models;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.deckfour.xes.classification.XEventClassifier;
@@ -64,6 +65,19 @@ public class ActivityAlphabet {
 		}
 	}
 
+	public ActivityAlphabet(List<String> activities) {
+		activity2Idx = new HashMap<String, Integer>();
+		idx2Activity = new String[activities.size() + 1];
+		activity2Idx.put(STARTEND, 0);
+		idx2Activity[0] = STARTEND;
+		size = 1;
+		for (String activity : activities) {
+			activity2Idx.put(activity, size);
+			idx2Activity[size] = activity;
+			size++;
+		}
+	}
+	
 	/**
 	 * Returns the activity at the given index.
 	 * 

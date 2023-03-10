@@ -1,6 +1,14 @@
 package org.processmining.discover.parameters;
 
-public class DiscoverPetriNetParameters {
+import java.util.ArrayList;
+import java.util.List;
+
+import org.deckfour.xes.classification.XEventClassifier;
+import org.processmining.discover.models.ActivityAlphabet;
+import org.processmining.discover.models.ActivityMatrix;
+import org.processmining.log.parameters.ClassifierParameter;
+
+public class DiscoverPetriNetParameters implements ClassifierParameter {
 
 	/**
 	 * Whether to merge on the activities.
@@ -38,6 +46,12 @@ public class DiscoverPetriNetParameters {
 	 */
 	private int safetyThreshold;
 
+	private XEventClassifier classifier;
+	
+	private List<String> activities;
+	
+	private ActivityMatrix matrix;
+	
 	/**
 	 * Parameter settings selected last by the user.
 	 */
@@ -48,6 +62,9 @@ public class DiscoverPetriNetParameters {
 	private static int lastRelativeThreshold = 1;
 	private static int lastSafetyThreshold = 95;
 	private static int LastNofSComponents = 20; // Seems more than enough.
+	private static XEventClassifier lastClassifier = null;
+	private static List<String> lastActivities = null;
+	private static ActivityMatrix lastMatrix = null;
 	/**
 	 * Creates default parameter settings.
 	 */
@@ -59,6 +76,9 @@ public class DiscoverPetriNetParameters {
 		setAbsoluteThreshold(lastAbsoluteThreshold);
 		setSafetyThreshold(lastSafetyThreshold);
 		setNofSComponents(LastNofSComponents);
+		setClassifier(lastClassifier);
+		setActivities(lastActivities);
+		setMatrix(lastMatrix);
 	}
 	
 	/*
@@ -126,5 +146,38 @@ public class DiscoverPetriNetParameters {
 	public void setSafetyThreshold(int safetyThreshold) {
 		this.lastSafetyThreshold = safetyThreshold;
 		this.safetyThreshold = safetyThreshold;
+	}
+
+	public XEventClassifier getClassifier() {
+		return classifier;
+	}
+
+	public void setClassifier(XEventClassifier classifier) {
+		this.lastClassifier = classifier;
+		this.classifier = classifier;
+	}
+
+	public List<String> getActivities() {
+		return activities;
+	}
+
+	public void setActivities(List<String> activities) {
+		this.lastActivities = (activities == null ? null : new ArrayList<String>(activities));
+		this.activities = (activities ==  null ? null : new ArrayList<String>(activities));
+	}
+	
+	public ActivityAlphabet getAlphabet() {
+		if (this.activities == null) {
+			return null;
+		}
+		return new ActivityAlphabet(this.activities);
+	}
+
+	public ActivityMatrix getMatrix() {
+		return matrix;
+	}
+
+	public void setMatrix(ActivityMatrix matrix) {
+		this.matrix = matrix;
 	}
 }

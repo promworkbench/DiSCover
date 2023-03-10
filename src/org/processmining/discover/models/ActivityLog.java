@@ -41,7 +41,12 @@ public class ActivityLog {
 		size = 1 + log.size();
 		// Allocate room for the regular activities.
 		for (XTrace trace : log) {
-			size += trace.size();
+			for (XEvent event : trace) {
+				String activity = classifier.getClassIdentity(event);
+				if (alphabet.contains(activity)) {
+					size++;
+				}
+			}
 		}
 		activities = new int[size];
 		size = 0;
@@ -49,7 +54,10 @@ public class ActivityLog {
 		activities[size++] = alphabet.get(ActivityAlphabet.STARTEND);
 		for (XTrace trace : log) {
 			for (XEvent event : trace) {
-				activities[size++] = alphabet.get(classifier.getClassIdentity(event));
+				String activity = classifier.getClassIdentity(event);
+				if (alphabet.contains(activity)) {
+					activities[size++] = alphabet.get(activity);
+				}
 			}
 			activities[size++] = alphabet.get(ActivityAlphabet.STARTEND);
 		}

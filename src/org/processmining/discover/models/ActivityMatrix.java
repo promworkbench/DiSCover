@@ -53,9 +53,10 @@ public class ActivityMatrix {
 	 * @param ignoreSet
 	 *            The activities to ignore
 	 * @param rootMatrix
-	 * 			  The matrix discovered earlier or the entire log
+	 *            The matrix discovered earlier or the entire log
 	 */
-	public ActivityMatrix(ActivityLog log, ActivityAlphabet alphabet, ActivitySet ignoreSet, ActivityMatrix rootMatrix) {
+	public ActivityMatrix(ActivityLog log, ActivityAlphabet alphabet, ActivitySet ignoreSet,
+			ActivityMatrix rootMatrix) {
 
 		// Register the alphabet.
 		this.alphabet = alphabet;
@@ -70,8 +71,8 @@ public class ActivityMatrix {
 		for (int idx = 1; idx < log.size(); idx++) {
 			if (rootMatrix != null && rootMatrix.get(log.get(idx - 1), log.get(idx)) < 0) {
 				/*
-				 * This DF pair was filtered out of the root matrix. 
-				 * As a result, we should not add a DF pair in this matrix.
+				 * This DF pair was filtered out of the root matrix. As a
+				 * result, we should not add a DF pair in this matrix.
 				 */
 				lastIdx = -1;
 			}
@@ -103,6 +104,13 @@ public class ActivityMatrix {
 
 	public void set(int fromIdx, int toIdx) {
 		edgeCounts[fromIdx][toIdx] = Math.abs(edgeCounts[fromIdx][toIdx]);
+	}
+
+	public void set(int fromIdx, int toIdx, int value) {
+		if (value != edgeCounts[fromIdx][toIdx]) {
+			nodeCounts[toIdx] += (value - edgeCounts[fromIdx][toIdx]);
+			edgeCounts[fromIdx][toIdx] = value;
+		}
 	}
 
 	/**
@@ -278,7 +286,8 @@ public class ActivityMatrix {
 	}
 
 	/**
-	 * Filters the matrix on the given relative threshold and given safety threshold.
+	 * Filters the matrix on the given relative threshold and given safety
+	 * threshold.
 	 * 
 	 * @param relativeThreshold
 	 *            The given relative threshold
@@ -289,7 +298,7 @@ public class ActivityMatrix {
 		if (relativeThreshold == 0) {
 			return;
 		}
-		
+
 		// Arrays to hold the maximal values for any row (from) and any column (to).
 		int fromMax[] = new int[alphabet.size()];
 		int toMax[] = new int[alphabet.size()];
@@ -317,10 +326,10 @@ public class ActivityMatrix {
 				if (100 * edgeCounts[fromIdx][toIdx] >= safetyThreshold * Math.min(fromMax[fromIdx], toMax[toIdx])) {
 					continue;
 				}
-//				if (((edgeCounts[fromIdx][toIdx] < fromMax[fromIdx] && 1000 * fromMax[fromIdx]
-//								* edgeCounts[fromIdx][toIdx] < threshold * (fromMax[fromIdx] + edgeCounts[fromIdx][toIdx]) * (fromMax[fromIdx] + edgeCounts[fromIdx][toIdx]))
-//						|| (edgeCounts[fromIdx][toIdx] < toMax[toIdx] && 1000 * toMax[toIdx]
-//								* edgeCounts[fromIdx][toIdx] < threshold * (toMax[toIdx] + edgeCounts[fromIdx][toIdx]) * (toMax[toIdx] + edgeCounts[fromIdx][toIdx])))) {
+				//				if (((edgeCounts[fromIdx][toIdx] < fromMax[fromIdx] && 1000 * fromMax[fromIdx]
+				//								* edgeCounts[fromIdx][toIdx] < threshold * (fromMax[fromIdx] + edgeCounts[fromIdx][toIdx]) * (fromMax[fromIdx] + edgeCounts[fromIdx][toIdx]))
+				//						|| (edgeCounts[fromIdx][toIdx] < toMax[toIdx] && 1000 * toMax[toIdx]
+				//								* edgeCounts[fromIdx][toIdx] < threshold * (toMax[toIdx] + edgeCounts[fromIdx][toIdx]) * (toMax[toIdx] + edgeCounts[fromIdx][toIdx])))) {
 				if (edgeCounts[fromIdx][toIdx] * 100 <= Math.max(fromMax[fromIdx], toMax[toIdx]) * relativeThreshold) {
 					// Does not exceed threshold percent, filter out.
 					edgeCounts[fromIdx][toIdx] = -Math.abs(edgeCounts[fromIdx][toIdx]);
