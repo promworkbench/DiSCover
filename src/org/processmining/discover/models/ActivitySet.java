@@ -8,6 +8,8 @@ public class ActivitySet extends BitSet {
 	 * 
 	 */
 	private static final long serialVersionUID = -3438285338528189401L;
+	
+	public static ActivityAlphabet alphabet = null;
 
 	public ActivitySet() {
 		super();
@@ -36,6 +38,24 @@ public class ActivitySet extends BitSet {
 	
 	public void addAll(ActivitySet set) {
 		or(set);
+	}
+	
+	public String toString() {
+		StringBuffer s = new StringBuffer();
+		s.append("{");
+		boolean first = true;
+		for (int i = 0; i < length(); i++) {
+			if (get(i)) {
+				if (first) {
+					first = false;
+				} else {
+					s.append(", ");
+				}
+				s.append(alphabet.get(i));
+			}
+		}
+		s.append("}");
+		return s.toString();
 	}
 
 }

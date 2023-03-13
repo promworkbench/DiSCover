@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.deckfour.xes.classification.XEventClassifier;
+import org.deckfour.xes.classification.XEventNameClassifier;
 import org.deckfour.xes.model.XLog;
 import org.processmining.acceptingpetrinet.models.AcceptingPetriNet;
 import org.processmining.acceptingpetrinet.models.impl.AcceptingPetriNetFactory;
@@ -36,77 +37,101 @@ public class DiscoverPetriNetAlgorithm {
 	public AcceptingPetriNet apply(PluginContext context, XLog eventLog, DiscoverPetriNetParameters parameters) {
 		return apply(context, eventLog, null, parameters);
 	}
-	
-	public AcceptingPetriNet apply(PluginContext context, XLog eventLog, ProcessTree tree, DiscoverPetriNetParameters parameters) {
+
+	public AcceptingPetriNet apply(PluginContext context, XLog eventLog, ProcessTree tree,
+			DiscoverPetriNetParameters parameters) {
 		/*
 		 * Get the first classifier. If the event log has no classifier, use the
 		 * default classifier.
 		 */
 		XEventClassifier classifier = parameters.getClassifier();
+		if (classifier == null) {
+			if (eventLog.getClassifiers().isEmpty()) {
+				parameters.setClassifier(new XEventNameClassifier());
+			} else {
+				parameters.setClassifier(eventLog.getClassifiers().get(0));
+			}
+		}
 
 		long time = System.currentTimeMillis();
 		long time2 = time;
 		/*
 		 * Create the alphabet (set of activities) for the event log.
 		 */
-		ActivityAlphabet alphabet = parameters.getAlphabet(); //new ActivityAlphabet(eventLog, classifier);
-		System.out.println("[DiscoverPetriNetAlgorithm] Creating alphabet took " + (System.currentTimeMillis() - time) + " milliseconds.");
-		time = System.currentTimeMillis();
-		
-		/*
-		 * Convert the event log to an activity log using the alphabet.
-		 */
-		ActivityLog log = new ActivityLog(eventLog, classifier, alphabet);
-		System.out.println("[DiscoverPetriNetAlgorithm] Creating activity log took " + (System.currentTimeMillis() - time) + " milliseconds.");
-		time = System.currentTimeMillis();
+		ActivityAlphabet alphabet = parameters.getAlphabet();
+		if (alphabet == null) {
+			alphabet = new ActivityAlphabet(eventLog, classifier);
+			System.out.println("[DiscoverPetriNetAlgorithm] Creating alphabet took "
+					+ (System.currentTimeMillis() - time) + " milliseconds.");
+			time = System.currentTimeMillis();
+		}
 
-		/*
-		 * Discover a directly-follows matrix from the activity log.
-		 */
-		ActivityMatrix matrix = new ActivityMatrix(log, alphabet);
-		System.out.println("[DiscoverPetriNetAlgorithm] Creating primary matrix took " + (System.currentTimeMillis() - time) + " milliseconds.");
-		time = System.currentTimeMillis();
-
-		/*
-		 * Filter the directly-follows matrix.
-		 */
-		matrix.filterAbsolute(parameters.getAbsoluteThreshold());
-		matrix.filterRelative(parameters.getRelativeThreshold(), parameters.getSafetyThreshold());
-		System.out.println("[DiscoverPetriNetAlgorithm] Filtering primary matrix took " + (System.currentTimeMillis() - time) + " milliseconds.");
-		time = System.currentTimeMillis();
-
-		ActivitySets separated = null;
-		if (tree == null) {
+		ActivityLog log = parameters.getLog();
+		if (log == null) {
 			/*
-			 * Discover pairs of concurrent activities.
+			 * Convert the event log to an activity log using the alphabet.
 			 */
-			ConcurrentActivityPairs pairs = new ConcurrentActivityPairs(matrix, alphabet);
-			System.out.println("[DiscoverPetriNetAlgorithm] Creating concurrent pairs took "
+			log = new ActivityLog(eventLog, classifier, alphabet);
+			System.out.println("[DiscoverPetriNetAlgorithm] Creating activity log took "
+					+ (System.currentTimeMillis() - time) + " milliseconds.");
+			time = System.currentTimeMillis();
+		}
+
+		ActivityMatrix matrix = parameters.getMatrix();
+		if (matrix == null) {
+			/*
+			 * Discover a directly-follows matrix from the activity log.
+			 */
+			matrix = new ActivityMatrix(log, alphabet);
+			System.out.println("[DiscoverPetriNetAlgorithm] Creating primary matrix took "
 					+ (System.currentTimeMillis() - time) + " milliseconds.");
 			time = System.currentTimeMillis();
 
 			/*
-			 * Create sets of activities from these pairs. Every set covers at
-			 * least one activity for every pair. These sets will be minimal in
-			 * the sense that removing an activity from it will result in some
-			 * pairs being uncovered.
-			 * 
-			 * This may take some time.
+			 * Filter the directly-follows matrix.
 			 */
-			separated = new ActivitySets(pairs);
-			System.out.println("[DiscoverPetriNetAlgorithm] Creating non-concurrent sets took "
+			matrix.filterAbsolute(parameters.getAbsoluteThreshold());
+			matrix.filterRelative(parameters.getRelativeThreshold(), parameters.getSafetyThreshold());
+			System.out.println("[DiscoverPetriNetAlgorithm] Filtering primary matrix took "
 					+ (System.currentTimeMillis() - time) + " milliseconds.");
-			System.out.println("[DiscoverPetriNetAlgorithm] Created non-concurrent sets: " + separated);
 			time = System.currentTimeMillis();
-		} else {
-			/*
-			 * Create sets of activities using the provided process tree.
-			 */
-			separated = new ActivitySets(tree, alphabet);
-			System.out.println("[DiscoverPetriNetAlgorithm] Creating non-concurrent sets from process tree took "
-					+ (System.currentTimeMillis() - time) + " milliseconds.");
-			System.out.println("[DiscoverPetriNetAlgorithm] Created non-concurrent sets: " + separated);
-			time = System.currentTimeMillis();
+		}
+
+		ActivitySets separated = (parameters.getActivitySets() == null ? null
+				: new ActivitySets(parameters.getActivitySets()));
+		if (separated == null) {
+			if (tree == null) {
+				/*
+				 * Discover pairs of concurrent activities.
+				 */
+				ConcurrentActivityPairs pairs = new ConcurrentActivityPairs(matrix, alphabet);
+				System.out.println("[DiscoverPetriNetAlgorithm] Creating concurrent pairs took "
+						+ (System.currentTimeMillis() - time) + " milliseconds.");
+				time = System.currentTimeMillis();
+
+				/*
+				 * Create sets of activities from these pairs. Every set covers
+				 * at least one activity for every pair. These sets will be
+				 * minimal in the sense that removing an activity from it will
+				 * result in some pairs being uncovered.
+				 * 
+				 * This may take some time.
+				 */
+				separated = new ActivitySets(pairs);
+				System.out.println("[DiscoverPetriNetAlgorithm] Creating non-concurrent sets took "
+						+ (System.currentTimeMillis() - time) + " milliseconds.");
+				System.out.println("[DiscoverPetriNetAlgorithm] Created non-concurrent sets: " + separated);
+				time = System.currentTimeMillis();
+			} else {
+				/*
+				 * Create sets of activities using the provided process tree.
+				 */
+				separated = new ActivitySets(tree, alphabet);
+				System.out.println("[DiscoverPetriNetAlgorithm] Creating non-concurrent sets from process tree took "
+						+ (System.currentTimeMillis() - time) + " milliseconds.");
+				System.out.println("[DiscoverPetriNetAlgorithm] Created non-concurrent sets: " + separated);
+				time = System.currentTimeMillis();
+			}
 		}
 
 		/*
@@ -114,25 +139,28 @@ public class DiscoverPetriNetAlgorithm {
 		 * log and discover a directly-follows matrix for it.
 		 */
 		ActivityMatrixCollection matrices = new ActivityMatrixCollection(log, alphabet, separated, matrix, parameters);
-		System.out.println("[DiscoverPetriNetAlgorithm] Creating secondary matrices took " + (System.currentTimeMillis() - time) + " milliseconds.");
+		System.out.println("[DiscoverPetriNetAlgorithm] Creating secondary matrices took "
+				+ (System.currentTimeMillis() - time) + " milliseconds.");
 		time = System.currentTimeMillis();
 
 		/*
 		 * Filter all created matrices.
 		 */
-//		for (int idx = 0; idx < matrices.size(); idx++) {
-//			matrices.get(idx).filterAbsolute(parameters.getAbsoluteThreshold());
-//			matrices.get(idx).filterRelative(parameters.getRelativeThreshold(), parameters.getSafetyThreshold());
-//		}
-//		System.out.println("[DiscoverPetriNetAlgorithm] Filtering secondary matrices took " + (System.currentTimeMillis() - time) + " milliseconds.");
-//		time = System.currentTimeMillis();
-		
+		//		for (int idx = 0; idx < matrices.size(); idx++) {
+		//			matrices.get(idx).filterAbsolute(parameters.getAbsoluteThreshold());
+		//			matrices.get(idx).filterRelative(parameters.getRelativeThreshold(), parameters.getSafetyThreshold());
+		//		}
+		//		System.out.println("[DiscoverPetriNetAlgorithm] Filtering secondary matrices took " + (System.currentTimeMillis() - time) + " milliseconds.");
+		//		time = System.currentTimeMillis();
+
 		/*
-		 * If selected, use majority vote for whether to consider some edge as noise.
+		 * If selected, use majority vote for whether to consider some edge as
+		 * noise.
 		 */
 		if (parameters.isVetoNoise()) {
 			matrices.vetoNoise(alphabet);
-			System.out.println("[DiscoverPetriNetAlgorithm] Vetoing noise took " + (System.currentTimeMillis() - time) + " milliseconds.");
+			System.out.println("[DiscoverPetriNetAlgorithm] Vetoing noise took " + (System.currentTimeMillis() - time)
+					+ " milliseconds.");
 			time = System.currentTimeMillis();
 		}
 
@@ -143,7 +171,8 @@ public class DiscoverPetriNetAlgorithm {
 		 * activities.
 		 */
 		AcceptingPetriNet apn = createNet(matrices, alphabet, parameters);
-		System.out.println("[DiscoverPetriNetAlgorithm] Creating accepting Petri net took " + (System.currentTimeMillis() - time) + " milliseconds.");
+		System.out.println("[DiscoverPetriNetAlgorithm] Creating accepting Petri net took "
+				+ (System.currentTimeMillis() - time) + " milliseconds.");
 		time = System.currentTimeMillis();
 
 		/*
@@ -162,19 +191,21 @@ public class DiscoverPetriNetAlgorithm {
 			reduceNet(apn);
 			System.out.println("[DiscoverPetriNetAlgorithm] Reducing using rules...");
 			apn = redAlgorithm.apply(context, apn, redParameters);
-//			System.out.println("[DiscoverPetriNetAlgorithm] Reducing same contexts...");
-//			reduceSameContext(apn);
-//			System.out.println("[DiscoverPetriNetAlgorithm] Reducing using rules...");
-//			apn = redAlgorithm.apply(context, apn, redParameters);
+			//			System.out.println("[DiscoverPetriNetAlgorithm] Reducing same contexts...");
+			//			reduceSameContext(apn);
+			//			System.out.println("[DiscoverPetriNetAlgorithm] Reducing using rules...");
+			//			apn = redAlgorithm.apply(context, apn, redParameters);
 			System.out.println("[DiscoverPetriNetAlgorithm] Reduced the net.");
-			System.out.println("[DiscoverPetriNetAlgorithm] Reducing accepting Petri net took " + (System.currentTimeMillis() - time) + " milliseconds.");
+			System.out.println("[DiscoverPetriNetAlgorithm] Reducing accepting Petri net took "
+					+ (System.currentTimeMillis() - time) + " milliseconds.");
 			time = System.currentTimeMillis();
 		}
 
 		/*
 		 * Return the discovered accepting Petri net.
 		 */
-		System.out.println("[DiscoverPetriNetAlgorithm] Discovering accepting Petri net took " + (System.currentTimeMillis() - time2) + " milliseconds.");
+		System.out.println("[DiscoverPetriNetAlgorithm] Discovering accepting Petri net took "
+				+ (System.currentTimeMillis() - time2) + " milliseconds.");
 		return apn;
 	}
 
@@ -201,7 +232,7 @@ public class DiscoverPetriNetAlgorithm {
 		finalMarkings.add(finalMarking);
 
 		Map<Integer, Transition> transitions = new HashMap<Integer, Transition>();
-//		Map<Pair<ActivitySet, ActivitySet>, Transition> silentTransitions = new HashMap<Pair<ActivitySet, ActivitySet>, Transition>();
+		//		Map<Pair<ActivitySet, ActivitySet>, Transition> silentTransitions = new HashMap<Pair<ActivitySet, ActivitySet>, Transition>();
 		// Add visible shared transitions.
 		if (parameters.isMerge()) {
 			for (int nodeIdx = 1; nodeIdx < alphabet.size(); nodeIdx++) {
@@ -210,20 +241,20 @@ public class DiscoverPetriNetAlgorithm {
 		}
 
 		/*
-		 * Set of tau-clusters that have already been produced. 
+		 * Set of tau-clusters that have already been produced.
 		 */
 		Set<Set<String>> clustersProduced = new HashSet<Set<String>>();
-		
+
 		for (int idx = 0; idx < matrices.size(); idx++) {
 			ActivityMatrix subMatrix = matrices.get(idx);
 			Map<Integer, ActivitySet> nextActivities = subMatrix.getNextActivities();
 			Map<Integer, ActivitySet> previousActivities = subMatrix.getPreviousActivities();
-			
+
 			/*
-			 * Find the tau-clusters for this matrix. 
-			 * First, initialize the tau-clusters.
+			 * Find the tau-clusters for this matrix. First, initialize the
+			 * tau-clusters.
 			 */
-			Map<String,Set<String>> clusters = new HashMap<String, Set<String>>();
+			Map<String, Set<String>> clusters = new HashMap<String, Set<String>>();
 			for (int nodeIdx = 0; nodeIdx < alphabet.size(); nodeIdx++) {
 				if (subMatrix.get(nodeIdx) == 0) {
 					continue;
@@ -245,7 +276,8 @@ public class DiscoverPetriNetAlgorithm {
 				}
 			}
 			/*
-			 * Second, merge tau-clusters if they have an object (must be place) in common.
+			 * Second, merge tau-clusters if they have an object (must be place)
+			 * in common.
 			 */
 			boolean change = true;
 			while (change) {
@@ -268,7 +300,7 @@ public class DiscoverPetriNetAlgorithm {
 					}
 				}
 			}
-						
+
 			if (!parameters.isMerge()) {
 				// Add visible non-shared transitions.
 				for (int nodeIdx = 1; nodeIdx < alphabet.size(); nodeIdx++) {
@@ -276,7 +308,7 @@ public class DiscoverPetriNetAlgorithm {
 						transitions.put(nodeIdx, net.addTransition(alphabet.get(nodeIdx)));
 					}
 				}
-//				silentTransitions.clear();
+				//				silentTransitions.clear();
 			}
 			// Add places
 			Map<ActivitySet, Place> nextPlaces = new HashMap<ActivitySet, Place>();
@@ -323,20 +355,21 @@ public class DiscoverPetriNetAlgorithm {
 					if (subMatrix.get(nextIdx) == 0) {
 						continue;
 					}
-					if (clustersProduced.contains(clusters.get("(" + alphabet.get(nodeIdx) + "," + alphabet.get(nextIdx) + ")"))) {
+					if (clustersProduced
+							.contains(clusters.get("(" + alphabet.get(nodeIdx) + "," + alphabet.get(nextIdx) + ")"))) {
 						/*
 						 * Already produced. Skip here..
 						 */
 						continue;
 					}
-//					Pair<ActivitySet, ActivitySet> pair = new Pair<ActivitySet, ActivitySet>(nextActivities.get(nodeIdx), previousActivities.get(nextIdx));
-//					Transition transition = silentTransitions.get(pair);
-//					if (transition == null) {
-						Transition transition = net
+					//					Pair<ActivitySet, ActivitySet> pair = new Pair<ActivitySet, ActivitySet>(nextActivities.get(nodeIdx), previousActivities.get(nextIdx));
+					//					Transition transition = silentTransitions.get(pair);
+					//					if (transition == null) {
+					Transition transition = net
 							.addTransition("(" + alphabet.get(nodeIdx) + "," + alphabet.get(nextIdx) + ")");
-						transition.setInvisible(true);
-//						silentTransitions.put(pair, transition);
-//					}
+					transition.setInvisible(true);
+					//						silentTransitions.put(pair, transition);
+					//					}
 					net.addArc(nextPlaces.get(nextActivities.get(nodeIdx)), transition);
 					net.addArc(transition, previousPlaces.get(previousActivities.get(nextIdx)));
 				}
@@ -369,7 +402,7 @@ public class DiscoverPetriNetAlgorithm {
 			if (!transition.isInvisible()) {
 				continue;
 			}
-			if(transitionsRemoved.contains(transition)) {
+			if (transitionsRemoved.contains(transition)) {
 				continue;
 			}
 			for (PetrinetNode node : postset.get(preset.get(transition).iterator().next())) {
@@ -455,7 +488,7 @@ public class DiscoverPetriNetAlgorithm {
 			apn.getNet().removeTransition(transition);
 			apn.getNet().removePlace(place);
 		}
-		
+
 	}
 
 	private void reduceSameContext(AcceptingPetriNet apn) {
@@ -470,7 +503,7 @@ public class DiscoverPetriNetAlgorithm {
 			preset.get(edge.getTarget()).add(edge.getSource());
 		}
 		Set<Transition> transitions = new HashSet<Transition>(apn.getNet().getTransitions());
-		Map<List<Set<PetrinetNode>>,Transition> seen = new HashMap<List<Set<PetrinetNode>>,Transition>();
+		Map<List<Set<PetrinetNode>>, Transition> seen = new HashMap<List<Set<PetrinetNode>>, Transition>();
 		for (Transition transition : transitions) {
 			if (!transition.isInvisible() || preset.get(transition).size() != 1
 					|| postset.get(transition).size() != 1) {
@@ -484,7 +517,7 @@ public class DiscoverPetriNetAlgorithm {
 			if (postset.get(postPlace).size() != 1) {
 				continue;
 			}
-			
+
 			Set<PetrinetNode> postPrePlace = new HashSet<PetrinetNode>();
 			for (PetrinetNode node : postset.get(prePlace)) {
 				if (!((Transition) node).isInvisible()) {

@@ -1,5 +1,6 @@
 package org.processmining.discover.widgets;
 
+import javax.swing.JComponent;
 import javax.swing.JPanel;
 
 import org.deckfour.xes.classification.XEventNameClassifier;
@@ -17,18 +18,54 @@ public class SelectClassifierWidget extends JPanel {
 	 */
 	private static final long serialVersionUID = 7976542514991505085L;
 
+	private JComponent classifierPanel = null;
+	
 	public SelectClassifierWidget(XLog log, DiscoverPetriNetParameters parameters) {
 		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL } };
 		setLayout(new TableLayout(size));
 		
 		if (parameters.getClassifier() == null || !log.getClassifiers().contains(parameters.getClassifier())) {
-			if (log.getClassifiers().isEmpty()) {
-				parameters.setClassifier(new XEventNameClassifier());
-			} else {
-				parameters.setClassifier(log.getClassifiers().get(0));
-			}
+			/*
+			 * Either the classifier has not been set before, or the last classifier set does not exist in the current log.
+			 * Reset the classifier.
+			 */
+			reset(log, parameters);
 		}
-		add(new ClassifierPanel(log.getClassifiers(), parameters), "0, 0");
+		classifierPanel = new ClassifierPanel(log.getClassifiers(), parameters);
+		add(classifierPanel, "0, 0");
 
+//		SlickerButton resetButton = new SlickerButton("Reset");
+//		resetButton.addActionListener(new ActionListener() {
+//
+//			public void actionPerformed(ActionEvent arg0) {
+//				if (classifierPanel != null) {
+//					remove(classifierPanel);
+//				}
+//				reset(log, parameters);
+//				classifierPanel = new ClassifierPanel(log.getClassifiers(), parameters);
+//				add(classifierPanel, "0, 0");
+//				validate();
+//				repaint();
+//				/*
+//				 * Get rid of animation that results from pressing the button.
+//				 */
+//				resetButton.setEnabled(false);
+//				resetButton.setEnabled(true);
+//			}
+//			
+//		});
+//		add(resetButton, "0, 1");
+	}
+	
+	private void reset(XLog log, DiscoverPetriNetParameters parameters) {
+		if (log.getClassifiers().isEmpty()) {
+			parameters.setClassifier(new XEventNameClassifier());
+		} else {
+			parameters.setClassifier(log.getClassifiers().get(0));
+		}
+		/*
+		 * Although we have now reset the classifier, the selected activities may still be valid. 
+		 * Therefore, we do not reset them here.
+		 */
 	}
 }

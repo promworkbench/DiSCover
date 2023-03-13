@@ -5,7 +5,9 @@ import java.util.List;
 
 import org.deckfour.xes.classification.XEventClassifier;
 import org.processmining.discover.models.ActivityAlphabet;
+import org.processmining.discover.models.ActivityLog;
 import org.processmining.discover.models.ActivityMatrix;
+import org.processmining.discover.models.ActivitySet;
 import org.processmining.log.parameters.ClassifierParameter;
 
 public class DiscoverPetriNetParameters implements ClassifierParameter {
@@ -50,8 +52,14 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	
 	private List<String> activities;
 	
+	private ActivityLog log;
+	
 	private ActivityMatrix matrix;
 	
+	private List<ActivitySet> activitySets;
+
+	private List<ActivitySet> allActivitySets;
+
 	/**
 	 * Parameter settings selected last by the user.
 	 */
@@ -64,7 +72,11 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static int LastNofSComponents = 20; // Seems more than enough.
 	private static XEventClassifier lastClassifier = null;
 	private static List<String> lastActivities = null;
+	private static ActivityLog lastLog = null;
 	private static ActivityMatrix lastMatrix = null;
+	private static List<ActivitySet> lastActivitySets = null;
+	private static List<ActivitySet> lastAllActivitySets = null;
+
 	/**
 	 * Creates default parameter settings.
 	 */
@@ -78,7 +90,10 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		setNofSComponents(LastNofSComponents);
 		setClassifier(lastClassifier);
 		setActivities(lastActivities);
+		setLog(lastLog);
 		setMatrix(lastMatrix);
+		setActivitySets(lastActivitySets);
+		setAllActivitySets(lastAllActivitySets);
 	}
 	
 	/*
@@ -179,5 +194,32 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 
 	public void setMatrix(ActivityMatrix matrix) {
 		this.matrix = matrix;
+	}
+
+	public List<ActivitySet> getActivitySets() {
+		return activitySets;
+	}
+
+	public void setActivitySets(List<ActivitySet> activitySets) {
+		this.lastActivitySets = (activitySets == null ? null : new ArrayList<ActivitySet>(activitySets));
+		this.activitySets = (activitySets == null ? null : new ArrayList<ActivitySet>(activitySets));
+	}
+
+	public ActivityLog getLog() {
+		return log;
+	}
+
+	public void setLog(ActivityLog log) {
+		this.lastLog = log;
+		this.log = log;
+	}
+
+	public static List<ActivitySet> getAllActivitySets() {
+		return lastAllActivitySets;
+	}
+
+	public void setAllActivitySets(List<ActivitySet> allActivitySets) {
+		this.lastAllActivitySets = (allActivitySets == null ? null : new ArrayList<ActivitySet>(allActivitySets));
+		this.allActivitySets = (allActivitySets == null ? null : new ArrayList<ActivitySet>(allActivitySets));
 	}
 }

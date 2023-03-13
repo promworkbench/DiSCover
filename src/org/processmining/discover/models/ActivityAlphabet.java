@@ -1,8 +1,12 @@
 package org.processmining.discover.models;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.deckfour.xes.classification.XEventClassifier;
 import org.deckfour.xes.model.XEvent;
@@ -46,36 +50,33 @@ public class ActivityAlphabet {
 	 * @param classifier The classifier to use
 	 */
 	public ActivityAlphabet(XLog log, XEventClassifier classifier) {
-		activity2Idx = new HashMap<String, Integer>();
-		activity2Idx.put(STARTEND, 0);
-		size = 1;
-		for (XTrace trace : log) {
-			for (XEvent event : trace) {
-				String activity = classifier.getClassIdentity(event);
-				if (!activity2Idx.containsKey(activity)) {
-					// Found new activity. Give it the next available index.
-					activity2Idx.put(activity, size++);
-				}
-			}
-		}
-		// Create the reverse mapping.
-		idx2Activity = new String[size];
-		for (String activity : activity2Idx.keySet()) {
-			idx2Activity[activity2Idx.get(activity)] = activity;
-		}
+		this(getActivities(log, classifier));
 	}
 
 	public ActivityAlphabet(List<String> activities) {
+		List<String> sortedActivities = new ArrayList<String>(activities);
+		Collections.sort(sortedActivities);
+		
 		activity2Idx = new HashMap<String, Integer>();
 		idx2Activity = new String[activities.size() + 1];
 		activity2Idx.put(STARTEND, 0);
 		idx2Activity[0] = STARTEND;
 		size = 1;
-		for (String activity : activities) {
+		for (String activity : sortedActivities) {
 			activity2Idx.put(activity, size);
 			idx2Activity[size] = activity;
 			size++;
 		}
+	}
+	
+	private static List<String> getActivities(XLog log, XEventClassifier classifier) {
+		Set<String> activities = new HashSet<String>();
+		for (XTrace trace : log) {
+			for (XEvent event : trace) {
+				activities.add(classifier.getClassIdentity(event));
+			}
+		}
+		return new ArrayList<String>(activities);
 	}
 	
 	/**

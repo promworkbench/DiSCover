@@ -12,6 +12,7 @@ import org.processmining.discover.parameters.DiscoverPetriNetParameters;
 import org.processmining.discover.widgets.DiscoverPetriNetWidget;
 import org.processmining.discover.widgets.FilterMatrixWidget;
 import org.processmining.discover.widgets.SelectActivitiesWidget;
+import org.processmining.discover.widgets.SelectActivitySetsWidget;
 import org.processmining.discover.widgets.SelectClassifierWidget;
 import org.processmining.framework.plugin.PluginContext;
 import org.processmining.framework.plugin.annotations.Plugin;
@@ -55,11 +56,14 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 				case 2:
 					widget = new FilterMatrixWidget(log, parameters);
 					break;
+				case 3:
+					widget = new SelectActivitySetsWidget(parameters);
+					break;
 				default: 
 					widget = new DiscoverPetriNetWidget(parameters);
 					break;
 			}
-			InteractionResult result = context.showWizard("Configure DiSCovery", step == 0, step == 3, widget);
+			InteractionResult result = context.showWizard("Configure DiSCovery", step == 0, step == 4, widget);
 			switch (result) {
 				case NEXT:
 					if (step == 0 && parameters.getClassifier() == null) {

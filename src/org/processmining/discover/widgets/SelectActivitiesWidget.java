@@ -26,34 +26,62 @@ public class SelectActivitiesWidget extends JPanel implements ListSelectionListe
 	private static final long serialVersionUID = -7976742514293349986L;
 	
 	private DiscoverPetriNetParameters parameters;
-	private ProMList<String> list;
+	private ProMList<String> listPanel = null;
 	
 	public SelectActivitiesWidget(XLog log, DiscoverPetriNetParameters parameters) {
 		this.parameters = parameters;
 		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL } };
 		setLayout(new TableLayout(size));
-		
-		DefaultListModel<String> listModel = new DefaultListModel<String>();
+
 		ActivityAlphabet alphabet = new ActivityAlphabet(log, parameters.getClassifier());
-		
-		if (parameters.getActivities() == null || !matches(alphabet, parameters.getActivities())) {
-			List<String> activities = new ArrayList<String>();
-			for (int i = 1; i < alphabet.size(); i++) {
-				activities.add(alphabet.get(i));
-			}
-			parameters.setActivities(activities);
+
+		if (parameters.getActivities() == null || !matches(parameters.getAlphabet(), parameters.getActivities())) {
+			/*
+			 * Either the activities have not been set before, or the some of the last selected 
+			 * activities do not match the current classifier.
+			 * Reset the activities.
+			 */
+			reset(log, parameters, alphabet);
 		}
+		listPanel = getMainComponent(log, parameters, alphabet);
+		add(listPanel, "0, 0");
+
+//		SlickerButton resetButton = new SlickerButton("Reset");
+//		resetButton.addActionListener(new ActionListener() {
+//
+//			public void actionPerformed(ActionEvent arg0) {
+//				if (listPanel != null) {
+//					remove(listPanel);
+//				}
+//				reset(log, parameters, alphabet);
+//				listPanel = getMainComponent(log, parameters, alphabet);
+//				add(listPanel, "0, 0");
+//				validate();
+//				repaint();
+//				/*
+//				 * Get rid of animation that results from pressing the button.
+//				 */
+//				resetButton.setEnabled(false);
+//				resetButton.setEnabled(true);
+//			}
+//			
+//		});
+//		add(resetButton, "0, 1");
+	}
+
+	private ProMList<String> getMainComponent(XLog log, DiscoverPetriNetParameters parameters, ActivityAlphabet alphabet) {
+		DefaultListModel<String> listModel = new DefaultListModel<String>();
 		for (int i = 1; i < alphabet.size(); i++) {
 			listModel.addElement(alphabet.get(i));
 		}
 		int selectedIndices[] = new int[parameters.getActivities().size()];
 		int j = 0;
-		for (int i = 1; i < alphabet.size(); i++) {
+		for (int i = 1; i < parameters.getAlphabet().size(); i++) {
 			if (parameters.getActivities().contains(listModel.get(i - 1))) {
 				selectedIndices[j++] = i - 1;
 			}
 		}
-		list = new ProMList<String>("Alphabet", listModel);
+		ProMList<String> list = new ProMList<String>("Select activities", listModel);
 		list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		if (alphabet.size() - 1 == j) {
 			/*
@@ -71,23 +99,36 @@ public class SelectActivitiesWidget extends JPanel implements ListSelectionListe
 		parameters.setActivities(list.getSelectedValuesList());
 		
 		list.setPreferredSize(new Dimension(100,100));
-		add(list, "0, 0");
-
+		return list;
 	}
-
+	
 	private boolean matches(ActivityAlphabet alphabet, List<String> activities) {
 		for (String activity : activities) {
 			if (!alphabet.contains(activity)) {
+				/*
+				 * The selected activity is not valid anymore.
+				 */
 				return false;
 			}
 		}
 		return true;
 	}
 	
+	private void reset(XLog log, DiscoverPetriNetParameters parameters, ActivityAlphabet alphabet) {
+		List<String> activities = new ArrayList<String>();
+		for (int i = 1; i < alphabet.size(); i++) {
+			activities.add(alphabet.get(i));
+		}
+		if (listPanel == null || !activities.equals(listPanel.getSelectedValuesList())) {
+			parameters.setActivities(activities);
+			parameters.setMatrix(null);
+		}
+	}
+	
 	public void valueChanged(ListSelectionEvent e) {
 		// TODO Auto-generated method stub
-		if (!parameters.getActivities().equals(list.getSelectedValuesList())) {
-			parameters.setActivities(list.getSelectedValuesList());
+		if (!parameters.getActivities().equals(listPanel.getSelectedValuesList())) {
+			parameters.setActivities(listPanel.getSelectedValuesList());
 			parameters.setMatrix(null);
 		}
 	}

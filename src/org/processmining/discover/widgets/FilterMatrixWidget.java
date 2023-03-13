@@ -37,6 +37,7 @@ public class FilterMatrixWidget extends JPanel {
 
 	int maxValue = 0;
 
+	JComponent mainPanel = null;
 	JComponent matrixComponent = null;
 
 	ActivityMatrix matrix = null;
@@ -51,31 +52,33 @@ public class FilterMatrixWidget extends JPanel {
 				int row, int col) {
 			Component comp = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
 
-			if (col > 0) {
-
-				double s = 0.0;
-				try {
-					int d = Integer.valueOf((String) table.getModel().getValueAt(row, col));
-					matrix.set(row, col - 1, d);
+			double s = 0.0;
+			try {
+				int d = Integer.valueOf((String) table.getModel().getValueAt(row, col));
+				matrix.set(row, col, d);
+				int d2 = Integer.valueOf((String) table.getModel().getValueAt(col, row));
+				if (d > 0 && d2 > 0) {
+					s = ((double) -Math.min(d, d2)) / maxValue;
+				} else if (d > 0) {
 					s = ((double) d) / maxValue;
-				} catch (NumberFormatException e) {
-					// Treat any non-number as zero.
-					matrix.set(row, col - 1, 0);
-				}
-
-				if (s > 1.0) {
-					s = 1.0;
-				} else if (s < -1.0) {
-					s = -1.0;
-				}
-				comp.setBackground(getColorValue(s));
-				if (s > 0.0) {
-					comp.setForeground(Color.WHITE);
 				} else {
-					comp.setForeground(Color.BLACK);
+					s = 0.0;
 				}
+			} catch (NumberFormatException e) {
+				// Treat any non-number as zero.
+				matrix.set(row, col, 0);
+			}
+
+			if (s > 1.0) {
+				s = 1.0;
+			} else if (s < -1.0) {
+				s = -1.0;
+			}
+			comp.setBackground(getColorValue(s));
+			if (s > 0.1) {
+				comp.setForeground(Color.WHITE);
 			} else {
-				comp.setBackground(Color.WHITE);
+				comp.setForeground(Color.BLACK);
 			}
 
 			return (comp);
@@ -86,11 +89,11 @@ public class FilterMatrixWidget extends JPanel {
 
 			int r = 255, g = 255, b = 255;
 			if (d > 0.0) {
-				g = (int) ((1.0 - d) * 127.0);
+				g = (int) ((1.0 - d) * 191.0);
 				r = g;
 			}
 			if (d < 0.0) {
-				g = (int) ((d + 1.0) * 127.0);
+				g = (int) ((d + 1.0) * 191.0);
 				b = g;
 			}
 
@@ -99,17 +102,49 @@ public class FilterMatrixWidget extends JPanel {
 	}
 
 	public FilterMatrixWidget(XLog eventLog, DiscoverPetriNetParameters parameters) {
-		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL, 30, 30, 30 } };
+		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL } };
 		setLayout(new TableLayout(size));
+
+		mainPanel = getMainComponent(eventLog, parameters);
+		add(mainPanel, "0, 0");
+
+		//		SlickerButton resetButton = new SlickerButton("Reset");
+		//		resetButton.addActionListener(new ActionListener() {
+		//
+		//			public void actionPerformed(ActionEvent arg0) {
+		//				if (mainPanel != null) {
+		//					remove(mainPanel);
+		//				}
+		//				mainPanel = getMainComponent(eventLog, parameters);
+		//				add(mainPanel, "0, 0");
+		//				validate();
+		//				repaint();
+		//				/*
+		//				 * Get rid of animation that results from pressing the button.
+		//				 */
+		//				resetButton.setEnabled(false);
+		//				resetButton.setEnabled(true);
+		//			}
+		//			
+		//		});
+		//		add(resetButton, "0, 1");
+	}
+
+	private JPanel getMainComponent(XLog eventLog, DiscoverPetriNetParameters parameters) {
+		JPanel panel = new JPanel();
+		panel.setOpaque(false);
+		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL, 30, 30, 30 } };
+		panel.setLayout(new TableLayout(size));
 		//		if (parameters.getMatrix() == null) {
 		XEventClassifier classifier = parameters.getClassifier();
 		ActivityAlphabet alphabet = parameters.getAlphabet();
 		ActivityLog log = new ActivityLog(eventLog, classifier, alphabet);
+		parameters.setLog(log);
 		matrix = new ActivityMatrix(log, alphabet);
 		parameters.setMatrix(matrix);
 		//		}
 		filter(parameters);
-		addMatrixWidget(parameters);
+		addMatrixWidget(panel, parameters);
 
 		final NiceSlider absSlider = SlickerFactory.instance().createNiceIntegerSlider(
 				"Absolute threshold (0 if no noise)", 0, 20, parameters.getAbsoluteThreshold(), Orientation.HORIZONTAL);
@@ -120,12 +155,13 @@ public class FilterMatrixWidget extends JPanel {
 				int value = absSlider.getSlider().getValue();
 				parameters.setAbsoluteThreshold(value);
 				filter(parameters);
-				addMatrixWidget(parameters);
+				addMatrixWidget(panel, parameters);
+				parameters.setAllActivitySets(null);
 				//				System.out.println("[FilterMatrixWidget] end change");
 			}
 		});
 		absSlider.setPreferredSize(new Dimension(100, 30));
-		add(absSlider, "0, 1");
+		panel.add(absSlider, "0, 1");
 
 		// Slider for the relative threshold. Ranges from 0 to 99 (percent).
 		final NiceSlider relSlider = SlickerFactory.instance().createNiceIntegerSlider(
@@ -136,11 +172,12 @@ public class FilterMatrixWidget extends JPanel {
 				int value = relSlider.getSlider().getValue();
 				parameters.setRelativeThreshold(value);
 				filter(parameters);
-				addMatrixWidget(parameters);
+				addMatrixWidget(panel, parameters);
+				parameters.setAllActivitySets(null);
 			}
 		});
 		relSlider.setPreferredSize(new Dimension(100, 30));
-		add(relSlider, "0, 2");
+		panel.add(relSlider, "0, 2");
 
 		final NiceSlider safSlider = SlickerFactory.instance().createNiceIntegerSlider("Safety threshold", 0, 99,
 				parameters.getSafetyThreshold(), Orientation.HORIZONTAL);
@@ -150,11 +187,13 @@ public class FilterMatrixWidget extends JPanel {
 				int value = safSlider.getSlider().getValue();
 				parameters.setSafetyThreshold(value);
 				filter(parameters);
-				addMatrixWidget(parameters);
+				addMatrixWidget(panel, parameters);
+				parameters.setAllActivitySets(null);
 			}
 		});
 		safSlider.setPreferredSize(new Dimension(100, 30));
-		add(safSlider, "0, 3");
+		panel.add(safSlider, "0, 3");
+		return panel;
 	}
 
 	private void filter(DiscoverPetriNetParameters parameters) {
@@ -163,32 +202,29 @@ public class FilterMatrixWidget extends JPanel {
 		parameters.getMatrix().filterRelative(parameters.getRelativeThreshold(), parameters.getSafetyThreshold());
 	}
 
-	private void addMatrixWidget(DiscoverPetriNetParameters parameters) {
+	private void addMatrixWidget(JPanel panel, DiscoverPetriNetParameters parameters) {
 		if (matrixComponent != null) {
 			//			System.out.println("[FilterMatrixWdiget] removing matrix component");
-			remove(matrixComponent);
+			panel.remove(matrixComponent);
 			//			System.out.println("[FilterMatrixWdiget] removed matrix component");
 		}
 		final JTable table = new JTable();
 		ActivityAlphabet alphabet = parameters.getAlphabet();
 		matrix = parameters.getMatrix();
 		int n = alphabet.size();
-		String[] columnNames = new String[n + 1];
-		String[][] rows = new String[n][n + 1];
+		String[] columnNames = new String[n];
+		String[][] rows = new String[n][n];
 		for (int r = 0; r < n; r++) {
-			rows[r][0] = alphabet.get(r);
-
 			for (int c = 0; c < n; c++) {
 				if (r == 0) {
-					columnNames[c + 1] = alphabet.get(c);
+					columnNames[c] = alphabet.get(c);
 				}
 
 				int v = matrix.get(r, c);
 				maxValue = Math.max(Math.abs(v), maxValue);
-				rows[r][c + 1] = String.valueOf(v);
+				rows[r][c] = String.valueOf(v);
 			}
 		}
-		columnNames[0] = "Matrix";
 
 		TableModel model = new DefaultTableModel(rows, columnNames);
 		table.setModel(model);
@@ -202,9 +238,10 @@ public class FilterMatrixWidget extends JPanel {
 		matrixComponent.setOpaque(false);
 		matrixComponent.setPreferredSize(new Dimension(100, 100));
 		//		System.out.println("[FilterMatrixWdiget] adding matrix component");
-		add(matrixComponent, "0, 0");
+		panel.add(matrixComponent, "0, 0");
 		//		System.out.println("[FilterMatrixWdiget] added matrix component");
-		revalidate();
-		repaint();
+		panel.validate();
+		panel.repaint();
 	}
+
 }

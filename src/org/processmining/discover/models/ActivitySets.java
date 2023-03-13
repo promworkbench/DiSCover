@@ -1,6 +1,7 @@
 package org.processmining.discover.models;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -72,6 +73,14 @@ public class ActivitySets {
 				}
 			}
 			this.sets.add(size++, ignoreSet);
+		}
+	}
+	
+	public ActivitySets(Collection<ActivitySet> activitySets) {
+		this.size = activitySets.size();
+		this.sets = new ArrayList<ActivitySet>(size);
+		for (ActivitySet activities : activitySets) {
+			this.sets.add(activities);
 		}
 	}
 	
