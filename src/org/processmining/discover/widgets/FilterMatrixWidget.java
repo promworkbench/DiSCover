@@ -75,8 +75,8 @@ public class FilterMatrixWidget extends JPanel {
 			} else if (s < -1.0) {
 				s = -1.0;
 			}
-			comp.setBackground(getColorValue(s));
-			if (s > 0.1) {
+			comp.setBackground(getColorValue(s, col == row));
+			if (s > 0.1 || col == row) {
 				comp.setForeground(Color.WHITE);
 			} else {
 				comp.setForeground(Color.BLACK);
@@ -85,10 +85,15 @@ public class FilterMatrixWidget extends JPanel {
 			return (comp);
 		}
 
-		private Color getColorValue(double d) {
+		private Color getColorValue(double d, boolean isDiagonal) {
 			/* int color */
 
 			int r = 255, g = 255, b = 255;
+			if (isDiagonal) {
+				r = 128;
+				g = 128;
+				b = 128;
+			}
 			if (d > 0.0) {
 				g = (int) ((1.0 - d) * 191.0);
 				r = g;
@@ -211,6 +216,7 @@ public class FilterMatrixWidget extends JPanel {
 		int n = alphabet.size();
 		String[] columnNames = new String[n];
 		String[][] rows = new String[n][n];
+		maxValue = 0;
 		for (int r = 0; r < n; r++) {
 			for (int c = 0; c < n; c++) {
 				if (r == 0) {
