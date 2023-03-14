@@ -1,18 +1,13 @@
 package org.processmining.discover.widgets;
 
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.processmining.discover.parameters.DiscoverPetriNetParameters;
 
-import com.fluxicon.slickerbox.components.NiceSlider;
-import com.fluxicon.slickerbox.components.NiceSlider.Orientation;
 import com.fluxicon.slickerbox.factory.SlickerFactory;
 
 import info.clearthought.layout.TableLayout;
@@ -31,22 +26,22 @@ public class DiscoverPetriNetWidget extends JPanel {
 	 * @param parameters The given parameter settings
 	 */
 	public DiscoverPetriNetWidget(final DiscoverPetriNetParameters parameters) {
-		double size[][] = { { TableLayoutConstants.FILL }, { 30, 30, 30, TableLayoutConstants.FILL } };
+		double size[][] = { { TableLayoutConstants.FILL }, { 30, 30, TableLayoutConstants.FILL } };
 		setLayout(new TableLayout(size));
 
 
 		// Slider for the relative threshold. Ranges from 0 to 99 (percent).
-		final NiceSlider scomSlider = SlickerFactory.instance().createNiceIntegerSlider(
-				"Limit on number of components (0 if no limit)", 0, 99, parameters.getNofSComponents(), Orientation.HORIZONTAL);
-		scomSlider.addChangeListener(new ChangeListener() {
-
-			public void stateChanged(ChangeEvent e) {
-				int value = scomSlider.getSlider().getValue();
-				parameters.setNofSComponents(value);
-			}
-		});
-		scomSlider.setPreferredSize(new Dimension(100, 30));
-		add(scomSlider, "0, 0");
+//		final NiceSlider scomSlider = SlickerFactory.instance().createNiceIntegerSlider(
+//				"Limit on number of components (0 if no limit)", 0, 99, parameters.getNofSComponents(), Orientation.HORIZONTAL);
+//		scomSlider.addChangeListener(new ChangeListener() {
+//
+//			public void stateChanged(ChangeEvent e) {
+//				int value = scomSlider.getSlider().getValue();
+//				parameters.setNofSComponents(value);
+//			}
+//		});
+//		scomSlider.setPreferredSize(new Dimension(100, 30));
+//		add(scomSlider, "0, 0");
 
 		// Check box for merge
 		final JCheckBox mergeBox = SlickerFactory.instance().createCheckBox("Merge activities",
@@ -59,7 +54,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 
 		});
 		mergeBox.setOpaque(false);
-		add(mergeBox, "0, 1");
+		add(mergeBox, "0, 0");
 		
 		// Check box for reduce
 		final JCheckBox reduceBox = SlickerFactory.instance().createCheckBox("Reduce Petri net",
@@ -72,7 +67,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 
 		});
 		reduceBox.setOpaque(false);
-		add(reduceBox, "0, 2");
+		add(reduceBox, "0, 1");
 		
 		// Check box for majority
 //		final JCheckBox majorityBox = SlickerFactory.instance().createCheckBox("Use veto for noise",

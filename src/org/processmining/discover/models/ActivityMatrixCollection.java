@@ -41,20 +41,50 @@ public class ActivityMatrixCollection {
 	 * @param ignoreSets
 	 *            THe given activity sets to ignore
 	 * @param rootMatrix
-	 * 			  The matrix discovered earlier or the entire log
+	 *            The matrix discovered earlier or the entire log
 	 */
-	public ActivityMatrixCollection(ActivityLog log, ActivityAlphabet alphabet, ActivitySets ignoreSets, ActivityMatrix rootMatrix) {
+	public ActivityMatrixCollection(ActivityLog log, ActivityAlphabet alphabet, ActivitySets ignoreSets,
+			ActivityMatrix rootMatrix) {
 		this(log, alphabet, ignoreSets, rootMatrix, new DiscoverPetriNetParameters());
 	}
 
-	public ActivityMatrixCollection(ActivityLog log, ActivityAlphabet alphabet, ActivitySets ignoreSets, ActivityMatrix rootMatrix,
-			DiscoverPetriNetParameters parameters) {
+	public ActivityMatrixCollection(ActivityLog log, ActivityAlphabet alphabet, ActivitySets ignoreSets,
+			ActivityMatrix rootMatrix, DiscoverPetriNetParameters parameters) {
 		size = ignoreSets.size();
 		matrices = new ActivityMatrix[size];
 		for (int idx = 0; idx < size; idx++) {
 			matrices[idx] = new ActivityMatrix(log, alphabet, ignoreSets.get(idx), rootMatrix);
 		}
-		reduce(parameters);
+		if (parameters.getNofSComponents() > 0) {
+			reduce(parameters);
+		}
+	}
+
+	public ActivityMatrixCollection(ActivityMatrixCollection matrices) {
+		size = matrices.size;
+		this.matrices = new ActivityMatrix[size];
+		for (int i = 0; i < size; i++) {
+			this.matrices[i] = new ActivityMatrix(matrices.get(i));
+		}
+	}
+
+	public boolean equals(Object o) {
+		if (o == null) {
+			return false;
+		}
+		if (o instanceof ActivityMatrixCollection) {
+			ActivityMatrixCollection matrices = (ActivityMatrixCollection) o;
+			if (size != matrices.size) {
+				return false;
+			}
+			for (int i = 0; i < size; i++) {
+				if (!this.matrices[i].equals(matrices.get(i))) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -128,64 +158,69 @@ public class ActivityMatrixCollection {
 	}
 
 	private void reduce(DiscoverPetriNetParameters parameters) {
-		Set<ActivitySet> nextActivities = new HashSet<ActivitySet>();
-		Set<ActivitySet> previousActivities = new HashSet<ActivitySet>();
 		Set<ActivityMatrix> selected = new HashSet<ActivityMatrix>();
-		for (ActivityMatrix matrix : matrices) {
-			nextActivities.addAll(matrix.getNextActivities().values());
-			previousActivities.addAll(matrix.getPreviousActivities().values());
-		}
-		//		System.out.println("[ActivityMatrixCollection] Reduced from " + size + " to " + selected.size() + " matrices.");
-		//		size = selected.size();
-		//		matrices = new ActivityMatrix[size];
-		//		int idx = 0;
-		//		for (ActivityMatrix matrix : selected) {
-		//			matrices[idx++] = matrix;
-		//		}
 
-		/*
-		 * Create an ILP to get a minimal set of matrices that cover all next and previous sets.
-		 */
-		LPEngine engine = LPEngineFactory.createLPEngine(EngineType.LPSOLVE, 0, 0);
-		Map<Integer, Double> objective = new HashMap<Integer, Double>();
-		int variables[] = new int[matrices.length];
-		for (int i = 0; i < matrices.length; i++) {
-			variables[i] = engine.addVariable(new HashMap<Integer, Double>(), LPEngine.VariableType.INTEGER);
-			objective.put(variables[i], 1.0);
-		}
-		engine.setObjective(objective, ObjectiveTargetType.MIN);
+		if (parameters.isUseILP()) {
+			Set<ActivitySet> nextActivities = new HashSet<ActivitySet>();
+			Set<ActivitySet> previousActivities = new HashSet<ActivitySet>();
+			for (ActivityMatrix matrix : matrices) {
+				nextActivities.addAll(matrix.getNextActivities().values());
+				previousActivities.addAll(matrix.getPreviousActivities().values());
+			}
+			//		System.out.println("[ActivityMatrixCollection] Reduced from " + size + " to " + selected.size() + " matrices.");
+			//		size = selected.size();
+			//		matrices = new ActivityMatrix[size];
+			//		int idx = 0;
+			//		for (ActivityMatrix matrix : selected) {
+			//			matrices[idx++] = matrix;
+			//		}
 
-		for (ActivitySet set : nextActivities) {
-			Map<Integer, Double> constraint = new HashMap<Integer, Double>();
+			/*
+			 * Create an ILP to get a minimal set of matrices that cover all
+			 * next and previous sets.
+			 */
+			LPEngine engine = LPEngineFactory.createLPEngine(EngineType.LPSOLVE, 0, 0);
+			Map<Integer, Double> objective = new HashMap<Integer, Double>();
+			int variables[] = new int[matrices.length];
 			for (int i = 0; i < matrices.length; i++) {
-				constraint.put(variables[i], matrices[i].getNextActivities().containsValue(set) ? 1.0 : 0.0);
+				variables[i] = engine.addVariable(new HashMap<Integer, Double>(), LPEngine.VariableType.INTEGER);
+				objective.put(variables[i], 1.0);
 			}
-			engine.addConstraint(constraint, Operator.GREATER_EQUAL, 1.0);
-		}
+			engine.setObjective(objective, ObjectiveTargetType.MIN);
 
-		for (ActivitySet set : previousActivities) {
-			Map<Integer, Double> constraint = new HashMap<Integer, Double>();
+			for (ActivitySet set : nextActivities) {
+				Map<Integer, Double> constraint = new HashMap<Integer, Double>();
+				for (int i = 0; i < matrices.length; i++) {
+					constraint.put(variables[i], matrices[i].getNextActivities().containsValue(set) ? 1.0 : 0.0);
+				}
+				engine.addConstraint(constraint, Operator.GREATER_EQUAL, 1.0);
+			}
+
+			for (ActivitySet set : previousActivities) {
+				Map<Integer, Double> constraint = new HashMap<Integer, Double>();
+				for (int i = 0; i < matrices.length; i++) {
+					constraint.put(variables[i], matrices[i].getPreviousActivities().containsValue(set) ? 1.0 : 0.0);
+				}
+				engine.addConstraint(constraint, Operator.GREATER_EQUAL, 1.0);
+			}
+			// Solve the ILP
+			Map<Integer, Double> solution = engine.solve();
+			// Select the matrices for the minimal set.
 			for (int i = 0; i < matrices.length; i++) {
-				constraint.put(variables[i], matrices[i].getPreviousActivities().containsValue(set) ? 1.0 : 0.0);
+				if (solution.containsKey(variables[i]) && solution.get(variables[i]) > 0.0) {
+					selected.add(matrices[i]);
+				}
 			}
-			engine.addConstraint(constraint, Operator.GREATER_EQUAL, 1.0);
-		}
-		// Solve the ILP
-		Map<Integer, Double> solution = engine.solve();
-		// Select the matrices for the minimal set.
-		for (int i = 0; i < matrices.length; i++) {
-			if (solution.containsKey(variables[i]) && solution.get(variables[i]) > 0.0) {
-				selected.add(matrices[i]);
+			// Set the matrices.
+			matrices = new ActivityMatrix[selected.size()];
+			int idx = 0;
+			for (ActivityMatrix matrix : selected) {
+				matrices[idx++] = matrix;
 			}
+			System.out.println(
+					"[ActivityMatrixCollection] Reduced from " + size + " to " + selected.size() + " matrices.");
+			size = selected.size();
 		}
-		// Set the matrices.
-		matrices = new ActivityMatrix[selected.size()];
-		int idx = 0;
-		for (ActivityMatrix matrix : selected) {
-			matrices[idx++] = matrix;
-		}
-		System.out.println("[ActivityMatrixCollection] Reduced from " + size + " to " + selected.size() + " matrices.");
-		size = selected.size();
 
 		/*
 		 * Limit the number of matrices to the provided limit.
@@ -199,10 +234,11 @@ public class ActivityMatrixCollection {
 		}
 		// Set the matrices.
 		matrices = new ActivityMatrix[selected.size()];
-		idx = 0;
+		int idx = 0;
 		for (ActivityMatrix matrix : selected) {
 			matrices[idx++] = matrix;
 		}
 		System.out.println("[ActivityMatrixCollection] Limited to " + selected.size() + " matrices.");
 		size = selected.size();
-	}}
+	}
+}

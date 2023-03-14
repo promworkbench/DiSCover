@@ -1,11 +1,16 @@
 package org.processmining.discover.widgets;
 
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
 import javax.swing.DefaultListModel;
+import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.ListSelectionModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -14,6 +19,10 @@ import org.processmining.discover.models.ActivitySets;
 import org.processmining.discover.models.ConcurrentActivityPairs;
 import org.processmining.discover.parameters.DiscoverPetriNetParameters;
 import org.processmining.framework.util.ui.widgets.ProMList;
+
+import com.fluxicon.slickerbox.components.NiceSlider;
+import com.fluxicon.slickerbox.components.NiceSlider.Orientation;
+import com.fluxicon.slickerbox.factory.SlickerFactory;
 
 import info.clearthought.layout.TableLayout;
 import info.clearthought.layout.TableLayoutConstants;
@@ -30,7 +39,7 @@ public class SelectActivitySetsWidget extends JPanel implements ListSelectionLis
 
 	public SelectActivitySetsWidget(DiscoverPetriNetParameters parameters) {
 		this.parameters = parameters;
-		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL } };
+		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL, 30, 30 } };
 		setLayout(new TableLayout(size));
 
 		ActivitySet.alphabet = parameters.getAlphabet();
@@ -48,6 +57,32 @@ public class SelectActivitySetsWidget extends JPanel implements ListSelectionLis
 		listPanel = getMainComponent(parameters);
 		add(listPanel, "0, 0");
 
+		// Slider for the relative threshold. Ranges from 0 to 99 (percent).
+		final NiceSlider scomSlider = SlickerFactory.instance().createNiceIntegerSlider(
+				"Limit on number of components (0 if no limit)", 0, 99, parameters.getNofSComponents(), Orientation.HORIZONTAL);
+		scomSlider.addChangeListener(new ChangeListener() {
+
+			public void stateChanged(ChangeEvent e) {
+				int value = scomSlider.getSlider().getValue();
+				parameters.setNofSComponents(value);
+			}
+		});
+		scomSlider.setPreferredSize(new Dimension(100, 30));
+		add(scomSlider, "0, 1");
+
+		// Check box for merge
+		final JCheckBox mergeBox = SlickerFactory.instance().createCheckBox("Use ILP reduction",
+				parameters.isUseILP());
+		mergeBox.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				parameters.setUseILP(mergeBox.isSelected());
+			}
+
+		});
+		mergeBox.setOpaque(false);
+		add(mergeBox, "0, 2");
+
 	}
 
 	private ProMList<ActivitySet> getMainComponent(DiscoverPetriNetParameters parameters) {
@@ -62,7 +97,7 @@ public class SelectActivitySetsWidget extends JPanel implements ListSelectionLis
 				selectedIndices[j++] = i;
 			}
 		}
-		ProMList<ActivitySet> list = new ProMList<ActivitySet>("Select components by selecting groups of activities to ignore", listModel);
+		ProMList<ActivitySet> list = new ProMList<ActivitySet>("Select components", listModel);
 		list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		if (parameters.getAllActivitySets().size() == j) {
 			/*

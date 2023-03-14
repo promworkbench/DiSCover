@@ -7,6 +7,7 @@ import org.deckfour.xes.classification.XEventClassifier;
 import org.processmining.discover.models.ActivityAlphabet;
 import org.processmining.discover.models.ActivityLog;
 import org.processmining.discover.models.ActivityMatrix;
+import org.processmining.discover.models.ActivityMatrixCollection;
 import org.processmining.discover.models.ActivitySet;
 import org.processmining.log.parameters.ClassifierParameter;
 
@@ -44,6 +45,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	 */
 	private int nofSComponents;
 
+	private boolean useILP;
 	/**
 	 * The safety threshold to use.
 	 */
@@ -63,6 +65,8 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 
 	private List<ActivitySet> allActivitySets;
 
+	private ActivityMatrixCollection matrixCollection;
+	
 	/**
 	 * Parameter settings selected last by the user.
 	 */
@@ -73,6 +77,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static int lastRelativeThreshold = 1;
 	private static int lastSafetyThreshold = 95;
 	private static int LastNofSComponents = 20; // Seems more than enough.
+	private static boolean lastUseILP = true;
 	private static XEventClassifier lastClassifier = null;
 	private static List<String> lastActivities = null;
 	private static ActivityAlphabet lastAlphabet = null;
@@ -80,6 +85,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static ActivityMatrix lastMatrix = null;
 	private static List<ActivitySet> lastActivitySets = null;
 	private static List<ActivitySet> lastAllActivitySets = null;
+	private static ActivityMatrixCollection lastMatrixCollection = null;
 
 	/**
 	 * Creates default parameter settings.
@@ -92,6 +98,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		setAbsoluteThreshold(lastAbsoluteThreshold);
 		setSafetyThreshold(lastSafetyThreshold);
 		setNofSComponents(LastNofSComponents);
+		setUseILP(lastUseILP);
 		setClassifier(lastClassifier, false);
 		setActivities(lastActivities, false);
 		setAlphabet(lastAlphabet, false);
@@ -99,6 +106,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		setMatrix(lastMatrix, false);
 		setActivitySets(lastActivitySets, false);
 		setAllActivitySets(lastAllActivitySets, false);
+		setMatrixCollection(lastMatrixCollection, false);
 	}
 
 	/*
@@ -268,6 +276,9 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		if (this.activitySets == null || !this.activitySets.equals(activitySets)) {
 			this.lastActivitySets = (activitySets == null ? null : new ArrayList<ActivitySet>(activitySets));
 			this.activitySets = (activitySets == null ? null : new ArrayList<ActivitySet>(activitySets));
+			if (propagate) {
+				setMatrixCollection(null);
+			}
 		}
 	}
 
@@ -284,5 +295,28 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 			this.lastAllActivitySets = (allActivitySets == null ? null : new ArrayList<ActivitySet>(allActivitySets));
 			this.allActivitySets = (allActivitySets == null ? null : new ArrayList<ActivitySet>(allActivitySets));
 		}
+	}
+
+	public ActivityMatrixCollection getMatrixCollection() {
+		return matrixCollection;
+	}
+
+	public void setMatrixCollection(ActivityMatrixCollection matrixCollection) {
+		setMatrixCollection(matrixCollection, true);
+	}
+	
+	private void setMatrixCollection(ActivityMatrixCollection matrixCollection, boolean propagate) {
+		if (this.matrixCollection == null || !this.matrixCollection.equals(matrixCollection)) {
+			this.lastMatrixCollection = (matrixCollection == null ? null : new ActivityMatrixCollection(matrixCollection));
+			this.matrixCollection = (matrixCollection == null ? null : new ActivityMatrixCollection(matrixCollection));
+		}
+	}
+
+	public boolean isUseILP() {
+		return useILP;
+	}
+
+	public void setUseILP(boolean useILP) {
+		this.useILP = useILP;
 	}
 }

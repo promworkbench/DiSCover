@@ -14,10 +14,10 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
-import org.deckfour.xes.model.XLog;
 import org.processmining.discover.models.ActivityAlphabet;
-import org.processmining.discover.models.ActivityLog;
 import org.processmining.discover.models.ActivityMatrix;
+import org.processmining.discover.models.ActivityMatrixCollection;
+import org.processmining.discover.models.ActivitySets;
 import org.processmining.discover.parameters.DiscoverPetriNetParameters;
 
 import com.fluxicon.slickerbox.components.NiceSlider;
@@ -27,16 +27,12 @@ import com.fluxicon.slickerbox.factory.SlickerFactory;
 import info.clearthought.layout.TableLayout;
 import info.clearthought.layout.TableLayoutConstants;
 
-public class FilterMatrixWidget extends JPanel {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1016124096702672631L;
-
-	private int maxValue = 0;
+public class FilterMatrixCollectionWidget extends JPanel {
 
 	JComponent matrixPanel = null;
+	int selectedMatrix = 0;
+
+	private int maxValue = 0;
 
 	ActivityMatrix matrix = null;
 
@@ -56,9 +52,8 @@ public class FilterMatrixWidget extends JPanel {
 				if (d != matrix.get(row, col)) {
 					matrix.set(row, col, d);
 				}
-				int d2 = Integer.valueOf((String) table.getModel().getValueAt(col, row));
-				if (d > 0 && d2 > 0) {
-					s = ((double) -Math.min(d, d2)) / maxValue;
+				if (d > 0) {
+					s = ((double) d) / maxValue;
 				} else if (d > 0) {
 					s = ((double) d) / maxValue;
 				} else {
@@ -106,100 +101,43 @@ public class FilterMatrixWidget extends JPanel {
 		}
 	}
 
-	public FilterMatrixWidget(XLog eventLog, DiscoverPetriNetParameters parameters) {
+	public FilterMatrixCollectionWidget(DiscoverPetriNetParameters parameters) {
 		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL } };
 		setLayout(new TableLayout(size));
 
-		add(getMainComponent(eventLog, parameters), "0, 0");
-
-		//		SlickerButton resetButton = new SlickerButton("Reset");
-		//		resetButton.addActionListener(new ActionListener() {
-		//
-		//			public void actionPerformed(ActionEvent arg0) {
-		//				if (mainPanel != null) {
-		//					remove(mainPanel);
-		//				}
-		//				mainPanel = getMainComponent(eventLog, parameters);
-		//				add(mainPanel, "0, 0");
-		//				validate();
-		//				repaint();
-		//				/*
-		//				 * Get rid of animation that results from pressing the button.
-		//				 */
-		//				resetButton.setEnabled(false);
-		//				resetButton.setEnabled(true);
-		//			}
-		//			
-		//		});
-		//		add(resetButton, "0, 1");
+		add(getMainComponent(parameters), "0, 0");
+		
+		
 	}
 
-	private JPanel getMainComponent(XLog eventLog, DiscoverPetriNetParameters parameters) {
+	private JPanel getMainComponent(DiscoverPetriNetParameters parameters) {
 		JPanel panel = new JPanel();
 		panel.setOpaque(false);
-		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL, 30, 30, 30 } };
+		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL, 30 } };
 		panel.setLayout(new TableLayout(size));
-		//		if (parameters.getMatrix() == null) {
-		parameters.setAlphabet(new ActivityAlphabet(parameters.getActivities()));
-		parameters.setLog(new ActivityLog(eventLog, parameters.getClassifier(), parameters.getAlphabet()));
-		parameters.setMatrix(new ActivityMatrix(parameters.getLog(), parameters.getAlphabet()));
-		//		}
-		filter(parameters);
+
+		parameters.setMatrixCollection(new ActivityMatrixCollection(parameters.getLog(), parameters.getAlphabet(),
+				new ActivitySets(parameters.getActivitySets()), parameters.getMatrix(), parameters));
+		selectedMatrix = 0;
 		addMatrixWidget(panel, parameters);
 
-		final NiceSlider absSlider = SlickerFactory.instance().createNiceIntegerSlider(
-				"Absolute threshold (0 if no noise)", 0, 20, parameters.getAbsoluteThreshold(), Orientation.HORIZONTAL);
-		absSlider.addChangeListener(new ChangeListener() {
-
-			public void stateChanged(ChangeEvent e) {
-				//				System.out.println("[FilterMatrixWidget] start change");
-				int value = absSlider.getSlider().getValue();
-				parameters.setAbsoluteThreshold(value);
-				filter(parameters);
-				addMatrixWidget(panel, parameters);
-				//				System.out.println("[FilterMatrixWidget] end change");
-			}
-		});
-		absSlider.setPreferredSize(new Dimension(100, 30));
-		panel.add(absSlider, "0, 1");
-
 		// Slider for the relative threshold. Ranges from 0 to 99 (percent).
-		final NiceSlider relSlider = SlickerFactory.instance().createNiceIntegerSlider(
-				"Relative threshold (0 if no noise)", 0, 99, parameters.getRelativeThreshold(), Orientation.HORIZONTAL);
-		relSlider.addChangeListener(new ChangeListener() {
+		final NiceSlider scomSlider = SlickerFactory.instance().createNiceIntegerSlider(
+				"Select component", 0, parameters.getMatrixCollection().size() - 1, selectedMatrix, Orientation.HORIZONTAL);
+		scomSlider.addChangeListener(new ChangeListener() {
 
 			public void stateChanged(ChangeEvent e) {
-				int value = relSlider.getSlider().getValue();
-				parameters.setRelativeThreshold(value);
-				filter(parameters);
+				selectedMatrix = scomSlider.getSlider().getValue();
+				if (matrixPanel != null) {
+					remove(matrixPanel);
+				}
 				addMatrixWidget(panel, parameters);
 			}
 		});
-		relSlider.setPreferredSize(new Dimension(100, 30));
-		panel.add(relSlider, "0, 2");
+		scomSlider.setPreferredSize(new Dimension(100, 30));
+		panel.add(scomSlider, "0, 1");
 
-		final NiceSlider safSlider = SlickerFactory.instance().createNiceIntegerSlider("Safety threshold", 0, 99,
-				parameters.getSafetyThreshold(), Orientation.HORIZONTAL);
-		safSlider.addChangeListener(new ChangeListener() {
-
-			public void stateChanged(ChangeEvent e) {
-				int value = safSlider.getSlider().getValue();
-				parameters.setSafetyThreshold(value);
-				filter(parameters);
-				addMatrixWidget(panel, parameters);
-			}
-		});
-		safSlider.setPreferredSize(new Dimension(100, 30));
-		panel.add(safSlider, "0, 3");
 		return panel;
-	}
-
-	private void filter(DiscoverPetriNetParameters parameters) {
-		matrix = new ActivityMatrix(parameters.getMatrix());
-		matrix.restore();
-		matrix.filterAbsolute(parameters.getAbsoluteThreshold());
-		matrix.filterRelative(parameters.getRelativeThreshold(), parameters.getSafetyThreshold());
-		parameters.setMatrix(matrix);
 	}
 
 	private void addMatrixWidget(JPanel panel, DiscoverPetriNetParameters parameters) {
@@ -210,7 +148,7 @@ public class FilterMatrixWidget extends JPanel {
 		}
 		final JTable table = new JTable();
 		ActivityAlphabet alphabet = parameters.getAlphabet();
-		matrix = parameters.getMatrix();
+		matrix = parameters.getMatrixCollection().get(selectedMatrix);
 		int n = alphabet.size();
 		String[] columnNames = new String[n];
 		String[][] rows = new String[n][n];

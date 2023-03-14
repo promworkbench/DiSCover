@@ -10,6 +10,7 @@ import org.processmining.contexts.uitopia.annotations.UITopiaVariant;
 import org.processmining.discover.algorithms.DiscoverPetriNetAlgorithm;
 import org.processmining.discover.parameters.DiscoverPetriNetParameters;
 import org.processmining.discover.widgets.DiscoverPetriNetWidget;
+import org.processmining.discover.widgets.FilterMatrixCollectionWidget;
 import org.processmining.discover.widgets.FilterMatrixWidget;
 import org.processmining.discover.widgets.SelectActivitiesWidget;
 import org.processmining.discover.widgets.SelectActivitySetsWidget;
@@ -59,11 +60,14 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 				case 3:
 					widget = new SelectActivitySetsWidget(parameters);
 					break;
+				case 4:
+					widget = new FilterMatrixCollectionWidget(parameters);
+					break;
 				default: 
 					widget = new DiscoverPetriNetWidget(parameters);
 					break;
 			}
-			InteractionResult result = context.showWizard("Configure DiSCovery", step == 0, step == 4, widget);
+			InteractionResult result = context.showWizard("Configure DiSCovery", step == 0, step == 5, widget);
 			switch (result) {
 				case NEXT:
 					if (step == 0 && parameters.getClassifier() == null) {

@@ -138,10 +138,13 @@ public class DiscoverPetriNetAlgorithm {
 		 * For every activity set, filter these activities out of the activity
 		 * log and discover a directly-follows matrix for it.
 		 */
-		ActivityMatrixCollection matrices = new ActivityMatrixCollection(log, alphabet, separated, matrix, parameters);
-		System.out.println("[DiscoverPetriNetAlgorithm] Creating secondary matrices took "
-				+ (System.currentTimeMillis() - time) + " milliseconds.");
-		time = System.currentTimeMillis();
+		ActivityMatrixCollection matrices = parameters.getMatrixCollection();
+		if (matrices == null) {
+			matrices = new ActivityMatrixCollection(log, alphabet, separated, matrix, parameters);
+			System.out.println("[DiscoverPetriNetAlgorithm] Creating secondary matrices took "
+					+ (System.currentTimeMillis() - time) + " milliseconds.");
+			time = System.currentTimeMillis();
+		}
 
 		/*
 		 * Filter all created matrices.
