@@ -9,6 +9,7 @@ import org.processmining.discover.models.ActivityLog;
 import org.processmining.discover.models.ActivityMatrix;
 import org.processmining.discover.models.ActivityMatrixCollection;
 import org.processmining.discover.models.ActivitySet;
+import org.processmining.discover.models.ActivitySets;
 import org.processmining.log.parameters.ClassifierParameter;
 
 public class DiscoverPetriNetParameters implements ClassifierParameter {
@@ -61,9 +62,9 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 
 	private ActivityMatrix matrix;
 
-	private List<ActivitySet> activitySets;
+	private ActivitySets activitySets;
 
-	private List<ActivitySet> allActivitySets;
+	private ActivitySets allActivitySets;
 
 	private ActivityMatrixCollection matrixCollection;
 	
@@ -83,8 +84,8 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static ActivityAlphabet lastAlphabet = null;
 	private static ActivityLog lastLog = null;
 	private static ActivityMatrix lastMatrix = null;
-	private static List<ActivitySet> lastActivitySets = null;
-	private static List<ActivitySet> lastAllActivitySets = null;
+	private static ActivitySets lastActivitySets = null;
+	private static ActivitySets lastAllActivitySets = null;
 	private static ActivityMatrixCollection lastMatrixCollection = null;
 
 	/**
@@ -225,6 +226,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		if (this.alphabet == null || !this.alphabet.equals(alphabet)) {
 			this.lastAlphabet = (alphabet == null ? null : new ActivityAlphabet(alphabet));
 			this.alphabet = (alphabet == null ? null : new ActivityAlphabet(alphabet));
+			ActivitySet.alphabet = this.alphabet;
 			//			setLog(null);
 		}
 	}
@@ -265,7 +267,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		}
 	}
 
-	public List<ActivitySet> getActivitySets() {
+	public ActivitySets getActivitySets() {
 		return activitySets;
 	}
 
@@ -274,15 +276,15 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 	public void setActivitySets(List<ActivitySet> activitySets, boolean propagate) {
 		if (this.activitySets == null || !this.activitySets.equals(activitySets)) {
-			this.lastActivitySets = (activitySets == null ? null : new ArrayList<ActivitySet>(activitySets));
-			this.activitySets = (activitySets == null ? null : new ArrayList<ActivitySet>(activitySets));
+			this.lastActivitySets = (activitySets == null ? null : new ActivitySets(activitySets));
+			this.activitySets = (activitySets == null ? null : new ActivitySets(activitySets));
 			if (propagate) {
 				setMatrixCollection(null);
 			}
 		}
 	}
 
-	public static List<ActivitySet> getAllActivitySets() {
+	public static ActivitySets getAllActivitySets() {
 		return lastAllActivitySets;
 	}
 
@@ -292,8 +294,8 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	
 	public void setAllActivitySets(List<ActivitySet> allActivitySets, boolean propagate) {
 		if (this.allActivitySets == null || !this.allActivitySets.equals(allActivitySets)) {
-			this.lastAllActivitySets = (allActivitySets == null ? null : new ArrayList<ActivitySet>(allActivitySets));
-			this.allActivitySets = (allActivitySets == null ? null : new ArrayList<ActivitySet>(allActivitySets));
+			this.lastAllActivitySets = (allActivitySets == null ? null : new ActivitySets(allActivitySets));
+			this.allActivitySets = (allActivitySets == null ? null : new ActivitySets(allActivitySets));
 		}
 	}
 

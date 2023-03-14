@@ -3,7 +3,6 @@ package org.processmining.discover.widgets;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JCheckBox;
@@ -46,12 +45,8 @@ public class SelectActivitySetsWidget extends JPanel implements ListSelectionLis
 		if (parameters.getAllActivitySets() == null) {
 			ConcurrentActivityPairs pairs = new ConcurrentActivityPairs(parameters.getMatrix(), parameters.getAlphabet());
 			ActivitySets activitySets = new ActivitySets(pairs);
-			parameters.setAllActivitySets(new ArrayList<ActivitySet>());
-			parameters.setActivitySets(new ArrayList<ActivitySet>());
-			for (int i = 0; i < activitySets.size(); i++) {
-				parameters.getAllActivitySets().add(activitySets.get(i));
-				parameters.getActivitySets().add(activitySets.get(i));
-			}
+			parameters.setAllActivitySets(new ActivitySets(activitySets));
+			parameters.setActivitySets(new ActivitySets(activitySets));
 		}
 		
 		listPanel = getMainComponent(parameters);
@@ -121,7 +116,7 @@ public class SelectActivitySetsWidget extends JPanel implements ListSelectionLis
 	public void valueChanged(ListSelectionEvent arg0) {
 		// TODO Auto-generated method stub
 		if (!parameters.getActivitySets().equals(listPanel.getSelectedValuesList())) {
-			parameters.setActivitySets(listPanel.getSelectedValuesList());
+			parameters.setActivitySets(new ActivitySets(listPanel.getSelectedValuesList()));
 		}
 		
 	}

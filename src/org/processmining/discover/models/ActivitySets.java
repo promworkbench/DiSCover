@@ -1,7 +1,6 @@
 package org.processmining.discover.models;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -10,17 +9,12 @@ import org.processmining.processtree.Block;
 import org.processmining.processtree.Node;
 import org.processmining.processtree.ProcessTree;
 
-public class ActivitySets {
+public class ActivitySets extends ArrayList<ActivitySet>{
 
 	/**
-	 * Array containing all minimal ignore sets.
+	 * 
 	 */
-	private ArrayList<ActivitySet> sets;
-
-	/**
-	 * Number of minimal ignore sets.
-	 */
-	private int size;
+	private static final long serialVersionUID = 1802894563746035348L;
 
 	/**
 	 * Discovers the minimal ignore sets from a set of concurrent pairs. An
@@ -38,12 +32,9 @@ public class ActivitySets {
 			seen.add(idx, new HashSet<ActivitySet>());
 		}
 		apply(pairs, 0, new ActivitySet("Not"), sets, seen);
-		size = sets.size();
-		System.out.println("[ActivitySets] " + size + " solutions.");
-		this.sets = new ArrayList<ActivitySet>(size);
-		size = 0;
+		System.out.println("[ActivitySets] " + sets.size() + " solutions.");
 		for (ActivitySet set : sets) {
-			this.sets.add(size++, set);
+			add(set);
 		}
 	}
 
@@ -63,8 +54,6 @@ public class ActivitySets {
 		 * We now need to take the complement of those as the remainder will
 		 * ignore these sets. As a result, all others branches will be ignored.
 		 */
-		this.sets = new ArrayList<ActivitySet>(size);
-		size = 0;
 		for (ActivitySet set2 : sets) {
 			ActivitySet ignoreSet = new ActivitySet("Not");
 			for (int idx = 0; idx < alphabet.size(); idx++) {
@@ -72,15 +61,13 @@ public class ActivitySets {
 					ignoreSet.add(idx);
 				}
 			}
-			this.sets.add(size++, ignoreSet);
+			add(ignoreSet);
 		}
 	}
 	
-	public ActivitySets(Collection<ActivitySet> activitySets) {
-		this.size = activitySets.size();
-		this.sets = new ArrayList<ActivitySet>(size);
-		for (ActivitySet activities : activitySets) {
-			this.sets.add(activities);
+	public ActivitySets(List<ActivitySet> activitySets) {
+		for (int i = 0; i < activitySets.size(); i++) {
+			add(activitySets.get(i));
 		}
 	}
 	
@@ -177,26 +164,4 @@ public class ActivitySets {
 		candidateSet.remove(pair.getSecond());
 	}
 
-	/**
-	 * Returns the number of minimal ignore sets.
-	 * 
-	 * @return The number of minimal ignore sets
-	 */
-	public int size() {
-		return size;
-	}
-
-	/**
-	 * Returns the ignore set at the given index.
-	 * 
-	 * @param idx The given index
-	 * @return The ignore set at the given index
-	 */
-	public ActivitySet get(int idx) {
-		return sets.get(idx);
-	}
-	
-	public String toString() {
-		return sets.toString();
-	}
 }
