@@ -39,7 +39,7 @@ public class ActivityMatrix {
 	 *            The given alphabet
 	 */
 	public ActivityMatrix(ActivityLog log, ActivityAlphabet alphabet) {
-		this(log, alphabet, new ActivitySet(), null);
+		this(log, alphabet, new ActivitySet("Not"), null);
 	}
 
 	/**
@@ -248,7 +248,7 @@ public class ActivityMatrix {
 			if (nodeCounts[fromIdx] == 0) {
 				continue;
 			}
-			ActivitySet activities = new ActivitySet();
+			ActivitySet activities = new ActivitySet("Out");
 			for (int toIdx = 0; toIdx < alphabet.size(); toIdx++) {
 				if (nodeCounts[toIdx] == 0) {
 					continue;
@@ -275,7 +275,7 @@ public class ActivityMatrix {
 			if (nodeCounts[toIdx] == 0) {
 				continue;
 			}
-			ActivitySet activities = new ActivitySet();
+			ActivitySet activities = new ActivitySet("In");
 			for (int fromIdx = 0; fromIdx < alphabet.size(); fromIdx++) {
 				if (nodeCounts[fromIdx] == 0) {
 					continue;

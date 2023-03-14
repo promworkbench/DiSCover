@@ -11,8 +11,16 @@ public class ActivitySet extends BitSet {
 	
 	public static ActivityAlphabet alphabet = null;
 
-	public ActivitySet() {
+	private final String prefix;
+	
+	public ActivitySet(String prefix) {
 		super();
+		this.prefix = prefix;
+	}
+
+	public ActivitySet(ActivitySet set) {
+		or(set);
+		this.prefix = set.prefix;
 	}
 	
 	public void add(int i) {
@@ -42,7 +50,12 @@ public class ActivitySet extends BitSet {
 	
 	public String toString() {
 		StringBuffer s = new StringBuffer();
-		s.append("Not ");
+		if (prefix != null) {
+			s.append(prefix);
+			s.append(" {");
+		} else {
+			s.append("{");			
+		}
 		boolean first = true;
 		int j = 0;
 		for (int i = 0; i < length(); i++) {
@@ -55,14 +68,13 @@ public class ActivitySet extends BitSet {
 			if (get(i)) {
 				if (first) {
 					first = false;
-				} else if (i == j){
-					s.append(" and ");
 				} else {
 					s.append(", ");
 				}
 				s.append(alphabet.get(i));
 			}
 		}
+		s.append("}");
 		return s.toString();
 	}
 }

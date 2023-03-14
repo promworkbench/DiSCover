@@ -37,7 +37,7 @@ public class ActivitySets {
 		for (int idx = 0; idx < pairs.size(); idx++) {
 			seen.add(idx, new HashSet<ActivitySet>());
 		}
-		apply(pairs, 0, new ActivitySet(), sets, seen);
+		apply(pairs, 0, new ActivitySet("Not"), sets, seen);
 		size = sets.size();
 		System.out.println("[ActivitySets] " + size + " solutions.");
 		this.sets = new ArrayList<ActivitySet>(size);
@@ -54,7 +54,7 @@ public class ActivitySets {
 	 */
 	public ActivitySets(ProcessTree tree, ActivityAlphabet alphabet) {
 		List<ActivitySet> sets = new ArrayList<ActivitySet>();
-		ActivitySet set = new ActivitySet();
+		ActivitySet set = new ActivitySet("");
 		set.add(0);
 		sets.add(set);
 		apply(tree, tree.getRoot(), alphabet, sets);
@@ -66,7 +66,7 @@ public class ActivitySets {
 		this.sets = new ArrayList<ActivitySet>(size);
 		size = 0;
 		for (ActivitySet set2 : sets) {
-			ActivitySet ignoreSet = new ActivitySet();
+			ActivitySet ignoreSet = new ActivitySet("Not");
 			for (int idx = 0; idx < alphabet.size(); idx++) {
 				if (!set2.contains(idx)) {
 					ignoreSet.add(idx);
@@ -106,16 +106,14 @@ public class ActivitySets {
 			Block block = (Block) node;
 			List<ActivitySet> copySets = new ArrayList<ActivitySet>();
 			for (ActivitySet set : sets) {
-				ActivitySet copySet = new ActivitySet();
-				copySet.addAll(set);
+				ActivitySet copySet = new ActivitySet(set);
 				copySets.add(copySet);
 			}
 			sets.clear();
 			for (Node child : block.getChildren()) {
 				List<ActivitySet> newSets = new ArrayList<ActivitySet>();
 				for (ActivitySet copySet : copySets) {
-					ActivitySet newSet = new ActivitySet();
-					newSet.addAll(copySet);
+					ActivitySet newSet = new ActivitySet(copySet);
 					newSets.add(newSet);
 				}
 				apply(tree, child, alphabet, newSets);
@@ -151,8 +149,7 @@ public class ActivitySets {
 			// Remove all the larger sets.
 			ignoreSets.removeAll(largerSets);
 			// Now add the candidate as a new set.
-			ActivitySet set = new ActivitySet();
-			set.addAll(candidateSet);
+			ActivitySet set = new ActivitySet(candidateSet);
 			ignoreSets.add(set);
 			System.out.println("[ActivitySets] " + ignoreSets.size() + " solutions found so far.");
 			return;
@@ -161,8 +158,7 @@ public class ActivitySets {
 			System.out.println("[ActivitySets] Already seen set " + candidateSet + " at index " + idx);
 			return;
 		}
-		ActivitySet candidateSetCopy = new ActivitySet();
-		candidateSetCopy.addAll(candidateSet);
+		ActivitySet candidateSetCopy = new ActivitySet(candidateSet);
 		seen.get(idx).add(candidateSetCopy);
 		// Cover the next pair.
 		ActivityPair pair = pairs.get(idx);
