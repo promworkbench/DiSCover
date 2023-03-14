@@ -63,9 +63,5 @@ public class SelectClassifierWidget extends JPanel {
 		} else {
 			parameters.setClassifier(log.getClassifiers().get(0));
 		}
-		/*
-		 * Although we have now reset the classifier, the selected activities may still be valid. 
-		 * Therefore, we do not reset them here.
-		 */
 	}
 }

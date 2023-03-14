@@ -87,6 +87,42 @@ public class ActivityMatrix {
 		}
 	}
 
+	public ActivityMatrix(ActivityMatrix matrix) {
+		this.alphabet = matrix.alphabet;
+		edgeCounts = new int[alphabet.size()][alphabet.size()];
+		nodeCounts = new int[alphabet.size()];
+		for (int i = 0; i < alphabet.size(); i++) {
+			nodeCounts[i] = matrix.nodeCounts[i];
+			for (int j = 0; j < alphabet.size(); j++) {
+				edgeCounts[i][j] = matrix.edgeCounts[i][j];
+			}
+		}
+	}
+
+	public boolean equals(Object o) {
+		if (o == null) {
+			return false;
+		}
+		if (o instanceof ActivityMatrix) {
+			ActivityMatrix matrix = (ActivityMatrix) o;
+			if (!alphabet.equals(matrix.alphabet)) {
+				return false;
+			}
+			for (int i = 0; i < alphabet.size(); i++) {
+				if (nodeCounts[i] != matrix.nodeCounts[i]) {
+					return false;
+				}
+				for (int j = 0; j < alphabet.size(); j++) {
+					if (edgeCounts[i][j] != matrix.edgeCounts[i][j]) {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+
 	/**
 	 * Returns how often the first index was directly followed by the second
 	 * index in the activity log.

@@ -57,5 +57,4 @@ public class ActivitySet extends BitSet {
 		s.append("}");
 		return s.toString();
 	}
-
 }

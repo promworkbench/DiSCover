@@ -33,6 +33,7 @@ public class SelectActivitySetsWidget extends JPanel implements ListSelectionLis
 		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL } };
 		setLayout(new TableLayout(size));
 
+		ActivitySet.alphabet = parameters.getAlphabet();
 		if (parameters.getAllActivitySets() == null) {
 			ConcurrentActivityPairs pairs = new ConcurrentActivityPairs(parameters.getMatrix(), parameters.getAlphabet());
 			ActivitySets activitySets = new ActivitySets(pairs);
@@ -50,7 +51,6 @@ public class SelectActivitySetsWidget extends JPanel implements ListSelectionLis
 	}
 
 	private ProMList<ActivitySet> getMainComponent(DiscoverPetriNetParameters parameters) {
-		ActivitySet.alphabet = parameters.getAlphabet();
 		DefaultListModel<ActivitySet> listModel = new DefaultListModel<ActivitySet>();
 		for (int i = 0; i < parameters.getAllActivitySets().size(); i++) {
 			listModel.addElement(parameters.getAllActivitySets().get(i));

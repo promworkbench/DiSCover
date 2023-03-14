@@ -63,6 +63,37 @@ public class ActivityLog {
 		}
 	}
 
+	public ActivityLog(ActivityLog log) {
+		alphabet = log.alphabet;
+		size = log.size;
+		activities = new int[size];
+		for (int i = 0; i < size; i++) {
+			activities[i] = log.activities[i];
+		}
+	}
+	
+	public boolean equals(Object o) {
+		if (o == null) {
+			return false;
+		}
+		if (o instanceof ActivityLog) {
+			ActivityLog log = (ActivityLog) o;
+			if (size != log.size) {
+				return false;
+			}
+			if (!alphabet.equals(log.alphabet)) {
+				return false;
+			}
+			for (int i = 0; i < size; i++) {
+				if (activities[i] != log.activities[i]) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+	
 	/**
 	 * Returns the activity index at the given index of the activity log.
 	 * 

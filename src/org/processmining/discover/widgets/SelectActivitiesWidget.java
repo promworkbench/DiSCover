@@ -33,7 +33,7 @@ public class SelectActivitiesWidget extends JPanel implements ListSelectionListe
 		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL } };
 		setLayout(new TableLayout(size));
 
-		ActivityAlphabet alphabet = new ActivityAlphabet(log, parameters.getClassifier());
+		parameters.setAlphabet(new ActivityAlphabet(log, parameters.getClassifier()));
 
 		if (parameters.getActivities() == null || !matches(parameters.getAlphabet(), parameters.getActivities())) {
 			/*
@@ -41,9 +41,9 @@ public class SelectActivitiesWidget extends JPanel implements ListSelectionListe
 			 * activities do not match the current classifier.
 			 * Reset the activities.
 			 */
-			reset(log, parameters, alphabet);
+			reset(log, parameters);
 		}
-		listPanel = getMainComponent(log, parameters, alphabet);
+		listPanel = getMainComponent(log, parameters);
 		add(listPanel, "0, 0");
 
 //		SlickerButton resetButton = new SlickerButton("Reset");
@@ -69,10 +69,10 @@ public class SelectActivitiesWidget extends JPanel implements ListSelectionListe
 //		add(resetButton, "0, 1");
 	}
 
-	private ProMList<String> getMainComponent(XLog log, DiscoverPetriNetParameters parameters, ActivityAlphabet alphabet) {
+	private ProMList<String> getMainComponent(XLog log, DiscoverPetriNetParameters parameters) {
 		DefaultListModel<String> listModel = new DefaultListModel<String>();
-		for (int i = 1; i < alphabet.size(); i++) {
-			listModel.addElement(alphabet.get(i));
+		for (int i = 1; i < parameters.getAlphabet().size(); i++) {
+			listModel.addElement(parameters.getAlphabet().get(i));
 		}
 		int selectedIndices[] = new int[parameters.getActivities().size()];
 		int j = 0;
@@ -83,11 +83,11 @@ public class SelectActivitiesWidget extends JPanel implements ListSelectionListe
 		}
 		ProMList<String> list = new ProMList<String>("Select activities", listModel);
 		list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		if (alphabet.size() - 1 == j) {
+		if (parameters.getAlphabet().size() - 1 == j) {
 			/*
 			 * Faster way to select all items in the list.
 			 */
-			list.getList().setSelectionInterval(0, alphabet.size() - 2);
+			list.getList().setSelectionInterval(0, parameters.getAlphabet().size() - 2);
 		} else {
 			/*
 			 * Slower way to select some items in the list.
@@ -114,14 +114,13 @@ public class SelectActivitiesWidget extends JPanel implements ListSelectionListe
 		return true;
 	}
 	
-	private void reset(XLog log, DiscoverPetriNetParameters parameters, ActivityAlphabet alphabet) {
+	private void reset(XLog log, DiscoverPetriNetParameters parameters) {
 		List<String> activities = new ArrayList<String>();
-		for (int i = 1; i < alphabet.size(); i++) {
-			activities.add(alphabet.get(i));
+		for (int i = 1; i < parameters.getAlphabet().size(); i++) {
+			activities.add(parameters.getAlphabet().get(i));
 		}
 		if (listPanel == null || !activities.equals(listPanel.getSelectedValuesList())) {
 			parameters.setActivities(activities);
-			parameters.setMatrix(null);
 		}
 	}
 	
@@ -129,7 +128,6 @@ public class SelectActivitiesWidget extends JPanel implements ListSelectionListe
 		// TODO Auto-generated method stub
 		if (!parameters.getActivities().equals(listPanel.getSelectedValuesList())) {
 			parameters.setActivities(listPanel.getSelectedValuesList());
-			parameters.setMatrix(null);
 		}
 	}
 }

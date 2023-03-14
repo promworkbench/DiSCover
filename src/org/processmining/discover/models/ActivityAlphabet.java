@@ -69,6 +69,39 @@ public class ActivityAlphabet {
 		}
 	}
 	
+	public ActivityAlphabet(ActivityAlphabet alphabet) {
+		activity2Idx = new HashMap<String, Integer>();
+		idx2Activity = new String[alphabet.size()];
+		size = 0;
+		for (int i = 0; i < alphabet.size(); i++) {
+			activity2Idx.put(alphabet.get(i), size);
+			idx2Activity[size] = alphabet.get(i);
+			size++;
+		}
+	}
+	
+	public boolean equals(Object o) {
+		if (o == null) {
+			return false;
+		}
+		if (o instanceof ActivityAlphabet) {
+			ActivityAlphabet alphabet = (ActivityAlphabet) o;
+			if (size != alphabet.size) {
+				return false;
+			}
+			if (!activity2Idx.equals(alphabet.activity2Idx)) {
+				return false;
+			}
+			for (int i = 0; i < size; i++) {
+				if (idx2Activity[i] != alphabet.idx2Activity[i]) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+	
 	private static List<String> getActivities(XLog log, XEventClassifier classifier) {
 		Set<String> activities = new HashSet<String>();
 		for (XTrace trace : log) {

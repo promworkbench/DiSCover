@@ -16,30 +16,31 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	 * Whether to merge on the activities.
 	 */
 	private boolean merge;
-	
+
 	/**
-	 * Whether to reduce the Petri net. 
+	 * Whether to reduce the Petri net.
 	 */
 	private boolean reduce;
-	
+
 	/**
-	 * Whether to require unanimity for noise. 
-	 * If set, noise requires all matrices agree on it.
+	 * Whether to require unanimity for noise. If set, noise requires all
+	 * matrices agree on it.
 	 */
 	private boolean vetoNoise;
-	
+
 	/**
 	 * The absolute threshold to use.
 	 */
 	private int relativeThreshold;
-	
+
 	/**
 	 * The relative threshold to use.
 	 */
 	private int absoluteThreshold;
 
 	/*
-	 * The maximal number of S-components to take into account (use 0 for no limit).
+	 * The maximal number of S-components to take into account (use 0 for no
+	 * limit).
 	 */
 	private int nofSComponents;
 
@@ -49,13 +50,15 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private int safetyThreshold;
 
 	private XEventClassifier classifier;
-	
+
 	private List<String> activities;
-	
+
+	private ActivityAlphabet alphabet;
+
 	private ActivityLog log;
-	
+
 	private ActivityMatrix matrix;
-	
+
 	private List<ActivitySet> activitySets;
 
 	private List<ActivitySet> allActivitySets;
@@ -72,6 +75,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static int LastNofSComponents = 20; // Seems more than enough.
 	private static XEventClassifier lastClassifier = null;
 	private static List<String> lastActivities = null;
+	private static ActivityAlphabet lastAlphabet = null;
 	private static ActivityLog lastLog = null;
 	private static ActivityMatrix lastMatrix = null;
 	private static List<ActivitySet> lastActivitySets = null;
@@ -88,18 +92,19 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		setAbsoluteThreshold(lastAbsoluteThreshold);
 		setSafetyThreshold(lastSafetyThreshold);
 		setNofSComponents(LastNofSComponents);
-		setClassifier(lastClassifier);
-		setActivities(lastActivities);
-		setLog(lastLog);
-		setMatrix(lastMatrix);
-		setActivitySets(lastActivitySets);
-		setAllActivitySets(lastAllActivitySets);
+		setClassifier(lastClassifier, false);
+		setActivities(lastActivities, false);
+		setAlphabet(lastAlphabet, false);
+		setLog(lastLog, false);
+		setMatrix(lastMatrix, false);
+		setActivitySets(lastActivitySets, false);
+		setAllActivitySets(lastAllActivitySets, false);
 	}
-	
+
 	/*
 	 * Getters and setters
 	 */
-	
+
 	public boolean isMerge() {
 		return merge;
 	}
@@ -168,8 +173,17 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setClassifier(XEventClassifier classifier) {
-		this.lastClassifier = classifier;
-		this.classifier = classifier;
+		setClassifier(classifier, true);
+	}
+
+	private void setClassifier(XEventClassifier classifier, boolean propagate) {
+		if (this.classifier == null || !this.classifier.equals(classifier)) {
+			this.lastClassifier = classifier;
+			this.classifier = classifier;
+			if (propagate) {
+				setActivities(null);
+			}
+		}
 	}
 
 	public List<String> getActivities() {
@@ -177,32 +191,34 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setActivities(List<String> activities) {
-		this.lastActivities = (activities == null ? null : new ArrayList<String>(activities));
-		this.activities = (activities ==  null ? null : new ArrayList<String>(activities));
+		setActivities(activities, true);
 	}
-	
-	public ActivityAlphabet getAlphabet() {
-		if (this.activities == null) {
-			return null;
+
+	private void setActivities(List<String> activities, boolean propagate) {
+		if (this.activities == null || !this.activities.equals(activities)) {
+			this.lastActivities = (activities == null ? null : new ArrayList<String>(activities));
+			this.activities = (activities == null ? null : new ArrayList<String>(activities));
+			if (propagate) {
+				setLog(null);
+			}
+			//			setAlphabet(activities == null ? null : new ActivityAlphabet(activities));
 		}
-		return new ActivityAlphabet(this.activities);
 	}
 
-	public ActivityMatrix getMatrix() {
-		return matrix;
+	public ActivityAlphabet getAlphabet() {
+		return alphabet;
 	}
 
-	public void setMatrix(ActivityMatrix matrix) {
-		this.matrix = matrix;
+	public void setAlphabet(ActivityAlphabet alphabet) {
+		setAlphabet(alphabet, true);
 	}
 
-	public List<ActivitySet> getActivitySets() {
-		return activitySets;
-	}
-
-	public void setActivitySets(List<ActivitySet> activitySets) {
-		this.lastActivitySets = (activitySets == null ? null : new ArrayList<ActivitySet>(activitySets));
-		this.activitySets = (activitySets == null ? null : new ArrayList<ActivitySet>(activitySets));
+	private void setAlphabet(ActivityAlphabet alphabet, boolean propagate) {
+		if (this.alphabet == null || !this.alphabet.equals(alphabet)) {
+			this.lastAlphabet = (alphabet == null ? null : new ActivityAlphabet(alphabet));
+			this.alphabet = (alphabet == null ? null : new ActivityAlphabet(alphabet));
+			//			setLog(null);
+		}
 	}
 
 	public ActivityLog getLog() {
@@ -210,8 +226,49 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setLog(ActivityLog log) {
-		this.lastLog = log;
-		this.log = log;
+		setLog(log, true);
+	}
+
+	private void setLog(ActivityLog log, boolean propagate) {
+		if (this.log == null || !this.log.equals(log)) {
+			this.lastLog = (log == null ? null : new ActivityLog(log));
+			this.log = (log == null ? null : new ActivityLog(log));
+			if (propagate) {
+				setMatrix(null);
+			}
+		}
+	}
+
+	public ActivityMatrix getMatrix() {
+		return matrix;
+	}
+
+	public void setMatrix(ActivityMatrix matrix) {
+		setMatrix(matrix, true);
+	}
+	
+	public void setMatrix(ActivityMatrix matrix, boolean propagate) {
+		if (this.matrix == null || !this.matrix.equals(matrix)) {
+			this.matrix = (matrix == null ? null : new ActivityMatrix(matrix));
+			if (propagate) {
+				setActivitySets(null);
+				setAllActivitySets(null);
+			}
+		}
+	}
+
+	public List<ActivitySet> getActivitySets() {
+		return activitySets;
+	}
+
+	public void setActivitySets(List<ActivitySet> activitySets) {
+		setActivitySets(activitySets, true);
+	}
+	public void setActivitySets(List<ActivitySet> activitySets, boolean propagate) {
+		if (this.activitySets == null || !this.activitySets.equals(activitySets)) {
+			this.lastActivitySets = (activitySets == null ? null : new ArrayList<ActivitySet>(activitySets));
+			this.activitySets = (activitySets == null ? null : new ArrayList<ActivitySet>(activitySets));
+		}
 	}
 
 	public static List<ActivitySet> getAllActivitySets() {
@@ -219,7 +276,13 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setAllActivitySets(List<ActivitySet> allActivitySets) {
-		this.lastAllActivitySets = (allActivitySets == null ? null : new ArrayList<ActivitySet>(allActivitySets));
-		this.allActivitySets = (allActivitySets == null ? null : new ArrayList<ActivitySet>(allActivitySets));
+		setAllActivitySets(allActivitySets, true);
+	}
+	
+	public void setAllActivitySets(List<ActivitySet> allActivitySets, boolean propagate) {
+		if (this.allActivitySets == null || !this.allActivitySets.equals(allActivitySets)) {
+			this.lastAllActivitySets = (allActivitySets == null ? null : new ArrayList<ActivitySet>(allActivitySets));
+			this.allActivitySets = (allActivitySets == null ? null : new ArrayList<ActivitySet>(allActivitySets));
+		}
 	}
 }

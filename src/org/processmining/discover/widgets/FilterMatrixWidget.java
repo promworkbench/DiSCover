@@ -14,7 +14,6 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
-import org.deckfour.xes.classification.XEventClassifier;
 import org.deckfour.xes.model.XLog;
 import org.processmining.discover.models.ActivityAlphabet;
 import org.processmining.discover.models.ActivityLog;
@@ -55,7 +54,9 @@ public class FilterMatrixWidget extends JPanel {
 			double s = 0.0;
 			try {
 				int d = Integer.valueOf((String) table.getModel().getValueAt(row, col));
-				matrix.set(row, col, d);
+				if (d != matrix.get(row, col)) {
+					matrix.set(row, col, d);
+				}
 				int d2 = Integer.valueOf((String) table.getModel().getValueAt(col, row));
 				if (d > 0 && d2 > 0) {
 					s = ((double) -Math.min(d, d2)) / maxValue;
@@ -136,12 +137,9 @@ public class FilterMatrixWidget extends JPanel {
 		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL, 30, 30, 30 } };
 		panel.setLayout(new TableLayout(size));
 		//		if (parameters.getMatrix() == null) {
-		XEventClassifier classifier = parameters.getClassifier();
-		ActivityAlphabet alphabet = parameters.getAlphabet();
-		ActivityLog log = new ActivityLog(eventLog, classifier, alphabet);
-		parameters.setLog(log);
-		matrix = new ActivityMatrix(log, alphabet);
-		parameters.setMatrix(matrix);
+		parameters.setAlphabet(new ActivityAlphabet(parameters.getActivities()));
+		parameters.setLog(new ActivityLog(eventLog, parameters.getClassifier(), parameters.getAlphabet()));
+		parameters.setMatrix(new ActivityMatrix(parameters.getLog(), parameters.getAlphabet()));
 		//		}
 		filter(parameters);
 		addMatrixWidget(panel, parameters);
@@ -156,7 +154,6 @@ public class FilterMatrixWidget extends JPanel {
 				parameters.setAbsoluteThreshold(value);
 				filter(parameters);
 				addMatrixWidget(panel, parameters);
-				parameters.setAllActivitySets(null);
 				//				System.out.println("[FilterMatrixWidget] end change");
 			}
 		});
@@ -173,7 +170,6 @@ public class FilterMatrixWidget extends JPanel {
 				parameters.setRelativeThreshold(value);
 				filter(parameters);
 				addMatrixWidget(panel, parameters);
-				parameters.setAllActivitySets(null);
 			}
 		});
 		relSlider.setPreferredSize(new Dimension(100, 30));
@@ -188,7 +184,6 @@ public class FilterMatrixWidget extends JPanel {
 				parameters.setSafetyThreshold(value);
 				filter(parameters);
 				addMatrixWidget(panel, parameters);
-				parameters.setAllActivitySets(null);
 			}
 		});
 		safSlider.setPreferredSize(new Dimension(100, 30));
@@ -197,9 +192,11 @@ public class FilterMatrixWidget extends JPanel {
 	}
 
 	private void filter(DiscoverPetriNetParameters parameters) {
-		parameters.getMatrix().restore();
-		parameters.getMatrix().filterAbsolute(parameters.getAbsoluteThreshold());
-		parameters.getMatrix().filterRelative(parameters.getRelativeThreshold(), parameters.getSafetyThreshold());
+		matrix = new ActivityMatrix(parameters.getMatrix());
+		matrix.restore();
+		matrix.filterAbsolute(parameters.getAbsoluteThreshold());
+		matrix.filterRelative(parameters.getRelativeThreshold(), parameters.getSafetyThreshold());
+		parameters.setMatrix(matrix);
 	}
 
 	private void addMatrixWidget(JPanel panel, DiscoverPetriNetParameters parameters) {
