@@ -5,9 +5,11 @@ import java.awt.Component;
 import java.awt.Dimension;
 
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -56,7 +58,7 @@ public class FilterMatrixWidget extends JPanel {
 				if (d != matrix.get(row, col)) {
 					matrix.set(row, col, d);
 				}
-				int d2 = Integer.valueOf((String) table.getModel().getValueAt(col, row));
+				int d2 = (row != 0 && col != 0 ? Integer.valueOf((String) table.getModel().getValueAt(col, row)) : 0);
 				if (d > 0 && d2 > 0) {
 					s = ((double) -Math.min(d, d2)) / maxValue;
 				} else if (d > 0) {
@@ -137,13 +139,23 @@ public class FilterMatrixWidget extends JPanel {
 	private JPanel getMainComponent(XLog eventLog, DiscoverPetriNetParameters parameters) {
 		JPanel panel = new JPanel();
 		panel.setOpaque(false);
-		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL, 30, 30, 30 } };
+		double size[][] = { { TableLayoutConstants.FILL }, { 30, TableLayoutConstants.FILL, 30, 30, 30 } };
 		panel.setLayout(new TableLayout(size));
 		//		if (parameters.getMatrix() == null) {
 		parameters.setAlphabet(new ActivityAlphabet(parameters.getActivities()));
 		parameters.setLog(new ActivityLog(eventLog, parameters.getClassifier(), parameters.getAlphabet()));
 		parameters.setMatrix(new ActivityMatrix(parameters.getLog(), parameters.getAlphabet()));
 		//		}
+		
+		final JLabel providersLabel = new JLabel("Filter root matrix");
+		providersLabel.setOpaque(false);
+		providersLabel.setFont(providersLabel.getFont().deriveFont(13f));
+		providersLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		providersLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		providersLabel.setHorizontalTextPosition(SwingConstants.CENTER);
+
+		panel.add(providersLabel, "0, 0");
+		
 		filter(parameters);
 		addMatrixWidget(panel, parameters);
 
@@ -161,7 +173,7 @@ public class FilterMatrixWidget extends JPanel {
 			}
 		});
 		absSlider.setPreferredSize(new Dimension(100, 30));
-		panel.add(absSlider, "0, 1");
+		panel.add(absSlider, "0, 2");
 
 		// Slider for the relative threshold. Ranges from 0 to 99 (percent).
 		final NiceSlider relSlider = SlickerFactory.instance().createNiceIntegerSlider(
@@ -176,7 +188,7 @@ public class FilterMatrixWidget extends JPanel {
 			}
 		});
 		relSlider.setPreferredSize(new Dimension(100, 30));
-		panel.add(relSlider, "0, 2");
+		panel.add(relSlider, "0, 3");
 
 		final NiceSlider safSlider = SlickerFactory.instance().createNiceIntegerSlider("Safety threshold", 0, 99,
 				parameters.getSafetyThreshold(), Orientation.HORIZONTAL);
@@ -190,7 +202,7 @@ public class FilterMatrixWidget extends JPanel {
 			}
 		});
 		safSlider.setPreferredSize(new Dimension(100, 30));
-		panel.add(safSlider, "0, 3");
+		panel.add(safSlider, "0, 4");
 		return panel;
 	}
 
@@ -239,7 +251,7 @@ public class FilterMatrixWidget extends JPanel {
 		matrixPanel.setOpaque(false);
 		matrixPanel.setPreferredSize(new Dimension(100, 100));
 		//		System.out.println("[FilterMatrixWdiget] adding matrix component");
-		panel.add(matrixPanel, "0, 0");
+		panel.add(matrixPanel, "0, 1");
 		//		System.out.println("[FilterMatrixWdiget] added matrix component");
 		panel.validate();
 		panel.repaint();

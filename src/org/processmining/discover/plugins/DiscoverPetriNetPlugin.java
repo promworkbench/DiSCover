@@ -58,16 +58,22 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 					widget = new FilterMatrixWidget(log, parameters);
 					break;
 				case 3:
-					widget = new SelectActivitySetsWidget(parameters);
+					widget = parameters.getMatrix().getComponent();
 					break;
 				case 4:
+					widget = new SelectActivitySetsWidget(parameters);
+					break;
+				case 5:
 					widget = new FilterMatrixCollectionWidget(parameters);
+					break;
+				case 6:
+					widget = parameters.getMatrixCollection().getComponent();
 					break;
 				default: 
 					widget = new DiscoverPetriNetWidget(parameters);
 					break;
 			}
-			InteractionResult result = context.showWizard("Configure DiSCovery", step == 0, step == 5, widget);
+			InteractionResult result = context.showWizard("Configure DiSCovery", step == 0, step == 7, widget);
 			switch (result) {
 				case NEXT:
 					if (step == 0 && parameters.getClassifier() == null) {

@@ -1,11 +1,14 @@
 package org.processmining.discover.models;
 
+import java.awt.Component;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 
 import org.processmining.discover.parameters.DiscoverPetriNetParameters;
 import org.processmining.lpengines.factories.LPEngineFactory;
@@ -16,6 +19,9 @@ import org.processmining.lpengines.interfaces.LPEngine.Operator;
 import org.processmining.plugins.graphviz.dot.Dot;
 import org.processmining.plugins.graphviz.dot.DotNode;
 import org.processmining.plugins.graphviz.visualisation.DotPanel;
+
+import info.clearthought.layout.TableLayout;
+import info.clearthought.layout.TableLayoutConstants;
 
 public class ActivityMatrixCollection {
 
@@ -114,7 +120,20 @@ public class ActivityMatrixCollection {
 	 * 
 	 * @return The JComponent containing all directly-follows graphs.
 	 */
-	public JComponent getComponent() {
+	public JPanel getComponent() {
+		JPanel panel = new JPanel();
+		panel.setOpaque(false);
+		double size[][] = { { TableLayoutConstants.FILL }, { 30, TableLayoutConstants.FILL } };
+		panel.setLayout(new TableLayout(size));
+
+		final JLabel providersLabel = new JLabel("Check combined component graphs");
+		providersLabel.setOpaque(false);
+		providersLabel.setFont(providersLabel.getFont().deriveFont(13f));
+		providersLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		providersLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		providersLabel.setHorizontalTextPosition(SwingConstants.CENTER);
+
+		panel.add(providersLabel, "0, 0");
 		Dot dotGraph = new Dot();
 
 		// Add the nodes for the artificial start and end activities.
@@ -128,7 +147,8 @@ public class ActivityMatrixCollection {
 			matrix.addNodesAndEdges(dotGraph, startNode, endNode);
 		}
 
-		return new DotPanel(dotGraph);
+		panel.add(new DotPanel(dotGraph), "0, 1");
+		return panel;
 	}
 
 	/**

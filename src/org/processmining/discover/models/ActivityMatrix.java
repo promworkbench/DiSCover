@@ -1,14 +1,20 @@
 package org.processmining.discover.models;
 
+import java.awt.Component;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 
 import org.processmining.plugins.graphviz.dot.Dot;
 import org.processmining.plugins.graphviz.dot.DotEdge;
 import org.processmining.plugins.graphviz.dot.DotNode;
 import org.processmining.plugins.graphviz.visualisation.DotPanel;
+
+import info.clearthought.layout.TableLayout;
+import info.clearthought.layout.TableLayoutConstants;
 
 public class ActivityMatrix {
 
@@ -39,7 +45,7 @@ public class ActivityMatrix {
 	 *            The given alphabet
 	 */
 	public ActivityMatrix(ActivityLog log, ActivityAlphabet alphabet) {
-		this(log, alphabet, new ActivitySet("Not"), null);
+		this(log, alphabet, new ActivitySet("Not", alphabet), null);
 	}
 
 	/**
@@ -214,6 +220,12 @@ public class ActivityMatrix {
 					DotEdge dotEdge = dotGraph.addEdge(fromIdx == 0 ? startNode : map.get(fromIdx),
 							toIdx == 0 ? endNode : map.get(toIdx));
 					dotEdge.setLabel("" + edgeCounts[fromIdx][toIdx]);
+					if (fromIdx != 0 && toIdx != 0 && edgeCounts[toIdx][fromIdx] > 0) {
+						dotEdge.setOption("color", "red");
+						map.get(fromIdx).setOption("color",  "red");
+					} else {
+						dotEdge.setOption("color", "blue");
+					}
 				}
 			}
 		}
@@ -224,7 +236,20 @@ public class ActivityMatrix {
 	 * 
 	 * @return A JCOmponent containing the directly-follows graph
 	 */
-	public JComponent getComponent() {
+	public JPanel getComponent() {
+		JPanel panel = new JPanel();
+		panel.setOpaque(false);
+		double size[][] = { { TableLayoutConstants.FILL }, { 30, TableLayoutConstants.FILL } };
+		panel.setLayout(new TableLayout(size));
+
+		final JLabel providersLabel = new JLabel("Check root graph");
+		providersLabel.setOpaque(false);
+		providersLabel.setFont(providersLabel.getFont().deriveFont(13f));
+		providersLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		providersLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		providersLabel.setHorizontalTextPosition(SwingConstants.CENTER);
+
+		panel.add(providersLabel, "0, 0");
 		Dot dotGraph = new Dot();
 
 		DotNode startNode = dotGraph.addNode(getNodeLabel(ActivityAlphabet.START, nodeCounts[0]));
@@ -232,7 +257,8 @@ public class ActivityMatrix {
 		DotNode endNode = dotGraph.addNode(getNodeLabel(ActivityAlphabet.END, nodeCounts[0]));
 		endNode.setOption("shape", "none");
 		addNodesAndEdges(dotGraph, startNode, endNode);
-		return new DotPanel(dotGraph);
+		panel.add(new DotPanel(dotGraph), "0, 1");
+		return panel;
 	}
 
 	/**
@@ -248,7 +274,7 @@ public class ActivityMatrix {
 			if (nodeCounts[fromIdx] == 0) {
 				continue;
 			}
-			ActivitySet activities = new ActivitySet("Out");
+			ActivitySet activities = new ActivitySet("To", alphabet);
 			for (int toIdx = 0; toIdx < alphabet.size(); toIdx++) {
 				if (nodeCounts[toIdx] == 0) {
 					continue;
@@ -275,7 +301,7 @@ public class ActivityMatrix {
 			if (nodeCounts[toIdx] == 0) {
 				continue;
 			}
-			ActivitySet activities = new ActivitySet("In");
+			ActivitySet activities = new ActivitySet("From", alphabet);
 			for (int fromIdx = 0; fromIdx < alphabet.size(); fromIdx++) {
 				if (nodeCounts[fromIdx] == 0) {
 					continue;

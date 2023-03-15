@@ -25,13 +25,13 @@ public class ActivitySets extends ArrayList<ActivitySet>{
 	 * @param pairs
 	 *            Set or concurrent pairs
 	 */
-	public ActivitySets(ConcurrentActivityPairs pairs) {
+	public ActivitySets(ConcurrentActivityPairs pairs, ActivityAlphabet alphabet) {
 		Set<ActivitySet> sets = new HashSet<ActivitySet>();
 		List<Set<ActivitySet>> seen = new ArrayList<Set<ActivitySet>>(pairs.size());
 		for (int idx = 0; idx < pairs.size(); idx++) {
 			seen.add(idx, new HashSet<ActivitySet>());
 		}
-		apply(pairs, 0, new ActivitySet("Not"), sets, seen);
+		apply(pairs, 0, new ActivitySet("All except", alphabet), sets, seen);
 		System.out.println("[ActivitySets] " + sets.size() + " solutions.");
 		for (ActivitySet set : sets) {
 			add(set);
@@ -45,7 +45,7 @@ public class ActivitySets extends ArrayList<ActivitySet>{
 	 */
 	public ActivitySets(ProcessTree tree, ActivityAlphabet alphabet) {
 		List<ActivitySet> sets = new ArrayList<ActivitySet>();
-		ActivitySet set = new ActivitySet("");
+		ActivitySet set = new ActivitySet("", alphabet);
 		set.add(0);
 		sets.add(set);
 		apply(tree, tree.getRoot(), alphabet, sets);
@@ -55,7 +55,7 @@ public class ActivitySets extends ArrayList<ActivitySet>{
 		 * ignore these sets. As a result, all others branches will be ignored.
 		 */
 		for (ActivitySet set2 : sets) {
-			ActivitySet ignoreSet = new ActivitySet("Not");
+			ActivitySet ignoreSet = new ActivitySet("All except", alphabet);
 			for (int idx = 0; idx < alphabet.size(); idx++) {
 				if (!set2.contains(idx)) {
 					ignoreSet.add(idx);

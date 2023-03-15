@@ -1,10 +1,13 @@
 package org.processmining.discover.widgets;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JCheckBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 
 import org.processmining.discover.parameters.DiscoverPetriNetParameters;
 
@@ -26,9 +29,18 @@ public class DiscoverPetriNetWidget extends JPanel {
 	 * @param parameters The given parameter settings
 	 */
 	public DiscoverPetriNetWidget(final DiscoverPetriNetParameters parameters) {
-		double size[][] = { { TableLayoutConstants.FILL }, { 30, 30, TableLayoutConstants.FILL } };
+		double size[][] = { { TableLayoutConstants.FILL }, { 30, 30, 30, TableLayoutConstants.FILL } };
 		setLayout(new TableLayout(size));
 
+
+		final JLabel providersLabel = new JLabel("Select conversion settings");
+		providersLabel.setOpaque(false);
+		providersLabel.setFont(providersLabel.getFont().deriveFont(13f));
+		providersLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		providersLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		providersLabel.setHorizontalTextPosition(SwingConstants.CENTER);
+
+		add(providersLabel, "0, 0");
 
 		// Slider for the relative threshold. Ranges from 0 to 99 (percent).
 //		final NiceSlider scomSlider = SlickerFactory.instance().createNiceIntegerSlider(
@@ -54,7 +66,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 
 		});
 		mergeBox.setOpaque(false);
-		add(mergeBox, "0, 0");
+		add(mergeBox, "0, 1");
 		
 		// Check box for reduce
 		final JCheckBox reduceBox = SlickerFactory.instance().createCheckBox("Reduce Petri net",
@@ -67,7 +79,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 
 		});
 		reduceBox.setOpaque(false);
-		add(reduceBox, "0, 1");
+		add(reduceBox, "0, 2");
 		
 		// Check box for majority
 //		final JCheckBox majorityBox = SlickerFactory.instance().createCheckBox("Use veto for noise",

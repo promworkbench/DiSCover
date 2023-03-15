@@ -5,9 +5,11 @@ import java.awt.Component;
 import java.awt.Dimension;
 
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -113,8 +115,17 @@ public class FilterMatrixCollectionWidget extends JPanel {
 	private JPanel getMainComponent(DiscoverPetriNetParameters parameters) {
 		JPanel panel = new JPanel();
 		panel.setOpaque(false);
-		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL, 30 } };
+		double size[][] = { { TableLayoutConstants.FILL }, { 30, TableLayoutConstants.FILL, 30 } };
 		panel.setLayout(new TableLayout(size));
+
+		final JLabel providersLabel = new JLabel("Filter component matrices");
+		providersLabel.setOpaque(false);
+		providersLabel.setFont(providersLabel.getFont().deriveFont(13f));
+		providersLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		providersLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		providersLabel.setHorizontalTextPosition(SwingConstants.CENTER);
+
+		panel.add(providersLabel, "0, 0");
 
 		parameters.setMatrixCollection(new ActivityMatrixCollection(parameters.getLog(), parameters.getAlphabet(),
 				new ActivitySets(parameters.getActivitySets()), parameters.getMatrix(), parameters));
@@ -135,7 +146,7 @@ public class FilterMatrixCollectionWidget extends JPanel {
 			}
 		});
 		scomSlider.setPreferredSize(new Dimension(100, 30));
-		panel.add(scomSlider, "0, 1");
+		panel.add(scomSlider, "0, 2");
 
 		return panel;
 	}
@@ -177,7 +188,7 @@ public class FilterMatrixCollectionWidget extends JPanel {
 		matrixPanel.setOpaque(false);
 		matrixPanel.setPreferredSize(new Dimension(100, 100));
 		//		System.out.println("[FilterMatrixWdiget] adding matrix component");
-		panel.add(matrixPanel, "0, 0");
+		panel.add(matrixPanel, "0, 1");
 		//		System.out.println("[FilterMatrixWdiget] added matrix component");
 		panel.validate();
 		panel.repaint();

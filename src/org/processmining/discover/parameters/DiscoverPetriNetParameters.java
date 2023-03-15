@@ -226,7 +226,6 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		if (this.alphabet == null || !this.alphabet.equals(alphabet)) {
 			this.lastAlphabet = (alphabet == null ? null : new ActivityAlphabet(alphabet));
 			this.alphabet = (alphabet == null ? null : new ActivityAlphabet(alphabet));
-			ActivitySet.alphabet = this.alphabet;
 			//			setLog(null);
 		}
 	}

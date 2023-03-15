@@ -111,7 +111,7 @@ public class DiscoverPetriNetAlgorithm {
 				 * 
 				 * This may take some time.
 				 */
-				parameters.setActivitySets(new ActivitySets(pairs));
+				parameters.setActivitySets(new ActivitySets(pairs, parameters.getAlphabet()));
 				System.out.println("[DiscoverPetriNetAlgorithm] Creating non-concurrent sets took "
 						+ (System.currentTimeMillis() - time) + " milliseconds.");
 				System.out.println(

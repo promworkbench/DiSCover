@@ -9,17 +9,22 @@ public class ActivitySet extends BitSet {
 	 */
 	private static final long serialVersionUID = -3438285338528189401L;
 	
-	public static ActivityAlphabet alphabet = null;
+	/*
+	 * The alphabet used for this activity log.
+	 */
+	private ActivityAlphabet alphabet;
 
 	private final String prefix;
 	
-	public ActivitySet(String prefix) {
+	public ActivitySet(String prefix, ActivityAlphabet alphabet) {
 		super();
+		this.alphabet = new ActivityAlphabet(alphabet);
 		this.prefix = prefix;
 	}
 
 	public ActivitySet(ActivitySet set) {
 		or(set);
+		this.alphabet = new ActivityAlphabet(set.alphabet);
 		this.prefix = set.prefix;
 	}
 	

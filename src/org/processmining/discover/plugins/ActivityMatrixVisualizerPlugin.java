@@ -20,7 +20,7 @@ import org.processmining.framework.plugin.annotations.PluginVariant;
 
 public class ActivityMatrixVisualizerPlugin {
 
-	@Plugin(name = "Visualize Direclty-Follows Activity Graph", returnLabels = {
+	@Plugin(name = "Visualize root graph", returnLabels = {
 			"Visualized Directly-Follows Activity Graph" }, returnTypes = {
 					JComponent.class }, parameterLabels = { "Petri Net" }, userAccessible = true)
 	@Visualizer
@@ -29,7 +29,7 @@ public class ActivityMatrixVisualizerPlugin {
 		return matrix.getComponent();
 	}
 
-	@Plugin(name = "Visualize Direclty-Follows Activity Graph", returnLabels = {
+	@Plugin(name = "Visualize root graph", returnLabels = {
 			"Visualized Directly-Follows Activity Graph" }, returnTypes = {
 					JComponent.class }, parameterLabels = { "Event Log" }, userAccessible = true)
 	@Visualizer
@@ -47,7 +47,7 @@ public class ActivityMatrixVisualizerPlugin {
 		return matrix.getComponent();
 	}
 
-	@Plugin(name = "Visualize Separated Direclty-Follows Activity Graph", returnLabels = {
+	@Plugin(name = "Visualize combined component graphs", returnLabels = {
 			"Visualized irectly-Follows Activity Graph" }, returnTypes = {
 					JComponent.class }, parameterLabels = { "Event Log" }, userAccessible = true)
 	@Visualizer
@@ -63,7 +63,7 @@ public class ActivityMatrixVisualizerPlugin {
 		ActivityMatrix matrix = new ActivityMatrix(log, alphabet);
 
 		ConcurrentActivityPairs pairs = new ConcurrentActivityPairs(matrix, alphabet);
-		ActivitySets separated = new ActivitySets(pairs);
+		ActivitySets separated = new ActivitySets(pairs, alphabet);
 		ActivityMatrixCollection matrices = new ActivityMatrixCollection(log, alphabet, separated, matrix);
 
 		return matrices.getComponent();

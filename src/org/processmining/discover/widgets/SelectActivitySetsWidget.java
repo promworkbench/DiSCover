@@ -41,10 +41,9 @@ public class SelectActivitySetsWidget extends JPanel implements ListSelectionLis
 		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL, 30, 30 } };
 		setLayout(new TableLayout(size));
 
-		ActivitySet.alphabet = parameters.getAlphabet();
 		if (parameters.getAllActivitySets() == null) {
 			ConcurrentActivityPairs pairs = new ConcurrentActivityPairs(parameters.getMatrix(), parameters.getAlphabet());
-			ActivitySets activitySets = new ActivitySets(pairs);
+			ActivitySets activitySets = new ActivitySets(pairs, parameters.getAlphabet());
 			parameters.setAllActivitySets(new ActivitySets(activitySets));
 			parameters.setActivitySets(new ActivitySets(activitySets));
 		}
