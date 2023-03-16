@@ -199,7 +199,15 @@ public class DiscoverPetriNetAlgorithm {
 					+ (System.currentTimeMillis() - time) + " milliseconds.");
 			time = System.currentTimeMillis();
 		}
+		time = System.currentTimeMillis();
 
+		if (parameters.isReduceSilent()) {
+			ReduceSimpleSilentTransitionsAlgorithm redAlgorithm = new ReduceSimpleSilentTransitionsAlgorithm();
+			System.out.println("[DiscoverPetriNetAlgorithm] Reducing simple silent transitions");
+			apn = redAlgorithm.apply(context, apn);
+			System.out.println("[DiscoverPetriNetAlgorithm] Reducing simple silent transitions took "
+					+ (System.currentTimeMillis() - time) + " milliseconds.");
+		}
 		/*
 		 * Return the discovered accepting Petri net.
 		 */

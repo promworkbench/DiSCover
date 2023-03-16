@@ -29,7 +29,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 	 * @param parameters The given parameter settings
 	 */
 	public DiscoverPetriNetWidget(final DiscoverPetriNetParameters parameters) {
-		double size[][] = { { TableLayoutConstants.FILL }, { 30, 30, 30, TableLayoutConstants.FILL } };
+		double size[][] = { { TableLayoutConstants.FILL }, { 30, 30, 30, 30, TableLayoutConstants.FILL } };
 		setLayout(new TableLayout(size));
 
 
@@ -80,6 +80,19 @@ public class DiscoverPetriNetWidget extends JPanel {
 		});
 		reduceBox.setOpaque(false);
 		add(reduceBox, "0, 2");
+		
+		// Check box for reduce
+		final JCheckBox reduceSilentBox = SlickerFactory.instance().createCheckBox("Reduce simple silent transitions (precision may suffer)",
+				parameters.isReduceSilent());
+		reduceSilentBox.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				parameters.setReduceSilent(reduceSilentBox.isSelected());
+			}
+
+		});
+		reduceSilentBox.setOpaque(false);
+		add(reduceSilentBox, "0, 3");
 		
 		// Check box for majority
 //		final JCheckBox majorityBox = SlickerFactory.instance().createCheckBox("Use veto for noise",

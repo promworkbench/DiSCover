@@ -25,6 +25,11 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private boolean reduce;
 
 	/**
+	 * Whether to reduce the simpel silent transitions.
+	 */
+	private boolean reduceSilent;
+
+	/**
 	 * Whether to require unanimity for noise. If set, noise requires all
 	 * matrices agree on it.
 	 */
@@ -73,6 +78,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	 */
 	private static boolean lastMerge = true;
 	private static boolean lastReduce = true;
+	private static boolean lastReduceSilent = true;
 	private static boolean lastVetoNoise = false;
 	private static int lastAbsoluteThreshold = 1; // These seem reasonable values.
 	private static int lastRelativeThreshold = 1;
@@ -94,6 +100,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	public DiscoverPetriNetParameters() {
 		setMerge(lastMerge);
 		setReduce(lastReduce);
+		setReduceSilent(lastReduceSilent);
 		setVetoNoise(lastVetoNoise);
 		setRelativeThreshold(lastRelativeThreshold);
 		setAbsoluteThreshold(lastAbsoluteThreshold);
@@ -319,5 +326,14 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 
 	public void setUseILP(boolean useILP) {
 		this.useILP = useILP;
+	}
+
+	public boolean isReduceSilent() {
+		return reduceSilent;
+	}
+
+	public void setReduceSilent(boolean reduceSilent) {
+		this.lastReduceSilent = reduceSilent;
+		this.reduceSilent = reduceSilent;
 	}
 }
