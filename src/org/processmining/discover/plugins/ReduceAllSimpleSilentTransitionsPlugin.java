@@ -2,15 +2,15 @@ package org.processmining.discover.plugins;
 
 import org.processmining.acceptingpetrinet.models.AcceptingPetriNet;
 import org.processmining.contexts.uitopia.annotations.UITopiaVariant;
-import org.processmining.discover.algorithms.ReduceSimpleSilentTransitionsAlgorithm;
+import org.processmining.discover.algorithms.ReduceAllSimpleSilentTransitionsAlgorithm;
 import org.processmining.framework.plugin.PluginContext;
 import org.processmining.framework.plugin.annotations.Plugin;
 import org.processmining.framework.plugin.annotations.PluginVariant;
 
-public class ReduceSimpleSilentTransitionsPlugin extends ReduceSimpleSilentTransitionsAlgorithm {
+public class ReduceAllSimpleSilentTransitionsPlugin extends ReduceAllSimpleSilentTransitionsAlgorithm {
 
 	@Plugin( //
-			name = "Reduce simple silent transitions", //
+			name = "Reduce all simple silent transitions", //
 			parameterLabels = { "Accepting Petri net" }, //
 			returnLabels = { "Reduced Accepting Petri net" }, //
 			returnTypes = { AcceptingPetriNet.class }, //

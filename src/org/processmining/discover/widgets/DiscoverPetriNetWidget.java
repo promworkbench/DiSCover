@@ -29,7 +29,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 	 * @param parameters The given parameter settings
 	 */
 	public DiscoverPetriNetWidget(final DiscoverPetriNetParameters parameters) {
-		double size[][] = { { TableLayoutConstants.FILL }, { 30, 30, 30, 30, TableLayoutConstants.FILL } };
+		double size[][] = { { 30, TableLayoutConstants.FILL }, { 30, 30, 30, 30, 30, TableLayoutConstants.FILL } };
 		setLayout(new TableLayout(size));
 
 
@@ -40,7 +40,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 		providersLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		providersLabel.setHorizontalTextPosition(SwingConstants.CENTER);
 
-		add(providersLabel, "0, 0");
+		add(providersLabel, "0, 0, 1, 0");
 
 		// Slider for the relative threshold. Ranges from 0 to 99 (percent).
 //		final NiceSlider scomSlider = SlickerFactory.instance().createNiceIntegerSlider(
@@ -66,33 +66,61 @@ public class DiscoverPetriNetWidget extends JPanel {
 
 		});
 		mergeBox.setOpaque(false);
-		add(mergeBox, "0, 1");
+		add(mergeBox, "0, 1, 1, 1");
 		
 		// Check box for reduce
-		final JCheckBox reduceBox = SlickerFactory.instance().createCheckBox("Reduce Petri net",
+		final JCheckBox reduceBox = SlickerFactory.instance().createCheckBox("Reduce Petri net (maximal precise)",
 				parameters.isReduce());
+		// Check box for reduce
+		final JCheckBox reduceAllBox = SlickerFactory.instance().createCheckBox("Additionally reduce all simple silent transitions (least precise)",
+				parameters.isReduceAll());
+		// Check box for reduce
+		final JCheckBox reduceRestrictedBox = SlickerFactory.instance().createCheckBox("Additionally reduce restricted simple silent transitions (less precise)",
+				parameters.isReduceRestricted());
+		
 		reduceBox.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
 				parameters.setReduce(reduceBox.isSelected());
+				reduceAllBox.setSelected(false);
+				reduceAllBox.setVisible(reduceBox.isSelected());
+				reduceRestrictedBox.setSelected(false);
+				reduceRestrictedBox.setVisible(reduceBox.isSelected());
 			}
 
 		});
 		reduceBox.setOpaque(false);
-		add(reduceBox, "0, 2");
-		
-		// Check box for reduce
-		final JCheckBox reduceSilentBox = SlickerFactory.instance().createCheckBox("Reduce simple silent transitions (precision may suffer)",
-				parameters.isReduceSilent());
-		reduceSilentBox.addActionListener(new ActionListener() {
+		add(reduceBox, "0, 2, 1, 2");
+
+		reduceAllBox.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
-				parameters.setReduceSilent(reduceSilentBox.isSelected());
+				parameters.setReduceAll(reduceAllBox.isSelected());
+				parameters.setReduceRestricted(false);
+				if (reduceRestrictedBox.isSelected()) {
+					reduceRestrictedBox.setSelected(false);
+				}
 			}
 
 		});
-		reduceSilentBox.setOpaque(false);
-		add(reduceSilentBox, "0, 3");
+		reduceAllBox.setOpaque(false);
+		reduceAllBox.setVisible(reduceBox.isSelected());
+		add(reduceAllBox, "1, 4");
+		
+		reduceRestrictedBox.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				parameters.setReduceRestricted(reduceRestrictedBox.isSelected());
+				parameters.setReduceAll(false);
+				if (reduceAllBox.isSelected()) {
+					reduceAllBox.setSelected(false);
+				}
+			}
+
+		});
+		reduceRestrictedBox.setOpaque(false);
+		reduceRestrictedBox.setVisible(reduceBox.isSelected());
+		add(reduceRestrictedBox, "1, 3");
 		
 		// Check box for majority
 //		final JCheckBox majorityBox = SlickerFactory.instance().createCheckBox("Use veto for noise",

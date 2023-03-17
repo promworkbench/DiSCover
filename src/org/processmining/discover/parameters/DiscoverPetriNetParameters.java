@@ -25,9 +25,14 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private boolean reduce;
 
 	/**
-	 * Whether to reduce the simpel silent transitions.
+	 * Whether to reduce all simple silent transitions.
 	 */
-	private boolean reduceSilent;
+	private boolean reduceAll;
+
+	/**
+	 * Whether to reduce restricted simple silent transitions.
+	 */
+	private boolean reduceRestricted;
 
 	/**
 	 * Whether to require unanimity for noise. If set, noise requires all
@@ -78,7 +83,8 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	 */
 	private static boolean lastMerge = true;
 	private static boolean lastReduce = true;
-	private static boolean lastReduceSilent = true;
+	private static boolean lastReduceAll = false;
+	private static boolean lastReduceRestricted = false;
 	private static boolean lastVetoNoise = false;
 	private static int lastAbsoluteThreshold = 1; // These seem reasonable values.
 	private static int lastRelativeThreshold = 1;
@@ -100,7 +106,8 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	public DiscoverPetriNetParameters() {
 		setMerge(lastMerge);
 		setReduce(lastReduce);
-		setReduceSilent(lastReduceSilent);
+		setReduceAll(lastReduceAll);
+		setReduceRestricted(lastReduceRestricted);
 		setVetoNoise(lastVetoNoise);
 		setRelativeThreshold(lastRelativeThreshold);
 		setAbsoluteThreshold(lastAbsoluteThreshold);
@@ -328,12 +335,21 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		this.useILP = useILP;
 	}
 
-	public boolean isReduceSilent() {
-		return reduceSilent;
+	public boolean isReduceAll() {
+		return reduceAll;
 	}
 
-	public void setReduceSilent(boolean reduceSilent) {
-		this.lastReduceSilent = reduceSilent;
-		this.reduceSilent = reduceSilent;
+	public void setReduceAll(boolean reduceAll) {
+		this.lastReduceAll = reduceAll;
+		this.reduceAll = reduceAll;
+	}
+
+	public boolean isReduceRestricted() {
+		return reduceRestricted;
+	}
+
+	public void setReduceRestricted(boolean reduceRestricted) {
+		this.lastReduceRestricted = reduceRestricted;
+		this.reduceRestricted = reduceRestricted;
 	}
 }

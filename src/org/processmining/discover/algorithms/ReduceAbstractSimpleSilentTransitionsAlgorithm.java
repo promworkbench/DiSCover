@@ -21,7 +21,7 @@ import org.processmining.models.graphbased.directed.petrinet.elements.Transition
 import org.processmining.models.graphbased.directed.petrinet.impl.PetrinetFactory;
 import org.processmining.models.semantics.petrinet.Marking;
 
-public class ReduceSimpleSilentTransitionsAlgorithm {
+public abstract class ReduceAbstractSimpleSilentTransitionsAlgorithm {
 
 	public AcceptingPetriNet apply(PluginContext context, AcceptingPetriNet apn) {
 		/*
@@ -67,7 +67,9 @@ public class ReduceSimpleSilentTransitionsAlgorithm {
 		List<Transition> simpleSilentTransitions = new ArrayList<Transition>();
 		for (Transition transition : apn.getNet().getTransitions()) {
 			if (transition.isInvisible() && preset.get(transition).size() == 1 && postset.get(transition).size() == 1) {
-				simpleSilentTransitions.add(transition);
+				if (isOK(transition, preset, postset)) {
+					simpleSilentTransitions.add(transition);
+				}
 			}
 		}
 		Collections.sort(simpleSilentTransitions, new Comparator<Transition>() {
@@ -154,4 +156,6 @@ public class ReduceSimpleSilentTransitionsAlgorithm {
 //			}
 		}
 	}
+	
+	abstract boolean isOK(Transition transition, Map<PetrinetNode, Set<PetrinetNode>> preset, Map<PetrinetNode, Set<PetrinetNode>> postset);
 }

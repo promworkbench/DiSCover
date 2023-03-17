@@ -201,13 +201,20 @@ public class DiscoverPetriNetAlgorithm {
 		}
 		time = System.currentTimeMillis();
 
-		if (parameters.isReduceSilent()) {
-			ReduceSimpleSilentTransitionsAlgorithm redAlgorithm = new ReduceSimpleSilentTransitionsAlgorithm();
-			System.out.println("[DiscoverPetriNetAlgorithm] Reducing simple silent transitions");
+		if (parameters.isReduceAll()) {
+			ReduceAbstractSimpleSilentTransitionsAlgorithm redAlgorithm = new ReduceAllSimpleSilentTransitionsAlgorithm();
+			System.out.println("[DiscoverPetriNetAlgorithm] Reducing all simple silent transitions");
 			apn = redAlgorithm.apply(context, apn);
-			System.out.println("[DiscoverPetriNetAlgorithm] Reducing simple silent transitions took "
+			System.out.println("[DiscoverPetriNetAlgorithm] Reducing all simple silent transitions took "
+					+ (System.currentTimeMillis() - time) + " milliseconds.");
+		} else if (parameters.isReduceRestricted()) {
+			ReduceAbstractSimpleSilentTransitionsAlgorithm redAlgorithm = new ReduceRestrictedSimpleSilentTransitionsAlgorithm();
+			System.out.println("[DiscoverPetriNetAlgorithm] Reducing restricted simple silent transitions");
+			apn = redAlgorithm.apply(context, apn);
+			System.out.println("[DiscoverPetriNetAlgorithm] Reducing restricted simple silent transitions took "
 					+ (System.currentTimeMillis() - time) + " milliseconds.");
 		}
+
 		/*
 		 * Return the discovered accepting Petri net.
 		 */
