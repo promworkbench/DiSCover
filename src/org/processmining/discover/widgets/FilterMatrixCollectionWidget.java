@@ -108,14 +108,13 @@ public class FilterMatrixCollectionWidget extends JPanel {
 		setLayout(new TableLayout(size));
 
 		add(getMainComponent(parameters), "0, 0");
-		
-		
+
 	}
 
 	private JPanel getMainComponent(DiscoverPetriNetParameters parameters) {
 		JPanel panel = new JPanel();
 		panel.setOpaque(false);
-		double size[][] = { { TableLayoutConstants.FILL }, { 30, TableLayoutConstants.FILL, 30 } };
+		double size[][] = { { TableLayoutConstants.FILL }, { 30, TableLayoutConstants.FILL, 30, 30 } };
 		panel.setLayout(new TableLayout(size));
 
 		final JLabel providersLabel = new JLabel("Filter component matrices");
@@ -129,24 +128,42 @@ public class FilterMatrixCollectionWidget extends JPanel {
 
 		parameters.setMatrixCollection(new ActivityMatrixCollection(parameters.getLog(), parameters.getAlphabet(),
 				new ActivitySets(parameters.getActivitySets()), parameters.getMatrix(), parameters));
+		//		for (int i = 0; i < parameters.getMatrixCollection().size(); i++) {
+		//			parameters.getMatrixCollection().get(i).filterAbsolute(parameters.getAbsoluteThreshold());
+		//		}
 		selectedMatrix = 0;
+		filter(parameters);
 		addMatrixWidget(panel, parameters);
 
+		final NiceSlider absSlider = SlickerFactory.instance().createNiceIntegerSlider(
+				"Absolute threshold (0 if no noise)", 0, 100, parameters.getAbsoluteThreshold2(),
+				Orientation.HORIZONTAL);
+		absSlider.addChangeListener(new ChangeListener() {
+
+			public void stateChanged(ChangeEvent e) {
+				//				System.out.println("[FilterMatrixWidget] start change");
+				int value = absSlider.getSlider().getValue();
+				parameters.setAbsoluteThreshold2(value);
+				filter(parameters);
+				addMatrixWidget(panel, parameters);
+				//				System.out.println("[FilterMatrixWidget] end change");
+			}
+		});
+		absSlider.setPreferredSize(new Dimension(100, 30));
+		panel.add(absSlider, "0, 2");
+
 		// Slider for the relative threshold. Ranges from 0 to 99 (percent).
-		final NiceSlider scomSlider = SlickerFactory.instance().createNiceIntegerSlider(
-				"Select component", 0, parameters.getMatrixCollection().size() - 1, selectedMatrix, Orientation.HORIZONTAL);
+		final NiceSlider scomSlider = SlickerFactory.instance().createNiceIntegerSlider("Select component", 0,
+				parameters.getMatrixCollection().size() - 1, selectedMatrix, Orientation.HORIZONTAL);
 		scomSlider.addChangeListener(new ChangeListener() {
 
 			public void stateChanged(ChangeEvent e) {
 				selectedMatrix = scomSlider.getSlider().getValue();
-				if (matrixPanel != null) {
-					remove(matrixPanel);
-				}
 				addMatrixWidget(panel, parameters);
 			}
 		});
 		scomSlider.setPreferredSize(new Dimension(100, 30));
-		panel.add(scomSlider, "0, 2");
+		panel.add(scomSlider, "0, 3");
 
 		return panel;
 	}
@@ -192,6 +209,10 @@ public class FilterMatrixCollectionWidget extends JPanel {
 		//		System.out.println("[FilterMatrixWdiget] added matrix component");
 		panel.validate();
 		panel.repaint();
+	}
+
+	private void filter(DiscoverPetriNetParameters parameters) {
+		parameters.getMatrixCollection().filterAbsolute(parameters.getAbsoluteThreshold2());
 	}
 
 }

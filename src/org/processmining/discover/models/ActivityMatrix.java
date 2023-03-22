@@ -150,7 +150,7 @@ public class ActivityMatrix {
 
 	public void set(int fromIdx, int toIdx, int value) {
 		if (value != edgeCounts[fromIdx][toIdx]) {
-			nodeCounts[toIdx] += (value - edgeCounts[fromIdx][toIdx]);
+//			nodeCounts[fromIdx] += (value - edgeCounts[fromIdx][toIdx]);
 			edgeCounts[fromIdx][toIdx] = value;
 		}
 	}
@@ -216,13 +216,13 @@ public class ActivityMatrix {
 		// Add all edges
 		for (int fromIdx = 0; fromIdx < alphabet.size(); fromIdx++) {
 			for (int toIdx = 0; toIdx < alphabet.size(); toIdx++) {
-				if (edgeCounts[fromIdx][toIdx] > 0) {
+				if (nodeCounts[fromIdx] > 0 && nodeCounts[toIdx] > 0 && edgeCounts[fromIdx][toIdx] > 0) {
 					DotEdge dotEdge = dotGraph.addEdge(fromIdx == 0 ? startNode : map.get(fromIdx),
 							toIdx == 0 ? endNode : map.get(toIdx));
 					dotEdge.setLabel("" + edgeCounts[fromIdx][toIdx]);
 					if (fromIdx != 0 && toIdx != 0 && edgeCounts[toIdx][fromIdx] > 0) {
 						dotEdge.setOption("color", "red");
-						map.get(fromIdx).setOption("color",  "red");
+						map.get(fromIdx).setOption("color", "red");
 					} else {
 						dotEdge.setOption("color", "blue");
 					}
@@ -321,7 +321,9 @@ public class ActivityMatrix {
 	public void restore() {
 		for (int fromIdx = 0; fromIdx < alphabet.size(); fromIdx++) {
 			for (int toIdx = 0; toIdx < alphabet.size(); toIdx++) {
-				edgeCounts[fromIdx][toIdx] = Math.abs(edgeCounts[fromIdx][toIdx]);
+				if (edgeCounts[fromIdx][toIdx] < 0) {
+					set(fromIdx, toIdx, -edgeCounts[fromIdx][toIdx]);
+				}
 			}
 		}
 	}
@@ -340,8 +342,7 @@ public class ActivityMatrix {
 					continue;
 				}
 				if (edgeCounts[fromIdx][toIdx] <= threshold) {
-					// Does not exceed threshold, filter out.
-					edgeCounts[fromIdx][toIdx] = -Math.abs(edgeCounts[fromIdx][toIdx]);
+					set(fromIdx, toIdx, -edgeCounts[fromIdx][toIdx]);
 				}
 			}
 		}
@@ -393,8 +394,7 @@ public class ActivityMatrix {
 				//						|| (edgeCounts[fromIdx][toIdx] < toMax[toIdx] && 1000 * toMax[toIdx]
 				//								* edgeCounts[fromIdx][toIdx] < threshold * (toMax[toIdx] + edgeCounts[fromIdx][toIdx]) * (toMax[toIdx] + edgeCounts[fromIdx][toIdx])))) {
 				if (edgeCounts[fromIdx][toIdx] * 100 <= Math.max(fromMax[fromIdx], toMax[toIdx]) * relativeThreshold) {
-					// Does not exceed threshold percent, filter out.
-					edgeCounts[fromIdx][toIdx] = -Math.abs(edgeCounts[fromIdx][toIdx]);
+					set(fromIdx, toIdx, -edgeCounts[fromIdx][toIdx]);
 				}
 			}
 		}

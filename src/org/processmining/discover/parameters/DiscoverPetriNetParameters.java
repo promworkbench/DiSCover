@@ -41,14 +41,19 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private boolean vetoNoise;
 
 	/**
-	 * The absolute threshold to use.
+	 * The relative threshold to use.
 	 */
 	private int relativeThreshold;
 
 	/**
-	 * The relative threshold to use.
+	 * The absolute threshold to use.
 	 */
 	private int absoluteThreshold;
+
+	/**
+	 * The absolute threshold to use for the sub matrices.
+	 */
+	private int absoluteThreshold2;
 
 	/*
 	 * The maximal number of S-components to take into account (use 0 for no
@@ -87,6 +92,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static boolean lastReduceRestricted = false;
 	private static boolean lastVetoNoise = false;
 	private static int lastAbsoluteThreshold = 1; // These seem reasonable values.
+	private static int lastAbsoluteThreshold2 = 1; 
 	private static int lastRelativeThreshold = 1;
 	private static int lastSafetyThreshold = 95;
 	private static int LastNofSComponents = 20; // Seems more than enough.
@@ -111,6 +117,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		setVetoNoise(lastVetoNoise);
 		setRelativeThreshold(lastRelativeThreshold);
 		setAbsoluteThreshold(lastAbsoluteThreshold);
+		setAbsoluteThreshold2(lastAbsoluteThreshold2);
 		setSafetyThreshold(lastSafetyThreshold);
 		setNofSComponents(LastNofSComponents);
 		setUseILP(lastUseILP);
@@ -351,5 +358,14 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	public void setReduceRestricted(boolean reduceRestricted) {
 		this.lastReduceRestricted = reduceRestricted;
 		this.reduceRestricted = reduceRestricted;
+	}
+
+	public int getAbsoluteThreshold2() {
+		return absoluteThreshold2;
+	}
+
+	public void setAbsoluteThreshold2(int absoluteThreshold2) {
+		this.lastAbsoluteThreshold2 = absoluteThreshold2;
+		this.absoluteThreshold2 = absoluteThreshold2;
 	}
 }

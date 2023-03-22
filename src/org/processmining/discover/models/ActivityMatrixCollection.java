@@ -30,6 +30,8 @@ public class ActivityMatrixCollection {
 	 */
 	private ActivityMatrix matrices[];
 
+	private ActivityAlphabet alphabet;
+	
 	/**
 	 * Number of matrices.
 	 */
@@ -56,10 +58,11 @@ public class ActivityMatrixCollection {
 
 	public ActivityMatrixCollection(ActivityLog log, ActivityAlphabet alphabet, ActivitySets ignoreSets,
 			ActivityMatrix rootMatrix, DiscoverPetriNetParameters parameters) {
-		size = ignoreSets.size();
-		matrices = new ActivityMatrix[size];
+		this.size = ignoreSets.size();
+		this.alphabet = new ActivityAlphabet(alphabet);
+		this.matrices = new ActivityMatrix[size];
 		for (int idx = 0; idx < size; idx++) {
-			matrices[idx] = new ActivityMatrix(log, alphabet, ignoreSets.get(idx), rootMatrix);
+			this.matrices[idx] = new ActivityMatrix(log, alphabet, ignoreSets.get(idx), rootMatrix);
 		}
 		if (parameters.getNofSComponents() > 0) {
 			reduce(parameters);
@@ -67,7 +70,8 @@ public class ActivityMatrixCollection {
 	}
 
 	public ActivityMatrixCollection(ActivityMatrixCollection matrices) {
-		size = matrices.size;
+		this.size = matrices.size;
+		this.alphabet = new ActivityAlphabet(matrices.alphabet);
 		this.matrices = new ActivityMatrix[size];
 		for (int i = 0; i < size; i++) {
 			this.matrices[i] = new ActivityMatrix(matrices.get(i));
@@ -81,6 +85,9 @@ public class ActivityMatrixCollection {
 		if (o instanceof ActivityMatrixCollection) {
 			ActivityMatrixCollection matrices = (ActivityMatrixCollection) o;
 			if (size != matrices.size) {
+				return false;
+			}
+			if (!alphabet.equals(matrices.alphabet)) {
 				return false;
 			}
 			for (int i = 0; i < size; i++) {
@@ -261,4 +268,26 @@ public class ActivityMatrixCollection {
 		System.out.println("[ActivityMatrixCollection] Limited to " + selected.size() + " matrices.");
 		size = selected.size();
 	}
+	
+	public void filterAbsolute(int threshold) {
+		for (int i = 0; i < size; i++) {
+			matrices[i].restore();
+		}
+		for (int fromIdx = 0; fromIdx < alphabet.size(); fromIdx++) {
+			for (int toIdx = 0; toIdx < alphabet.size(); toIdx++) {
+				boolean change = true;
+				for (int i = 0; i < size; i++) {
+					if (matrices[i].get(fromIdx, toIdx) > 0 && matrices[i].get(fromIdx, toIdx) > threshold) {
+						change = false;
+					}
+				}
+				if (change) {
+					for (int i = 0; i < size; i++) {
+						matrices[i].set(fromIdx, toIdx,	-Math.abs(matrices[i].get(fromIdx, toIdx)));
+					}
+				}
+			}
+		}
+	}
+
 }

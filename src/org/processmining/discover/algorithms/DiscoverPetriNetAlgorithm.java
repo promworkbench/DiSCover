@@ -140,6 +140,11 @@ public class DiscoverPetriNetAlgorithm {
 			System.out.println("[DiscoverPetriNetAlgorithm] Creating secondary matrices took "
 					+ (System.currentTimeMillis() - time) + " milliseconds.");
 			time = System.currentTimeMillis();
+			
+			parameters.getMatrixCollection().filterAbsolute(parameters.getAbsoluteThreshold2());
+			System.out.println("[DiscoverPetriNetAlgorithm] Filtering secondary matrices took "
+					+ (System.currentTimeMillis() - time) + " milliseconds.");
+			time = System.currentTimeMillis();
 		}
 
 		/*

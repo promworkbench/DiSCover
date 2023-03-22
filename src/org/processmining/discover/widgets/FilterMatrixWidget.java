@@ -160,7 +160,7 @@ public class FilterMatrixWidget extends JPanel {
 		addMatrixWidget(panel, parameters);
 
 		final NiceSlider absSlider = SlickerFactory.instance().createNiceIntegerSlider(
-				"Absolute threshold (0 if no noise)", 0, 20, parameters.getAbsoluteThreshold(), Orientation.HORIZONTAL);
+				"Absolute threshold (0 if no noise)", 0, 100, parameters.getAbsoluteThreshold(), Orientation.HORIZONTAL);
 		absSlider.addChangeListener(new ChangeListener() {
 
 			public void stateChanged(ChangeEvent e) {
