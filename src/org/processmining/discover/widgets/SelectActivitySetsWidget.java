@@ -38,7 +38,7 @@ public class SelectActivitySetsWidget extends JPanel implements ListSelectionLis
 
 	public SelectActivitySetsWidget(DiscoverPetriNetParameters parameters) {
 		this.parameters = parameters;
-		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL, 30, 30 } };
+		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL, 30, 30, 30 } };
 		setLayout(new TableLayout(size));
 
 		if (parameters.getAllActivitySets() == null) {
@@ -65,17 +65,38 @@ public class SelectActivitySetsWidget extends JPanel implements ListSelectionLis
 		add(scomSlider, "0, 1");
 
 		// Check box for merge
-		final JCheckBox mergeBox = SlickerFactory.instance().createCheckBox("Use ILP reduction",
+		final JCheckBox ilpBox = SlickerFactory.instance().createCheckBox("Select components that cover all activities",
+				parameters.isUseILP2());
+		final JCheckBox mergeBox = SlickerFactory.instance().createCheckBox("Select components that cover all activity sets",
 				parameters.isUseILP());
+		ilpBox.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				parameters.setUseILP2(ilpBox.isSelected());
+				parameters.setUseILP(false);
+				if (ilpBox.isSelected()) {
+					mergeBox.setSelected(false);
+				}
+			}
+
+		});
+		ilpBox.setOpaque(false);
+		add(ilpBox, "0, 2");
+
+		// Check box for merge
 		mergeBox.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
 				parameters.setUseILP(mergeBox.isSelected());
+				parameters.setUseILP2(false);
+				if (mergeBox.isSelected()) {
+					ilpBox.setSelected(false);
+				}
 			}
 
 		});
 		mergeBox.setOpaque(false);
-		add(mergeBox, "0, 2");
+		add(mergeBox, "0, 3");
 
 	}
 

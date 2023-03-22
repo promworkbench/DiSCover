@@ -62,6 +62,9 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private int nofSComponents;
 
 	private boolean useILP;
+
+	private boolean useILP2;
+
 	/**
 	 * The safety threshold to use.
 	 */
@@ -96,7 +99,8 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static int lastRelativeThreshold = 1;
 	private static int lastSafetyThreshold = 95;
 	private static int LastNofSComponents = 20; // Seems more than enough.
-	private static boolean lastUseILP = true;
+	private static boolean lastUseILP = false;
+	private static boolean lastUseILP2 = true;
 	private static XEventClassifier lastClassifier = null;
 	private static List<String> lastActivities = null;
 	private static ActivityAlphabet lastAlphabet = null;
@@ -121,6 +125,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		setSafetyThreshold(lastSafetyThreshold);
 		setNofSComponents(LastNofSComponents);
 		setUseILP(lastUseILP);
+		setUseILP2(lastUseILP2);
 		setClassifier(lastClassifier, false);
 		setActivities(lastActivities, false);
 		setAlphabet(lastAlphabet, false);
@@ -367,5 +372,14 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	public void setAbsoluteThreshold2(int absoluteThreshold2) {
 		this.lastAbsoluteThreshold2 = absoluteThreshold2;
 		this.absoluteThreshold2 = absoluteThreshold2;
+	}
+
+	public boolean isUseILP2() {
+		return useILP2;
+	}
+
+	public void setUseILP2(boolean useILP2) {
+		this.lastUseILP2 = useILP2;
+		this.useILP2 = useILP2;
 	}
 }

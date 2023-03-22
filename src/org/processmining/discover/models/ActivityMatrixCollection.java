@@ -187,6 +187,39 @@ public class ActivityMatrixCollection {
 	private void reduce(DiscoverPetriNetParameters parameters) {
 		Set<ActivityMatrix> selected = new HashSet<ActivityMatrix>();
 
+		if (parameters.isUseILP2()) {
+			LPEngine engine = LPEngineFactory.createLPEngine(EngineType.LPSOLVE, 0, 0);
+			Map<Integer, Double> objective = new HashMap<Integer, Double>();
+			int variables[] = new int[matrices.length];
+			for (int i = 0; i < matrices.length; i++) {
+				variables[i] = engine.addVariable(new HashMap<Integer, Double>(), LPEngine.VariableType.INTEGER);
+				objective.put(variables[i], 1.0);
+			}
+			engine.setObjective(objective, ObjectiveTargetType.MIN);
+
+			for (int a = 0; a < parameters.getAlphabet().size(); a++) {
+				Map<Integer, Double> constraint = new HashMap<Integer, Double>();
+				for (int i = 0; i < matrices.length; i++) {
+					constraint.put(variables[i], matrices[i].get(a) > 0 ? 1.0 : 0.0);
+				}
+				engine.addConstraint(constraint, Operator.GREATER_EQUAL, 1.0);
+			}
+			Map<Integer, Double> solution = engine.solve();
+			for (int i = 0; i < matrices.length; i++) {
+				if (solution.containsKey(variables[i]) && solution.get(variables[i]) > 0.0) {
+					selected.add(matrices[i]);
+				}
+			}
+			matrices = new ActivityMatrix[selected.size()];
+			int idx = 0;
+			for (ActivityMatrix matrix : selected) {
+				matrices[idx++] = matrix;
+			}
+			System.out.println(
+					"[ActivityMatrixCollection] Reduced from " + size + " to " + selected.size() + " matrices.");
+			size = selected.size();
+		}
+		
 		if (parameters.isUseILP()) {
 			Set<ActivitySet> nextActivities = new HashSet<ActivitySet>();
 			Set<ActivitySet> previousActivities = new HashSet<ActivitySet>();
@@ -269,19 +302,40 @@ public class ActivityMatrixCollection {
 		size = selected.size();
 	}
 	
+	/*
+	 * Filter the matrices on the given (absolute) threshold.
+	 */
 	public void filterAbsolute(int threshold) {
+		/*
+		 *  First, restore all matrices, as the provided threshold may be lower than the one used
+		 *  to create these matrices.
+		 */
 		for (int i = 0; i < size; i++) {
 			matrices[i].restore();
 		}
+		/*
+		 * Second, apply the threshold on the restored matrices.
+		 */
 		for (int fromIdx = 0; fromIdx < alphabet.size(); fromIdx++) {
 			for (int toIdx = 0; toIdx < alphabet.size(); toIdx++) {
+				/*
+				 * Initially, every cell needs to be changed.
+				 */
 				boolean change = true;
 				for (int i = 0; i < size; i++) {
 					if (matrices[i].get(fromIdx, toIdx) > 0 && matrices[i].get(fromIdx, toIdx) > threshold) {
+						/*
+						 * Found a matrix where the value of this cell exceeds the threshold. 
+						 * This cell should not be changed.
+						 */
 						change = false;
 					}
 				}
 				if (change) {
+					/*
+					 * All matrices have a value for this cell below (or equal to) the provided threshold.
+					 * Filter these cells out as being noise.
+					 */
 					for (int i = 0; i < size; i++) {
 						matrices[i].set(fromIdx, toIdx,	-Math.abs(matrices[i].get(fromIdx, toIdx)));
 					}
