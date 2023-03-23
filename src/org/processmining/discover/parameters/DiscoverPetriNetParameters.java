@@ -116,14 +116,6 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static boolean lastUseILP = false;
 	private static boolean lastUseILP2 = true;
 	private static boolean lastShowGraph = false;
-	private static XEventClassifier lastClassifier = null;
-	private static List<String> lastActivities = null;
-	private static ActivityAlphabet lastAlphabet = null;
-	private static ActivityLog lastLog = null;
-	private static ActivityMatrix lastMatrix = null;
-	private static ActivitySets lastActivitySets = null;
-	private static ActivitySets lastAllActivitySets = null;
-	private static ActivityMatrixCollection lastMatrixCollection = null;
 
 	/**
 	 * Creates default parameter settings.
@@ -144,16 +136,16 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		setUseILP(lastUseILP);
 		setUseILP2(lastUseILP2);
 		setShowGraph(lastShowGraph);
-		setClassifier(lastClassifier, false);
-		setActivities(lastActivities, false);
-		setAlphabet(lastAlphabet, false);
-		setLog(lastLog, false);
-		setMatrix(lastMatrix, false);
-		setActivitySets(lastActivitySets, false);
-		setAllActivitySets(lastAllActivitySets, false);
-		setMatrixCollection(lastMatrixCollection, false);
+		setClassifier(null, false);
+		setActivities(null, false);
+		setAlphabet(null, false);
+		setLog(null, false);
+		setMatrix(null, false);
+		setActivitySets(null, false);
+		setAllActivitySets(null, false);
+		setMatrixCollection(null, false);
 	}
-
+	
 	/*
 	 * Getters and setters
 	 */
@@ -231,7 +223,6 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 
 	private void setClassifier(XEventClassifier classifier, boolean propagate) {
 		if (this.classifier == null || !this.classifier.equals(classifier)) {
-			this.lastClassifier = classifier;
 			this.classifier = classifier;
 			if (propagate) {
 				setActivities(null);
@@ -249,7 +240,6 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 
 	private void setActivities(List<String> activities, boolean propagate) {
 		if (this.activities == null || !this.activities.equals(activities)) {
-			this.lastActivities = (activities == null ? null : new ArrayList<String>(activities));
 			this.activities = (activities == null ? null : new ArrayList<String>(activities));
 			if (propagate) {
 				setLog(null);
@@ -268,7 +258,6 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 
 	private void setAlphabet(ActivityAlphabet alphabet, boolean propagate) {
 		if (this.alphabet == null || !this.alphabet.equals(alphabet)) {
-			this.lastAlphabet = (alphabet == null ? null : new ActivityAlphabet(alphabet));
 			this.alphabet = (alphabet == null ? null : new ActivityAlphabet(alphabet));
 			//			setLog(null);
 		}
@@ -284,7 +273,6 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 
 	private void setLog(ActivityLog log, boolean propagate) {
 		if (this.log == null || !this.log.equals(log)) {
-			this.lastLog = (log == null ? null : new ActivityLog(log));
 			this.log = (log == null ? null : new ActivityLog(log));
 			if (propagate) {
 				setMatrix(null);
@@ -319,7 +307,6 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 	public void setActivitySets(List<ActivitySet> activitySets, boolean propagate) {
 		if (this.activitySets == null || !this.activitySets.equals(activitySets)) {
-			this.lastActivitySets = (activitySets == null ? null : new ActivitySets(activitySets));
 			this.activitySets = (activitySets == null ? null : new ActivitySets(activitySets));
 			if (propagate) {
 				setMatrixCollection(null);
@@ -327,8 +314,8 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		}
 	}
 
-	public static ActivitySets getAllActivitySets() {
-		return lastAllActivitySets;
+	public ActivitySets getAllActivitySets() {
+		return (allActivitySets == null ? null : new ActivitySets(allActivitySets));
 	}
 
 	public void setAllActivitySets(List<ActivitySet> allActivitySets) {
@@ -337,7 +324,6 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	
 	public void setAllActivitySets(List<ActivitySet> allActivitySets, boolean propagate) {
 		if (this.allActivitySets == null || !this.allActivitySets.equals(allActivitySets)) {
-			this.lastAllActivitySets = (allActivitySets == null ? null : new ActivitySets(allActivitySets));
 			this.allActivitySets = (allActivitySets == null ? null : new ActivitySets(allActivitySets));
 		}
 	}
@@ -352,7 +338,6 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	
 	private void setMatrixCollection(ActivityMatrixCollection matrixCollection, boolean propagate) {
 		if (this.matrixCollection == null || !this.matrixCollection.equals(matrixCollection)) {
-			this.lastMatrixCollection = (matrixCollection == null ? null : new ActivityMatrixCollection(matrixCollection));
 			this.matrixCollection = (matrixCollection == null ? null : new ActivityMatrixCollection(matrixCollection));
 		}
 	}

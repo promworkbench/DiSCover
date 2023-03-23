@@ -43,7 +43,7 @@ public class DiscoverPetriNetAlgorithm {
 		 * Get the first classifier. If the event log has no classifier, use the
 		 * default classifier.
 		 */
-		if (parameters.getClassifier() == null || !eventLog.getClassifiers().contains(parameters.getClassifier())) {
+		if (parameters.getClassifier() == null) {
 			if (eventLog.getClassifiers().isEmpty()) {
 				parameters.setClassifier(new XEventNameClassifier());
 			} else {
@@ -56,31 +56,28 @@ public class DiscoverPetriNetAlgorithm {
 		/*
 		 * Create the alphabet (set of activities) for the event log.
 		 */
-		ActivityAlphabet alphabet = new ActivityAlphabet(eventLog, parameters.getClassifier());
-		if (parameters.getAlphabet() == null || !parameters.getAlphabet().equals(alphabet)) {
-			parameters.setAlphabet(alphabet);
+		if (parameters.getAlphabet() == null) {
+			parameters.setAlphabet(new ActivityAlphabet(eventLog, parameters.getClassifier()));
 			System.out.println("[DiscoverPetriNetAlgorithm] Creating alphabet took "
 					+ (System.currentTimeMillis() - time) + " milliseconds.");
 			time = System.currentTimeMillis();
 		}
 
-		ActivityLog log = new ActivityLog(eventLog, parameters.getClassifier(), parameters.getAlphabet());
-		if (parameters.getLog() == null || !parameters.getLog().equals(log)) {
+		if (parameters.getLog() == null) {
 			/*
 			 * Convert the event log to an activity log using the alphabet.
 			 */
-			parameters.setLog(log);
+			parameters.setLog(new ActivityLog(eventLog, parameters.getClassifier(), parameters.getAlphabet()));
 			System.out.println("[DiscoverPetriNetAlgorithm] Creating activity log took "
 					+ (System.currentTimeMillis() - time) + " milliseconds.");
 			time = System.currentTimeMillis();
 		}
 
-		ActivityMatrix matrix = new ActivityMatrix(parameters.getLog(), parameters.getAlphabet());
-		if (parameters.getMatrix() == null || !parameters.getMatrix().equals(matrix)) {
+		if (parameters.getMatrix() == null) {
 			/*
 			 * Discover a directly-follows matrix from the activity log.
 			 */
-			parameters.setMatrix(matrix);
+			parameters.setMatrix(new ActivityMatrix(parameters.getLog(), parameters.getAlphabet()));
 			System.out.println("[DiscoverPetriNetAlgorithm] Creating primary matrix took "
 					+ (System.currentTimeMillis() - time) + " milliseconds.");
 			time = System.currentTimeMillis();
