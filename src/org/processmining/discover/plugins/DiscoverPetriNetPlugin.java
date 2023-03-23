@@ -82,10 +82,16 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 						// Ignore, need a non-empty alphabet.
 					} else {
 						step++;
+						if (step == 3 && !parameters.isShowGraph()) {
+							step++;
+						}
 					}
 					break;
 				case PREV:
 					step--;
+					if (step == 3 && !parameters.isShowGraph()) {
+						step--;
+					}
 					break;
 				case FINISHED:
 					return apply(context, log, tree, parameters);

@@ -344,4 +344,64 @@ public class ActivityMatrixCollection {
 		}
 	}
 
+	public void filterRelative(int relativeThreshold, int safetyThreshold) {
+		if (relativeThreshold == 0) {
+			return;
+		}
+
+		// Arrays to hold the maximal values for any row (from) and any column (to).
+		int fromMax[][] = new int[matrices.length][alphabet.size()];
+		int toMax[][] = new int[matrices.length][alphabet.size()];
+
+		// Initialize these arrays.
+		for (int m = 0; m < matrices.length; m++) {
+			for (int fromIdx = 0; fromIdx < alphabet.size(); fromIdx++) {
+				for (int toIdx = 0; toIdx < alphabet.size(); toIdx++) {
+					fromMax[m][fromIdx] = Math.max(fromMax[m][fromIdx], Math.abs(matrices[m].get(fromIdx, toIdx)));
+					toMax[m][toIdx] = Math.max(toMax[m][toIdx], Math.abs(matrices[m].get(fromIdx, toIdx)));
+				}
+			}
+		}
+
+		boolean change[][] = new boolean[alphabet.size()][alphabet.size()];
+		for (int fromIdx = 0; fromIdx < alphabet.size(); fromIdx++) {
+			for (int toIdx = 0; toIdx < alphabet.size(); toIdx++) {
+				change[fromIdx][toIdx] = true;
+			}
+		}
+
+		for (int m = 0; m < matrices.length; m++) {
+			for (int fromIdx = 0; fromIdx < alphabet.size(); fromIdx++) {
+				if (matrices[m].get(fromIdx) == 0) {
+					continue;
+				}
+				for (int toIdx = 0; toIdx < alphabet.size(); toIdx++) {
+					if (matrices[m].get(toIdx) == 0) {
+						continue;
+					}
+					if (!change[fromIdx][toIdx]) {
+						continue;
+					}
+					if (100 * matrices[m].get(fromIdx, toIdx) >= safetyThreshold * Math.min(fromMax[m][fromIdx], toMax[m][toIdx])) {
+						change[fromIdx][toIdx] = false;
+					} 
+					if (matrices[m].get(fromIdx, toIdx) * 100 > Math.max(fromMax[m][fromIdx], toMax[m][toIdx]) * relativeThreshold) {
+						change[fromIdx][toIdx] = false;
+					} 
+				}
+			}
+		}
+
+		for (int m = 0; m < matrices.length; m++) {
+			for (int fromIdx = 0; fromIdx < alphabet.size(); fromIdx++) {
+				for (int toIdx = 0; toIdx < alphabet.size(); toIdx++) {
+					if (change[fromIdx][toIdx]) {
+						matrices[m].set(fromIdx,  toIdx, -Math.abs(matrices[m].get(fromIdx, toIdx)));
+					}
+				}
+			}
+		}
+
+	}
+
 }

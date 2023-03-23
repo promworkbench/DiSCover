@@ -3,7 +3,10 @@ package org.processmining.discover.widgets;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -139,7 +142,7 @@ public class FilterMatrixWidget extends JPanel {
 	private JPanel getMainComponent(XLog eventLog, DiscoverPetriNetParameters parameters) {
 		JPanel panel = new JPanel();
 		panel.setOpaque(false);
-		double size[][] = { { TableLayoutConstants.FILL }, { 30, TableLayoutConstants.FILL, 30, 30, 30 } };
+		double size[][] = { { TableLayoutConstants.FILL }, { 30, TableLayoutConstants.FILL, 30, 30, 30, 30 } };
 		panel.setLayout(new TableLayout(size));
 		//		if (parameters.getMatrix() == null) {
 		parameters.setAlphabet(new ActivityAlphabet(parameters.getActivities()));
@@ -203,6 +206,20 @@ public class FilterMatrixWidget extends JPanel {
 		});
 		safSlider.setPreferredSize(new Dimension(100, 30));
 		panel.add(safSlider, "0, 4");
+		
+		// Check box for merge
+		final JCheckBox showGraphBox = SlickerFactory.instance().createCheckBox("Show graph (may take long)",
+				parameters.isShowGraph());
+		showGraphBox.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				parameters.setShowGraph(showGraphBox.isSelected());
+			}
+
+		});
+		showGraphBox.setOpaque(false);
+		panel.add(showGraphBox, "0, 5");
+
 		return panel;
 	}
 

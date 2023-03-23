@@ -114,7 +114,7 @@ public class FilterMatrixCollectionWidget extends JPanel {
 	private JPanel getMainComponent(DiscoverPetriNetParameters parameters) {
 		JPanel panel = new JPanel();
 		panel.setOpaque(false);
-		double size[][] = { { TableLayoutConstants.FILL }, { 30, TableLayoutConstants.FILL, 30, 30 } };
+		double size[][] = { { TableLayoutConstants.FILL }, { 30, TableLayoutConstants.FILL, 30, 30, 30, 30 } };
 		panel.setLayout(new TableLayout(size));
 
 		final JLabel providersLabel = new JLabel("Filter component matrices");
@@ -150,7 +150,37 @@ public class FilterMatrixCollectionWidget extends JPanel {
 			}
 		});
 		absSlider.setPreferredSize(new Dimension(100, 30));
-		panel.add(absSlider, "0, 2");
+		panel.add(absSlider, "0, 3");
+
+		// Slider for the relative threshold. Ranges from 0 to 99 (percent).
+		final NiceSlider relSlider = SlickerFactory.instance().createNiceIntegerSlider(
+				"Relative threshold (0 if no noise)", 0, 99, parameters.getRelativeThreshold2(), Orientation.HORIZONTAL);
+		relSlider.addChangeListener(new ChangeListener() {
+
+			public void stateChanged(ChangeEvent e) {
+				int value = relSlider.getSlider().getValue();
+				parameters.setRelativeThreshold2(value);
+				filter(parameters);
+				addMatrixWidget(panel, parameters);
+			}
+		});
+		relSlider.setPreferredSize(new Dimension(100, 30));
+		panel.add(relSlider, "0, 4");
+
+		final NiceSlider safSlider = SlickerFactory.instance().createNiceIntegerSlider("Safety threshold", 0, 99,
+				parameters.getSafetyThreshold2(), Orientation.HORIZONTAL);
+		safSlider.addChangeListener(new ChangeListener() {
+
+			public void stateChanged(ChangeEvent e) {
+				int value = safSlider.getSlider().getValue();
+				parameters.setSafetyThreshold2(value);
+				filter(parameters);
+				addMatrixWidget(panel, parameters);
+			}
+		});
+		safSlider.setPreferredSize(new Dimension(100, 30));
+		panel.add(safSlider, "0, 5");
+		
 
 		// Slider for the relative threshold. Ranges from 0 to 99 (percent).
 		final NiceSlider scomSlider = SlickerFactory.instance().createNiceIntegerSlider("Select component", 0,
@@ -163,7 +193,7 @@ public class FilterMatrixCollectionWidget extends JPanel {
 			}
 		});
 		scomSlider.setPreferredSize(new Dimension(100, 30));
-		panel.add(scomSlider, "0, 3");
+		panel.add(scomSlider, "0, 2");
 
 		return panel;
 	}
@@ -213,6 +243,7 @@ public class FilterMatrixCollectionWidget extends JPanel {
 
 	private void filter(DiscoverPetriNetParameters parameters) {
 		parameters.getMatrixCollection().filterAbsolute(parameters.getAbsoluteThreshold2());
+		parameters.getMatrixCollection().filterRelative(parameters.getRelativeThreshold2(), parameters.getSafetyThreshold2());
 	}
 
 }
