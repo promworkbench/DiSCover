@@ -75,7 +75,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 		final JCheckBox reduceAllBox = SlickerFactory.instance().createCheckBox("Additionally reduce all simple silent transitions (least precise)",
 				parameters.isReduceAll());
 		// Check box for reduce
-		final JCheckBox reduceRestrictedBox = SlickerFactory.instance().createCheckBox("Additionally reduce restricted simple silent transitions (less precise)",
+		final JCheckBox reduceRestrictedBox = SlickerFactory.instance().createCheckBox("Additionally reduce clustered simple silent transitions (less precise)",
 				parameters.isReduceRestricted());
 		
 		reduceBox.addActionListener(new ActionListener() {

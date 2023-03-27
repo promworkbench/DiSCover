@@ -214,10 +214,10 @@ public class DiscoverPetriNetAlgorithm {
 			System.out.println("[DiscoverPetriNetAlgorithm] Reducing all simple silent transitions took "
 					+ (System.currentTimeMillis() - time) + " milliseconds.");
 		} else if (parameters.isReduceRestricted()) {
-			ReduceAbstractSimpleSilentTransitionsAlgorithm redAlgorithm = new ReduceRestrictedSimpleSilentTransitionsAlgorithm();
-			System.out.println("[DiscoverPetriNetAlgorithm] Reducing restricted simple silent transitions");
+			ReduceClusteredSimpleSilentTransitionsAlgorithm redAlgorithm = new ReduceClusteredSimpleSilentTransitionsAlgorithm();
+			System.out.println("[DiscoverPetriNetAlgorithm] Reducing clustered simple silent transitions");
 			apn = redAlgorithm.apply(context, apn);
-			System.out.println("[DiscoverPetriNetAlgorithm] Reducing restricted simple silent transitions took "
+			System.out.println("[DiscoverPetriNetAlgorithm] Reducing clustered simple silent transitions took "
 					+ (System.currentTimeMillis() - time) + " milliseconds.");
 		}
 
