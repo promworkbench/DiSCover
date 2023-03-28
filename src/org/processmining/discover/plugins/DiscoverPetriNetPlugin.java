@@ -18,6 +18,7 @@ import org.processmining.discover.widgets.SelectClassifierWidget;
 import org.processmining.framework.plugin.PluginContext;
 import org.processmining.framework.plugin.annotations.Plugin;
 import org.processmining.framework.plugin.annotations.PluginVariant;
+import org.processmining.models.graphbased.directed.petrinet.elements.Transition;
 import org.processmining.processtree.ProcessTree;
 
 public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
@@ -44,38 +45,38 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 		// Get (last) parameter settings.
 		DiscoverPetriNetParameters parameters = new DiscoverPetriNetParameters();
 		int step = 0;
-		
+
 		while (true) {
 			JPanel widget;
 			switch (step) {
-				case 0:
+				case 0 :
 					widget = new SelectClassifierWidget(log, parameters);
 					break;
-				case 1:
+				case 1 :
 					widget = new SelectActivitiesWidget(log, parameters);
 					break;
-				case 2:
+				case 2 :
 					widget = new FilterMatrixWidget(log, parameters);
 					break;
-				case 3:
+				case 3 :
 					widget = parameters.getMatrix().getComponent();
 					break;
-				case 4:
+				case 4 :
 					widget = new SelectActivitySetsWidget(parameters);
 					break;
-				case 5:
+				case 5 :
 					widget = new FilterMatrixCollectionWidget(parameters);
 					break;
-				case 6:
+				case 6 :
 					widget = parameters.getMatrixCollection().getComponent();
 					break;
-				default: 
+				default :
 					widget = new DiscoverPetriNetWidget(parameters);
 					break;
 			}
 			InteractionResult result = context.showWizard("Configure DiSCovery", step == 0, step == 7, widget);
 			switch (result) {
-				case NEXT:
+				case NEXT :
 					if (step == 0 && parameters.getClassifier() == null) {
 						// Ignore, need classifier to proceed.
 					} else if (step == 1 && parameters.getActivities().isEmpty()) {
@@ -87,15 +88,15 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 						}
 					}
 					break;
-				case PREV:
+				case PREV :
 					step--;
 					if (step == 3 && !parameters.isShowGraph()) {
 						step--;
 					}
 					break;
-				case FINISHED:
+				case FINISHED :
 					return apply(context, log, tree, parameters);
-				default:
+				default :
 					context.getFutureResult(0).cancel(true);
 					return null;
 			}
@@ -172,4 +173,77 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 		return runProcessTree(context, log, null);
 	}
 
+	@Plugin( //
+			name = "DiSCover Petri net (auto)", //
+			parameterLabels = { "Event log" }, //
+			returnLabels = { "DiSCovered Accepting Petri net" }, //
+			returnTypes = { AcceptingPetriNet.class }, //
+			userAccessible = true, //
+			url = "http://www.win.tue.nl/~hverbeek/", //
+			help = "" //
+	) //
+	@UITopiaVariant( //
+			affiliation = UITopiaVariant.EHV, //
+			author = "H.M.W. Verbeek", //
+			email = "h.m.w.verbeek@tue.nl" //
+	) //
+	@PluginVariant( //
+			variantLabel = "DiSCover Petri net (auto)", //
+			requiredParameterLabels = { 0 } //
+	) //
+	public AcceptingPetriNet runAuto(UIPluginContext context, XLog log) {
+		/*
+		 * Try to discover a net with as few silent transitions as possible.
+		 */
+		DiscoverPetriNetParameters parameters = new DiscoverPetriNetParameters();
+		parameters.setAbsoluteThreshold(0);
+		parameters.setRelativeThreshold(0);
+		parameters.setAbsoluteThreshold2(0);
+		parameters.setRelativeThreshold2(0);
+		AcceptingPetriNet bestApn = apply(context, log, parameters);
+		int bestCount = countSilent(bestApn);
+		if (bestCount < 2) {
+			System.out.println("[DiscoverPetriNetPlugin] Found best net with thresholds 0 and 0.");
+			return bestApn;
+		}
+		/*
+		 * Discover alternative nets by changing the thresholds.
+		 * Use the thresholds itself as a penalty to promote low thresholds.
+		 */
+		int bestAbs = 0;
+		int bestRel = 0;
+		for (int abs = 1; abs < 5; abs++) {
+			for (int rel = 1; rel < 100; rel++) {
+				parameters = new DiscoverPetriNetParameters();
+				parameters.setAbsoluteThreshold(abs);
+				parameters.setRelativeThreshold(rel);
+				parameters.setAbsoluteThreshold2(abs);
+				parameters.setRelativeThreshold2(rel);
+				AcceptingPetriNet apn = apply(context, log, parameters);
+				int count = countSilent(apn);
+				if (count < 2) {
+					System.out.println("[DiscoverPetriNetPlugin] Found best net with thresholds " + abs + " and " + rel + ".");
+					return apn;
+				}
+				if (count + abs + rel < bestCount) {
+					bestCount = count + abs + rel;
+					bestApn = apn;
+					bestAbs = abs;
+					bestRel = rel;
+				}
+			}
+		}
+		System.out.println("[DiscoverPetriNetPlugin] Found best net with thresholds " + bestAbs + " and " + bestRel + ".");
+		return bestApn;
+	}
+
+	private int countSilent(AcceptingPetriNet apn) {
+		int cnt = 0;
+		for (Transition transition : apn.getNet().getTransitions()) {
+			if (transition.isInvisible()) {
+				cnt++;
+			}
+		}
+		return cnt;
+	}
 }

@@ -79,79 +79,76 @@ public class ReduceClusteredSimpleSilentTransitionsAlgorithm {
 
 		});
 		
+		/*
+		 * Transitions scheduled to be removed. These can only be removed afterwards, as here
+		 * we are still iterating over all transitions.
+		 */
 		Set<Transition> transitionsToRemove = new HashSet<Transition>();
-		for (Transition transition1 : simpleSilentTransitions) {
-			if (transitionsToRemove.contains(transition1)) {
+		for (Transition transitionToKeep : simpleSilentTransitions) {
+			if (transitionsToRemove.contains(transitionToKeep)) {
+				// Scheduled to remove, ignore it.
 				continue;
 			}
-			for (Transition transition2 : simpleSilentTransitions) {
-				if (transition1 == transition2) {
+			for (Transition transitionToRemove : simpleSilentTransitions) {
+				if (transitionToKeep == transitionToRemove) {
+					// Do not compare a transition with itself :-).
 					continue;
 				}
-				if (transitionsToRemove.contains(transition2)) {
+				if (transitionsToRemove.contains(transitionToRemove)) {
+					// Scheduled to remove, ignore it.
 					continue;
 				}
-				Set<PetrinetNode> nodes = new HashSet<PetrinetNode>(preset.get(transition2));
-				nodes.retainAll(preset.get(transition1));
-				if (!nodes.isEmpty()) {
-					// Transitions share same input place. Merge output places.
-					Place place1 = (Place) postset.get(transition1).iterator().next();
-					Place place2 = (Place) postset.get(transition2).iterator().next();
-					if (place1 == place2) {
-						transitionsToRemove.add(transition2);
+				/*
+				 * Places to merge. All arcs will be copied from the place to remove to the place to keep,
+				 * and then the place to remove will be removed.
+				 */
+				Place placeToKeep = null;
+				Place placeToRemove = null;
+				if (preset.get(transitionToRemove).iterator().next() == preset.get(transitionToKeep).iterator().next()) {
+					// Transitions share same input place. Select output places to merge.
+					placeToKeep = (Place) postset.get(transitionToKeep).iterator().next();
+					placeToRemove = (Place) postset.get(transitionToRemove).iterator().next();
+				} else if (postset.get(transitionToRemove).iterator().next() == postset.get(transitionToKeep).iterator().next()) {
+					// Transitions share same output place. Select input places to merge.
+					placeToKeep = (Place) preset.get(transitionToKeep).iterator().next();
+					placeToRemove = (Place) preset.get(transitionToRemove).iterator().next();
+				}
+				if (placeToKeep != null && placeToRemove != null) {
+					System.out.println("[ReduceSimpleSilentTransitionsClusterAlgorithm] Reducing " + placeToRemove + " to " + placeToKeep);
+					if (placeToKeep == placeToRemove) {
+						// Transitions also share same input place. Schedule to remove the transition to remove.
+						transitionsToRemove.add(transitionToRemove);
 						continue;
 					}
-					System.out.println("[ReduceSimpleSilentTransitionsClusterAlgorithm] Reducing " + place2 + " to " + place1);
-					for (PetrinetNode node : preset.get(place2)) {
-						apn.getNet().addArc((Transition) node, place1);
-						preset.get(place1).add(node);
-						postset.get(node).add(place1);
-						postset.get(node).remove(place2);
+					// Copy all the inputs of the place to remove to the place to keep.
+					for (PetrinetNode node : preset.get(placeToRemove)) {
+						apn.getNet().addArc((Transition) node, placeToKeep);
+						// Adjust preset and postset accordingly.
+						preset.get(placeToKeep).add(node);
+						postset.get(node).add(placeToKeep);
+						// Anticipate the fact that the place to remove will be removed.
+						postset.get(node).remove(placeToRemove);
 					}
-					for (PetrinetNode node : postset.get(place2)) {
-						apn.getNet().addArc(place1, (Transition) node);
-						postset.get(place1).add(node);
-						preset.get(node).add(place1);
-						preset.get(node).remove(place2);
+					// Copy all the outputs of the place to remove to the place to keep.
+					for (PetrinetNode node : postset.get(placeToRemove)) {
+						apn.getNet().addArc(placeToKeep, (Transition) node);
+						// Adjust preset and postset accordingly.
+						postset.get(placeToKeep).add(node);
+						preset.get(node).add(placeToKeep);
+						// Anticipate the fact that the place to remove will be removed.
+						preset.get(node).remove(placeToRemove);
 					}
-					apn.getNet().removePlace(place2);
-					preset.remove(place2);
-					postset.remove(place2);
-					transitionsToRemove.add(transition2);
-					continue;
-				}
-				nodes = new HashSet<PetrinetNode>(postset.get(transition2));
-				nodes.retainAll(postset.get(transition1));
-				if (!nodes.isEmpty()) {
-					// Transitions share same output place. Merge input places.
-					Place place1 = (Place) preset.get(transition1).iterator().next();
-					Place place2 = (Place) preset.get(transition2).iterator().next();
-					if (place1 == place2) {
-						transitionsToRemove.add(transition2);
-						continue;
-					}
-					System.out.println("[ReduceSimpleSilentTransitionsClusterAlgorithm] Reducing " + place2 + " to " + place1);
-					for (PetrinetNode node : preset.get(place2)) {
-						apn.getNet().addArc((Transition) node, place1);
-						preset.get(place1).add(node);
-						postset.get(node).add(place1);
-						postset.get(node).remove(place2);
-					}
-					for (PetrinetNode node : postset.get(place2)) {
-						apn.getNet().addArc(place1, (Transition) node);
-						postset.get(place1).add(node);
-						preset.get(node).add(place1);
-						preset.get(node).remove(place2);
-					}
-					apn.getNet().removePlace(place2);
-					preset.remove(place2);
-					postset.remove(place2);
-					transitionsToRemove.add(transition2);
-					continue;
+					// Now everything has been copied, remove the place to remove.
+					apn.getNet().removePlace(placeToRemove);
+					// Adjust preset and postset accordingly.
+					preset.remove(placeToRemove);
+					postset.remove(placeToRemove);
+					// Schedule to remove the transition to remove.
+					transitionsToRemove.add(transitionToRemove);
 				}
 			}
 		}
-		
+		// Now remove all transitions scheduled for removal.
 		for (Transition transition : transitionsToRemove) {
 			apn.getNet().removeTransition(transition);
 		}
