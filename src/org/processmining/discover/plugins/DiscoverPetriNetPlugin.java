@@ -214,6 +214,11 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 		int bestRel = 0;
 		for (int abs = 1; abs < 5; abs++) {
 			for (int rel = 1; rel < 100; rel++) {
+				if (abs + rel >= bestCount) {
+					// Cannot be better.
+					rel = 100;
+					continue;
+				}
 				parameters = new DiscoverPetriNetParameters();
 				parameters.setAbsoluteThreshold(abs);
 				parameters.setRelativeThreshold(rel);
