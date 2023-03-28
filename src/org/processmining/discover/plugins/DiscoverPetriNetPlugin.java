@@ -191,7 +191,7 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 			variantLabel = "DiSCover Petri net (auto)", //
 			requiredParameterLabels = { 0 } //
 	) //
-	public AcceptingPetriNet runAuto(UIPluginContext context, XLog log) {
+	public AcceptingPetriNet runAuto(PluginContext context, XLog log) {
 		/*
 		 * Try to discover a net with as few silent transitions as possible.
 		 */
