@@ -196,14 +196,14 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 		 * Try to discover a net with as few silent transitions as possible.
 		 */
 		DiscoverPetriNetParameters parameters = new DiscoverPetriNetParameters();
-		parameters.setAbsoluteThreshold(0);
-		parameters.setRelativeThreshold(0);
-		parameters.setAbsoluteThreshold2(0);
-		parameters.setRelativeThreshold2(0);
+		parameters.setAbsoluteThreshold(1);
+		parameters.setRelativeThreshold(2);
+		parameters.setAbsoluteThreshold2(1);
+		parameters.setRelativeThreshold2(2);
 		AcceptingPetriNet bestApn = apply(context, log, parameters);
 		int bestCount = countSilent(bestApn);
 		if (bestCount < 2) {
-			System.out.println("[DiscoverPetriNetPlugin] Found best net with thresholds 0 and 0.");
+			System.out.println("[DiscoverPetriNetPlugin] Found best net with thresholds 1 and 2.");
 			return bestApn;
 		}
 		/*
@@ -213,8 +213,8 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 		int bestAbs = 0;
 		int bestRel = 0;
 		for (int abs = 1; abs < 5; abs++) {
-			for (int rel = 1; rel < 100; rel++) {
-				if (abs + rel >= bestCount) {
+			for (int rel = 3; rel < 100; rel++) {
+				if (abs + rel >= bestCount + bestAbs + bestRel) {
 					// Cannot be better.
 					rel = 100;
 					continue;
@@ -226,12 +226,13 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 				parameters.setRelativeThreshold2(rel);
 				AcceptingPetriNet apn = apply(context, log, parameters);
 				int count = countSilent(apn);
+				System.out.println("[DiscoverPetriNetPlugin] Found net with thresholds " + abs + " and " + rel + ", score is " + count);
 				if (count < 2) {
 					System.out.println("[DiscoverPetriNetPlugin] Found best net with thresholds " + abs + " and " + rel + ".");
 					return apn;
 				}
-				if (count + abs + rel < bestCount) {
-					bestCount = count + abs + rel;
+				if (count + abs + rel < bestCount + bestAbs + bestRel) {
+					bestCount = count;
 					bestApn = apn;
 					bestAbs = abs;
 					bestRel = rel;
