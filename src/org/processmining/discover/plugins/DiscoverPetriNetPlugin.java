@@ -192,18 +192,22 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 			requiredParameterLabels = { 0 } //
 	) //
 	public AcceptingPetriNet runAuto(PluginContext context, XLog log) {
+		
+		int pivotAbs = 1;
+		int pivotRel = 3;
 		/*
 		 * Try to discover a net with as few silent transitions as possible.
 		 */
 		DiscoverPetriNetParameters parameters = new DiscoverPetriNetParameters();
-		parameters.setAbsoluteThreshold(1);
-		parameters.setRelativeThreshold(2);
-		parameters.setAbsoluteThreshold2(1);
-		parameters.setRelativeThreshold2(2);
+		parameters.setAbsoluteThreshold(pivotAbs);
+		parameters.setRelativeThreshold(pivotRel);
+		parameters.setAbsoluteThreshold2(pivotAbs);
+		parameters.setRelativeThreshold2(pivotRel);
 		AcceptingPetriNet bestApn = apply(context, log, parameters);
 		int bestCount = countSilent(bestApn);
 		if (bestCount < 2) {
-			System.out.println("[DiscoverPetriNetPlugin] Found best net with thresholds 1 and 2.");
+			// No way to get a better result.
+			System.out.println("[DiscoverPetriNetPlugin] Found best net with thresholds " + pivotAbs + " and " + pivotRel + ".");
 			return bestApn;
 		}
 		/*
@@ -212,9 +216,13 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 		 */
 		int bestAbs = 0;
 		int bestRel = 0;
-		for (int abs = 1; abs < 5; abs++) {
-			for (int rel = 3; rel < 100; rel++) {
-				if (abs + rel >= bestCount + bestAbs + bestRel) {
+		for (int abs = 0; abs < 5; abs++) {
+			for (int rel = 0; rel < 100; rel++) {
+				if (abs == pivotAbs && rel == pivotRel) {
+					// Done this one before.
+					continue;
+				}
+				if ((abs + rel) >= (pivotAbs + pivotRel) && Math.abs(pivotAbs - abs) + Math.abs(pivotRel - rel) >= bestCount + Math.abs(pivotAbs - bestAbs) + Math.abs(pivotRel - bestRel)) {
 					// Cannot be better.
 					rel = 100;
 					continue;
@@ -227,11 +235,7 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 				AcceptingPetriNet apn = apply(context, log, parameters);
 				int count = countSilent(apn);
 				System.out.println("[DiscoverPetriNetPlugin] Found net with thresholds " + abs + " and " + rel + ", score is " + count);
-				if (count < 2) {
-					System.out.println("[DiscoverPetriNetPlugin] Found best net with thresholds " + abs + " and " + rel + ".");
-					return apn;
-				}
-				if (count + abs + rel < bestCount + bestAbs + bestRel) {
+				if (count + Math.abs(pivotAbs - abs) + Math.abs(pivotRel - rel) < bestCount + Math.abs(pivotAbs - bestAbs) + Math.abs(pivotRel - bestRel)) {
 					bestCount = count;
 					bestApn = apn;
 					bestAbs = abs;
