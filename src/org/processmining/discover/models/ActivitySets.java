@@ -24,6 +24,7 @@ public class ActivitySets extends ArrayList<ActivitySet>{
 	 * 
 	 * @param pairs
 	 *            Set or concurrent pairs
+	 * @param alphabet The alphabet
 	 */
 	public ActivitySets(ConcurrentActivityPairs pairs, ActivityAlphabet alphabet) {
 		Set<ActivitySet> sets = new HashSet<ActivitySet>();

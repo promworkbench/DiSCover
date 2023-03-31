@@ -204,7 +204,7 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 		parameters.setAbsoluteThreshold2(pivotAbs);
 		parameters.setRelativeThreshold2(pivotRel);
 		AcceptingPetriNet bestApn = apply(context, log, parameters);
-		int bestCount = countSilent(bestApn);
+		int bestCount = countArcs(bestApn);
 		if (bestCount < 2) {
 			// No way to get a better result.
 			System.out.println("[DiscoverPetriNetPlugin] Found best net with thresholds " + pivotAbs + " and " + pivotRel + ".");
@@ -233,7 +233,7 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 				parameters.setAbsoluteThreshold2(abs);
 				parameters.setRelativeThreshold2(rel);
 				AcceptingPetriNet apn = apply(context, log, parameters);
-				int count = countSilent(apn);
+				int count = countArcs(apn);
 				System.out.println("[DiscoverPetriNetPlugin] Found net with thresholds " + abs + " and " + rel + ", score is " + count);
 				if (count + Math.abs(pivotAbs - abs) + Math.abs(pivotRel - rel) < bestCount + Math.abs(pivotAbs - bestAbs) + Math.abs(pivotRel - bestRel)) {
 					bestCount = count;
@@ -245,6 +245,10 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 		}
 		System.out.println("[DiscoverPetriNetPlugin] Found best net with thresholds " + bestAbs + " and " + bestRel + ".");
 		return bestApn;
+	}
+
+	private int countArcs(AcceptingPetriNet apn) {
+		return apn.getNet().getEdges().size();
 	}
 
 	private int countSilent(AcceptingPetriNet apn) {
