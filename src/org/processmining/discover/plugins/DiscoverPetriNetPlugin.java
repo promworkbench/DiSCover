@@ -19,6 +19,9 @@ import org.processmining.framework.plugin.PluginContext;
 import org.processmining.framework.plugin.annotations.Plugin;
 import org.processmining.framework.plugin.annotations.PluginVariant;
 import org.processmining.models.graphbased.directed.petrinet.elements.Transition;
+import org.processmining.pnanalysis.metrics.PetriNetMetric;
+import org.processmining.pnanalysis.metrics.impl.PetriNetCardosoMetric;
+import org.processmining.pnanalysis.metrics.impl.PetriNetStructurednessMetric;
 import org.processmining.processtree.ProcessTree;
 
 public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
@@ -204,7 +207,7 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 		parameters.setAbsoluteThreshold2(pivotAbs);
 		parameters.setRelativeThreshold2(pivotRel);
 		AcceptingPetriNet bestApn = apply(context, log, parameters);
-		int bestCount = countArcs(bestApn);
+		double bestCount = count(bestApn);
 		if (bestCount < 2) {
 			// No way to get a better result.
 			System.out.println("[DiscoverPetriNetPlugin] Found best net with thresholds " + pivotAbs + " and " + pivotRel + ".");
@@ -233,7 +236,7 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 				parameters.setAbsoluteThreshold2(abs);
 				parameters.setRelativeThreshold2(rel);
 				AcceptingPetriNet apn = apply(context, log, parameters);
-				int count = countArcs(apn);
+				double count = count(apn);
 				System.out.println("[DiscoverPetriNetPlugin] Found net with thresholds " + abs + " and " + rel + ", score is " + count);
 				if (count + Math.abs(pivotAbs - abs) + Math.abs(pivotRel - rel) < bestCount + Math.abs(pivotAbs - bestAbs) + Math.abs(pivotRel - bestRel)) {
 					bestCount = count;
@@ -247,11 +250,25 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 		return bestApn;
 	}
 
-	private int countArcs(AcceptingPetriNet apn) {
+	private double count(AcceptingPetriNet apn) {
+		return countCardoso(apn) + countSilent(apn)/2.0;
+	}
+	
+	private double countCardoso(AcceptingPetriNet apn) {
+		PetriNetMetric metric = new PetriNetCardosoMetric();
+		return metric.compute(null, apn.getNet(), apn.getInitialMarking());
+	}
+	
+	private double countStructuredness(AcceptingPetriNet apn) {
+		PetriNetMetric metric = new PetriNetStructurednessMetric();
+		return Math.sqrt(metric.compute(null, apn.getNet(), apn.getInitialMarking()));
+	}
+	
+	private double countArcs(AcceptingPetriNet apn) {
 		return apn.getNet().getEdges().size();
 	}
 
-	private int countSilent(AcceptingPetriNet apn) {
+	private double countSilent(AcceptingPetriNet apn) {
 		int cnt = 0;
 		for (Transition transition : apn.getNet().getTransitions()) {
 			if (transition.isInvisible()) {
