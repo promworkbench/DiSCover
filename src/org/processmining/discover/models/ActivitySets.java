@@ -33,7 +33,7 @@ public class ActivitySets extends ArrayList<ActivitySet>{
 			seen.add(idx, new HashSet<ActivitySet>());
 		}
 		apply(pairs, 0, new ActivitySet("All except", alphabet), sets, seen);
-		System.out.println("[ActivitySets] " + sets.size() + " solutions.");
+//		System.out.println("[ActivitySets] " + sets.size() + " solutions.");
 		for (ActivitySet set : sets) {
 			add(set);
 		}
@@ -73,16 +73,16 @@ public class ActivitySets extends ArrayList<ActivitySet>{
 	}
 	
 	private void apply(ProcessTree tree, Node node, ActivityAlphabet alphabet, List<ActivitySet> sets) {
-		System.out.println("[ActivitySets] sets: " + sets);
+//		System.out.println("[ActivitySets] sets: " + sets);
 		if (node.isLeaf()) {
 			/*
 			 * Leaf node. Extend all possible sets with the activivty, if possible.
 			 */
 			String name = node.getName();
-			System.out.println("[ActivitySets] Found activity name " + name);
+//			System.out.println("[ActivitySets] Found activity name " + name);
 			if (alphabet.contains(name)) {
 				int idx = alphabet.get(name);
-				System.out.println("[ActivitySets] has index " + idx);
+//				System.out.println("[ActivitySets] has index " + idx);
 				for (ActivitySet set : sets) {
 					set.add(idx);
 				}
@@ -139,11 +139,11 @@ public class ActivitySets extends ArrayList<ActivitySet>{
 			// Now add the candidate as a new set.
 			ActivitySet set = new ActivitySet(candidateSet);
 			ignoreSets.add(set);
-			System.out.println("[ActivitySets] " + ignoreSets.size() + " solutions found so far.");
+//			System.out.println("[ActivitySets] " + ignoreSets.size() + " solutions found so far.");
 			return;
 		}
 		if (seen.get(idx).contains(candidateSet)) {
-			System.out.println("[ActivitySets] Already seen set " + candidateSet + " at index " + idx);
+//			System.out.println("[ActivitySets] Already seen set " + candidateSet + " at index " + idx);
 			return;
 		}
 		ActivitySet candidateSetCopy = new ActivitySet(candidateSet);
