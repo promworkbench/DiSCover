@@ -260,10 +260,13 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 				System.out.println("[DiscoverPetriNetPlugin] Computing simplicity took "
 						+ (System.currentTimeMillis() - time) + " milliseconds.");
 
-				if (simplicity < bestScore) {
+				if (getScore(1.0, 1.0, simplicity) < bestScore) {
+					/*
+					 * Even a perfect fitness and precision will not result in a new best score.
+					 */
 					continue;
 				}
-
+				
 				time = System.currentTimeMillis();
 				PNRepResult replay = getReplay(apn, log);
 				System.out.println("[DiscoverPetriNetPlugin] Replaying log on discovered net took "
@@ -277,7 +280,7 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 				System.out.println("[DiscoverPetriNetPlugin] Computing precision took "
 						+ (System.currentTimeMillis() - time) + " milliseconds.");
 
-				double score = 3 * fitness * precision * simplicity / (fitness + precision + simplicity);
+				double score = getScore(fitness, precision, simplicity);
 				System.out.println("[DiscoverPetriNetPlugin] Found net with thresholds " + abs + " and " + rel
 						+ ", score " + score + " (f=" + fitness + ", p=" + precision + ", s=" + simplicity + ")");
 				if (score > bestScore) {
@@ -286,10 +289,10 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 					bestAbs = abs;
 					bestRel = rel;
 				}
-				if (fitness < bestScore) {
+				if (getScore(fitness, 1.0, 1.0) < bestScore) {
 					/*
-					 * As fitness does not go up when increasing the relative
-					 * threshold, we will not get a new best score by increasing
+					 * As fitness is unlikely to go up when increasing the relative
+					 * threshold, we will most likely not get a new best score by increasing
 					 * this threshold.
 					 */
 					rel = maxRel;
@@ -301,6 +304,11 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 		return bestApn;
 	}
 
+	private double getScore(double fitness, double precision, double simplicity) {
+		double fitPrec = 2 * fitness * precision / (fitness + precision);
+		return 2 * fitPrec * simplicity / (fitPrec + simplicity);
+	}
+	
 	private double getFitness(PNRepResult replay, XLog log) {
 		int fitting = 0;
 		for (SyncReplayResult traceReplay : replay) {
@@ -324,8 +332,8 @@ public class DiscoverPetriNetPlugin extends DiscoverPetriNetAlgorithm {
 	}
 
 	private double getSimplicity(AcceptingPetriNet apn) {
-		return Math.pow((apn.getNet().getPlaces().size() + apn.getNet().getTransitions().size() + 1.0)
-				/ apn.getNet().getEdges().size(), 2.0);
+		return (apn.getNet().getPlaces().size() + apn.getNet().getTransitions().size() + 1.0)
+				/ apn.getNet().getEdges().size();
 	}
 
 	private PNRepResult getReplay(AcceptingPetriNet apn, XLog log) {
