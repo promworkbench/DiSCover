@@ -19,6 +19,15 @@ public class ExcavatePetriNetParameters {
 	private static double lastSimplicityFactor = 1.0;
 	private static int lastNofThreads = 6;
 
+	public static void reset() {
+		lastAbsValues = null;
+		lastRelValues = null;
+		lastFitnessFactor = 1.0;
+		lastPrecisionFactor = 1.0;
+		lastSimplicityFactor = 1.0;
+		lastNofThreads = 6;
+	}
+	
 	public ExcavatePetriNetParameters() {
 		if (lastAbsValues == null) {
 			lastAbsValues = new ArrayList<Integer>();
