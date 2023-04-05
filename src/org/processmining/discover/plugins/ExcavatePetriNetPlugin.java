@@ -13,7 +13,7 @@ public class ExcavatePetriNetPlugin extends ExcavatePetriNetAlgorithm {
 
 	@Plugin( //
 			name = "Xcavate Petri net", //
-			parameterLabels = { "Event log" }, //
+			parameterLabels = { "Event log", "Parameters" }, //
 			returnLabels = { "Xcavated Accepting Petri net" }, //
 			returnTypes = { AcceptingPetriNet.class }, //
 			userAccessible = true, //
@@ -27,14 +27,14 @@ public class ExcavatePetriNetPlugin extends ExcavatePetriNetAlgorithm {
 	) //
 	@PluginVariant( //
 			variantLabel = "Xcavate Petri net", //
-			requiredParameterLabels = { 0 } //
+			requiredParameterLabels = { 0, 1 } //
 	) //
 	public AcceptingPetriNet run(PluginContext context, XLog log,ExcavatePetriNetParameters xParameters) {
 		return apply(context, log, xParameters);		
 	}
 	
 	@Plugin( //
-			name = "Xcavate Petri net maximizing fitness, precision and simplicity", //
+			name = "Xcavate Petri net using default settings", //
 			parameterLabels = { "Event log" }, //
 			returnLabels = { "Xcavated Accepting Petri net" }, //
 			returnTypes = { AcceptingPetriNet.class }, //
@@ -53,30 +53,6 @@ public class ExcavatePetriNetPlugin extends ExcavatePetriNetAlgorithm {
 	) //
 	public AcceptingPetriNet run(PluginContext context, XLog log) {
 		ExcavatePetriNetParameters parameters = new ExcavatePetriNetParameters();
-		return apply(context, log, parameters);
-	}
-	
-	@Plugin( //
-			name = "Xcavate Petri net maximizing fitness and precision", //
-			parameterLabels = { "Event log" }, //
-			returnLabels = { "Xcavated Accepting Petri net" }, //
-			returnTypes = { AcceptingPetriNet.class }, //
-			userAccessible = true, //
-			url = "http://www.win.tue.nl/~hverbeek/", //
-			help = "" //
-	) //
-	@UITopiaVariant( //
-			affiliation = UITopiaVariant.EHV, //
-			author = "H.M.W. Verbeek", //
-			email = "h.m.w.verbeek@tue.nl" //
-	) //
-	@PluginVariant( //
-			variantLabel = "Xcavate Petri net", //
-			requiredParameterLabels = { 0 } //
-	) //
-	public AcceptingPetriNet runFP(PluginContext context, XLog log) {
-		ExcavatePetriNetParameters parameters = new ExcavatePetriNetParameters();
-		parameters.setSimplicityFactor(0.0);
 		return apply(context, log, parameters);
 	}
 
