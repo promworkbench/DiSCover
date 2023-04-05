@@ -35,7 +35,6 @@ import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.petrinet.replayresult.PNRepResultImpl;
 import org.processmining.plugins.replayer.replayresult.SyncReplayResult;
 import org.processmining.precision.algorithms.EventBasedPrecisionAlgorithm;
-import org.processmining.precision.models.EventBasedPrecision;
 import org.processmining.precision.parameters.EventBasedPrecisionParameters;
 
 import nl.tue.alignment.Replayer;
@@ -164,8 +163,8 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		pars.setShowInfo(true);
 		EventBasedPrecisionAlgorithm alg = new EventBasedPrecisionAlgorithm();
 		try {
-			EventBasedPrecision precision = alg.apply(null, replay, apn, pars);
-			System.out.println("[ExcavatePetriNetALgorithm]\n" + precision.toHTMLString(false));
+//			EventBasedPrecision precision = alg.apply(null, replay, apn, pars);
+//			System.out.println("[ExcavatePetriNetALgorithm]\n" + precision.toHTMLString(false));
 			return Math.pow(alg.apply(null, replay, apn, pars).getPrecision(), xParameters.getPrecisionFactor());
 		} catch (IllegalTransitionException e) {
 			// TODO Auto-generated catch block
