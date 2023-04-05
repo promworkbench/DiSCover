@@ -11,23 +11,19 @@ public class ExcavatePetriNetParameters {
 	private double precisionFactor;
 	private double simplicityFactor;
 	private int nofThreads;
+	private int maxNofTransitions;
 
+	/*
+	 * Use dummy values. The constructor will then use the default values.
+	 */
 	private static List<Integer> lastAbsValues = null;
 	private static List<Integer> lastRelValues = null;
-	private static double lastFitnessFactor = 1.0;
-	private static double lastPrecisionFactor = 1.0;
-	private static double lastSimplicityFactor = 1.0;
-	private static int lastNofThreads = 6;
+	private static double lastFitnessFactor = -1.0;
+	private static double lastPrecisionFactor = -1.0;
+	private static double lastSimplicityFactor = -1.0;
+	private static int lastNofThreads = -1;
+	private static int lastMaxNofTransitions = -1;
 
-	public static void reset() {
-		lastAbsValues = null;
-		lastRelValues = null;
-		lastFitnessFactor = 1.0;
-		lastPrecisionFactor = 1.0;
-		lastSimplicityFactor = 1.0;
-		lastNofThreads = 6;
-	}
-	
 	public ExcavatePetriNetParameters() {
 		if (lastAbsValues == null) {
 			lastAbsValues = new ArrayList<Integer>();
@@ -41,18 +37,28 @@ public class ExcavatePetriNetParameters {
 			for (int i = 0; i < 10; i++) {
 				lastRelValues.add(i);
 			}
-			for (int i = 10; i < 30; i += 2) {
-				lastRelValues.add(i);
-			}
-			for (int i = 30; i < 100; i += 5) {
-				lastRelValues.add(i);
-			}
 		}
 		relValues = new ArrayList<Integer>(lastRelValues);
+		if (lastFitnessFactor < 0.0) {
+			lastFitnessFactor = 1.0;
+		}
 		fitnessFactor = lastFitnessFactor;
+		if (lastPrecisionFactor < 0.0) {
+			lastPrecisionFactor = 1.0;
+		}
 		precisionFactor = lastPrecisionFactor;
+		if (lastSimplicityFactor < 0.0) {
+			lastSimplicityFactor = 1.0;
+		}
 		simplicityFactor = lastSimplicityFactor;
+		if (lastNofThreads < 0) {
+			lastNofThreads = 6;
+		}
 		nofThreads = lastNofThreads;
+		if (lastMaxNofTransitions < 0) {
+			lastMaxNofTransitions = 100;
+		}
+		maxNofTransitions = lastMaxNofTransitions;
 	}
 
 	public List<Integer> getAbsValues() {
@@ -107,6 +113,15 @@ public class ExcavatePetriNetParameters {
 	public void setNofThreads(int nofThreads) {
 		this.lastNofThreads = nofThreads;
 		this.nofThreads = nofThreads;
+	}
+
+	public int getMaxNofTransitions() {
+		return maxNofTransitions;
+	}
+
+	public void setMaxNofTransitions(int maxNofTransitions) {
+		this.lastMaxNofTransitions = maxNofTransitions;
+		this.maxNofTransitions = maxNofTransitions;
 	}
 
 }

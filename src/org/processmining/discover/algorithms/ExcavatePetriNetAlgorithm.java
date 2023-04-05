@@ -35,6 +35,7 @@ import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.petrinet.replayresult.PNRepResultImpl;
 import org.processmining.plugins.replayer.replayresult.SyncReplayResult;
 import org.processmining.precision.algorithms.EventBasedPrecisionAlgorithm;
+import org.processmining.precision.models.EventBasedPrecision;
 import org.processmining.precision.parameters.EventBasedPrecisionParameters;
 
 import nl.tue.alignment.Replayer;
@@ -79,20 +80,24 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				parameters.setRelativeThreshold2(rel);
 				AcceptingPetriNet apn = apply(context, log, parameters);
 
-				if (apn.getNet().getTransitions().size() > 100) {
+				if (apn.getNet().getTransitions().size() > xParameters.getMaxNofTransitions()) {
+					System.out.println("[DiscoverPetriNetPlugin] Discarded thresholds " + abs + " and " + rel
+							+ " due to too many transitions.");
 					continue;
 				}
 
 				double time = System.currentTimeMillis();
 				double simplicity = getSimplicity(apn, xParameters);
 				System.out.println("[DiscoverPetriNetPlugin] Computing simplicity took "
-						+ (System.currentTimeMillis() - time) + " milliseconds.");
+						+ (System.currentTimeMillis() - time) + " milliseconds: " + simplicity + ".");
 
 				if (getScore(1.0, 1.0, simplicity) < bestScore) {
 					/*
 					 * Even a perfect fitness and precision will not result in a
 					 * new best score.
 					 */
+					System.out.println("[DiscoverPetriNetPlugin] Discarded thresholds " + abs + " and " + rel
+							+ " due to insufficient simplicity.");
 					continue;
 				}
 
@@ -103,20 +108,22 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				time = System.currentTimeMillis();
 				double fitness = getFitness(replay, log, xParameters);
 				System.out.println("[DiscoverPetriNetPlugin] Computing fitness took "
-						+ (System.currentTimeMillis() - time) + " milliseconds.");
+						+ (System.currentTimeMillis() - time) + " milliseconds: " + fitness + ".");
 
 				if (getScore(fitness, 1.0, simplicity) < bestScore) {
 					/*
 					 * Even a perfect precision will not result in a new best
 					 * score.
 					 */
+					System.out.println("[DiscoverPetriNetPlugin] Discarded thresholds " + abs + " and " + rel
+							+ " due to insufficient fitness.");
 					continue;
 				}
 
 				time = System.currentTimeMillis();
 				double precision = getPrecision(replay, apn, xParameters);
 				System.out.println("[DiscoverPetriNetPlugin] Computing precision took "
-						+ (System.currentTimeMillis() - time) + " milliseconds.");
+						+ (System.currentTimeMillis() - time) + " milliseconds: " + precision + ".");
 
 				double score = getScore(fitness, precision, simplicity);
 				System.out.println("[DiscoverPetriNetPlugin] Found net with thresholds " + abs + " and " + rel
@@ -146,20 +153,19 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 	}
 
 	private double getFitness(PNRepResult replay, XLog log, ExcavatePetriNetParameters xParameters) {
-		int fitting = 0;
-		for (SyncReplayResult traceReplay : replay) {
-			if (traceReplay.getInfo().containsKey(PNRepResult.RAWFITNESSCOST)
-					&& traceReplay.getInfo().get(PNRepResult.RAWFITNESSCOST) == 0) {
-				fitting += traceReplay.getTraceIndex().size();
-			}
-		}
-		return Math.pow((1.0 * fitting) / log.size(), xParameters.getFitnessFactor());
+		double mlf = (double) replay.getInfo().get(PNRepResult.MOVELOGFITNESS);
+		double mmf = (double) replay.getInfo().get(PNRepResult.MOVEMODELFITNESS);
+		double mf = 2 * mlf * mmf / (mlf + mmf);
+		return Math.pow(mf, xParameters.getFitnessFactor());
 	}
 
 	private double getPrecision(PNRepResult replay, AcceptingPetriNet apn, ExcavatePetriNetParameters xParameters) {
 		EventBasedPrecisionParameters pars = new EventBasedPrecisionParameters(apn);
+		pars.setShowInfo(true);
 		EventBasedPrecisionAlgorithm alg = new EventBasedPrecisionAlgorithm();
 		try {
+			EventBasedPrecision precision = alg.apply(null, replay, apn, pars);
+			System.out.println("[ExcavatePetriNetALgorithm]\n" + precision.toHTMLString(false));
 			return Math.pow(alg.apply(null, replay, apn, pars).getPrecision(), xParameters.getPrecisionFactor());
 		} catch (IllegalTransitionException e) {
 			// TODO Auto-generated catch block
@@ -168,8 +174,8 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 	}
 
 	private double getSimplicity(AcceptingPetriNet apn, ExcavatePetriNetParameters xParameters) {
-		return Math.pow((apn.getNet().getPlaces().size() + apn.getNet().getTransitions().size() + 1.0)
-				/ apn.getNet().getEdges().size(), xParameters.getSimplicityFactor());
+		return Math.pow((apn.getNet().getPlaces().size() + apn.getNet().getTransitions().size())
+				/ (apn.getNet().getEdges().size() + 1.0), xParameters.getSimplicityFactor());
 	}
 
 	private PNRepResult getReplay(AcceptingPetriNet apn, XLog log, ExcavatePetriNetParameters xParameters) {

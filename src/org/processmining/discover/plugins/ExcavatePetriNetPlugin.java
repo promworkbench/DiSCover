@@ -53,6 +53,10 @@ public class ExcavatePetriNetPlugin extends ExcavatePetriNetAlgorithm {
 	) //
 	public AcceptingPetriNet run(PluginContext context, XLog log) {
 		ExcavatePetriNetParameters parameters = new ExcavatePetriNetParameters();
+		parameters.getAbsValues().clear();
+		parameters.getAbsValues().add(0);
+		parameters.getRelValues().clear();
+		parameters.getRelValues().add(0);
 		return apply(context, log, parameters);
 	}
 
