@@ -140,9 +140,10 @@ public class DiscoverPetriNetAlgorithm {
 			System.out.println("[DiscoverPetriNetAlgorithm] Creating secondary matrices took "
 					+ (System.currentTimeMillis() - time) + " milliseconds.");
 			time = System.currentTimeMillis();
-			
+
 			parameters.getMatrixCollection().filterAbsolute(parameters.getAbsoluteThreshold2());
-			parameters.getMatrixCollection().filterRelative(parameters.getRelativeThreshold2(), parameters.getSafetyThreshold2());
+			parameters.getMatrixCollection().filterRelative(parameters.getRelativeThreshold2(),
+					parameters.getSafetyThreshold2());
 			System.out.println("[DiscoverPetriNetAlgorithm] Filtering secondary matrices took "
 					+ (System.currentTimeMillis() - time) + " milliseconds.");
 			time = System.currentTimeMillis();
@@ -426,7 +427,11 @@ public class DiscoverPetriNetAlgorithm {
 			if (transitionsRemoved.contains(transition)) {
 				continue;
 			}
-			for (PetrinetNode node : postset.get(preset.get(transition).iterator().next())) {
+			Set<PetrinetNode> prePlaces = preset.get(transition);
+			if (prePlaces == null || prePlaces.isEmpty()) {
+				continue;
+			}
+			for (PetrinetNode node : postset.get(prePlaces.iterator().next())) {
 				Transition otherTransition = (Transition) node;
 				if (transition == otherTransition) {
 					continue;
@@ -453,7 +458,11 @@ public class DiscoverPetriNetAlgorithm {
 			if (preset.get(place).isEmpty()) {
 				continue;
 			}
-			for (PetrinetNode node : postset.get(preset.get(place).iterator().next())) {
+			Set<PetrinetNode> preTransitions = preset.get(place);
+			if (preTransitions == null || preTransitions.isEmpty()) {
+				continue;
+			}
+			for (PetrinetNode node : postset.get(preTransitions.iterator().next())) {
 				Place otherPlace = (Place) node;
 				if (place == otherPlace) {
 					continue;
@@ -483,8 +492,8 @@ public class DiscoverPetriNetAlgorithm {
 		}
 		Set<Transition> transitions = new HashSet<Transition>(apn.getNet().getTransitions());
 		for (Transition transition : transitions) {
-			if (!transition.isInvisible() || preset.get(transition).size() != 1
-					|| postset.get(transition).size() != 1) {
+			if (!transition.isInvisible() || preset.get(transition) == null || preset.get(transition).size() != 1
+					|| postset.get(transition) == null || postset.get(transition).size() != 1) {
 				continue;
 			}
 			Place place = (Place) postset.get(transition).iterator().next();
