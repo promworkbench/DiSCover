@@ -56,7 +56,16 @@ public class ExcavatePetriNetPlugin extends ExcavatePetriNetAlgorithm {
 		parameters.getAbsValues().clear();
 		parameters.getAbsValues().add(0);
 		parameters.getRelValues().clear();
-		parameters.getRelValues().add(0);
+		for (int i = 0; i < 10; i++) {
+			parameters.getRelValues().add(i);
+		}
+		for (int i = 10; i < 30; i += 2) {
+			parameters.getRelValues().add(i);
+		}
+		for (int i = 30; i < 100; i += 5) {
+			parameters.getRelValues().add(i);
+		}
+		parameters.setSimplicityFactor(0.5);
 		return apply(context, log, parameters);
 	}
 

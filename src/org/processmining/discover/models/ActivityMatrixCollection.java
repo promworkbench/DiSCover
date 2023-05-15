@@ -31,7 +31,7 @@ public class ActivityMatrixCollection {
 	private ActivityMatrix matrices[];
 
 	private ActivityAlphabet alphabet;
-	
+
 	/**
 	 * Number of matrices.
 	 */
@@ -210,16 +210,18 @@ public class ActivityMatrixCollection {
 					selected.add(matrices[i]);
 				}
 			}
-			matrices = new ActivityMatrix[selected.size()];
-			int idx = 0;
-			for (ActivityMatrix matrix : selected) {
-				matrices[idx++] = matrix;
+			if (!selected.isEmpty()) {
+				matrices = new ActivityMatrix[selected.size()];
+				int idx = 0;
+				for (ActivityMatrix matrix : selected) {
+					matrices[idx++] = matrix;
+				}
+				System.out.println(
+						"[ActivityMatrixCollection] Reduced from " + size + " to " + selected.size() + " matrices.");
+				size = selected.size();
 			}
-			System.out.println(
-					"[ActivityMatrixCollection] Reduced from " + size + " to " + selected.size() + " matrices.");
-			size = selected.size();
 		}
-		
+
 		if (parameters.isUseILP()) {
 			Set<ActivitySet> nextActivities = new HashSet<ActivitySet>();
 			Set<ActivitySet> previousActivities = new HashSet<ActivitySet>();
@@ -271,15 +273,18 @@ public class ActivityMatrixCollection {
 					selected.add(matrices[i]);
 				}
 			}
-			// Set the matrices.
-			matrices = new ActivityMatrix[selected.size()];
-			int idx = 0;
-			for (ActivityMatrix matrix : selected) {
-				matrices[idx++] = matrix;
+			
+			if (!selected.isEmpty()) {
+				// Set the matrices.
+				matrices = new ActivityMatrix[selected.size()];
+				int idx = 0;
+				for (ActivityMatrix matrix : selected) {
+					matrices[idx++] = matrix;
+				}
+				System.out.println(
+						"[ActivityMatrixCollection] Reduced from " + size + " to " + selected.size() + " matrices.");
+				size = selected.size();
 			}
-			System.out.println(
-					"[ActivityMatrixCollection] Reduced from " + size + " to " + selected.size() + " matrices.");
-			size = selected.size();
 		}
 
 		/*
@@ -287,7 +292,7 @@ public class ActivityMatrixCollection {
 		 */
 		selected.clear();
 		int limit = parameters.getNofSComponents();
-		if (limit > 0) {
+		if (limit > 0 && size > 0) {
 			for (int i = 0; i < limit; i++) {
 				selected.add(matrices[(i * size) / limit]);
 			}
@@ -301,14 +306,14 @@ public class ActivityMatrixCollection {
 		System.out.println("[ActivityMatrixCollection] Limited to " + selected.size() + " matrices.");
 		size = selected.size();
 	}
-	
+
 	/*
 	 * Filter the matrices on the given (absolute) threshold.
 	 */
 	public void filterAbsolute(int threshold) {
 		/*
-		 *  First, restore all matrices, as the provided threshold may be lower than the one used
-		 *  to create these matrices.
+		 * First, restore all matrices, as the provided threshold may be lower
+		 * than the one used to create these matrices.
 		 */
 		for (int i = 0; i < size; i++) {
 			matrices[i].restore();
@@ -325,19 +330,20 @@ public class ActivityMatrixCollection {
 				for (int i = 0; i < size; i++) {
 					if (matrices[i].get(fromIdx, toIdx) > 0 && matrices[i].get(fromIdx, toIdx) > threshold) {
 						/*
-						 * Found a matrix where the value of this cell exceeds the threshold. 
-						 * This cell should not be changed.
+						 * Found a matrix where the value of this cell exceeds
+						 * the threshold. This cell should not be changed.
 						 */
 						change = false;
 					}
 				}
 				if (change) {
 					/*
-					 * All matrices have a value for this cell below (or equal to) the provided threshold.
-					 * Filter these cells out as being noise.
+					 * All matrices have a value for this cell below (or equal
+					 * to) the provided threshold. Filter these cells out as
+					 * being noise.
 					 */
 					for (int i = 0; i < size; i++) {
-						matrices[i].set(fromIdx, toIdx,	-Math.abs(matrices[i].get(fromIdx, toIdx)));
+						matrices[i].set(fromIdx, toIdx, -Math.abs(matrices[i].get(fromIdx, toIdx)));
 					}
 				}
 			}
@@ -382,12 +388,14 @@ public class ActivityMatrixCollection {
 					if (!change[fromIdx][toIdx]) {
 						continue;
 					}
-					if (100 * matrices[m].get(fromIdx, toIdx) >= safetyThreshold * Math.min(fromMax[m][fromIdx], toMax[m][toIdx])) {
+					if (100 * matrices[m].get(fromIdx, toIdx) >= safetyThreshold
+							* Math.min(fromMax[m][fromIdx], toMax[m][toIdx])) {
 						change[fromIdx][toIdx] = false;
-					} 
-					if (matrices[m].get(fromIdx, toIdx) * 100 > Math.max(fromMax[m][fromIdx], toMax[m][toIdx]) * relativeThreshold) {
+					}
+					if (matrices[m].get(fromIdx, toIdx) * 100 > Math.max(fromMax[m][fromIdx], toMax[m][toIdx])
+							* relativeThreshold) {
 						change[fromIdx][toIdx] = false;
-					} 
+					}
 				}
 			}
 		}
@@ -396,7 +404,7 @@ public class ActivityMatrixCollection {
 			for (int fromIdx = 0; fromIdx < alphabet.size(); fromIdx++) {
 				for (int toIdx = 0; toIdx < alphabet.size(); toIdx++) {
 					if (change[fromIdx][toIdx]) {
-						matrices[m].set(fromIdx,  toIdx, -Math.abs(matrices[m].get(fromIdx, toIdx)));
+						matrices[m].set(fromIdx, toIdx, -Math.abs(matrices[m].get(fromIdx, toIdx)));
 					}
 				}
 			}

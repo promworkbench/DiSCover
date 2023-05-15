@@ -10,6 +10,7 @@ public class ExcavatePetriNetParameters {
 	private double fitnessFactor;
 	private double precisionFactor;
 	private double simplicityFactor;
+	private double sizeFactor;
 	private int nofThreads;
 	private int maxNofTransitions;
 
@@ -21,6 +22,7 @@ public class ExcavatePetriNetParameters {
 	private static double lastFitnessFactor = -1.0;
 	private static double lastPrecisionFactor = -1.0;
 	private static double lastSimplicityFactor = -1.0;
+	private static double lastSizeFactor = -1.0;
 	private static int lastNofThreads = -1;
 	private static int lastMaxNofTransitions = -1;
 
@@ -51,6 +53,10 @@ public class ExcavatePetriNetParameters {
 			lastSimplicityFactor = 1.0;
 		}
 		simplicityFactor = lastSimplicityFactor;
+		if (lastSizeFactor < 0.0) {
+			lastSizeFactor = 1.0;
+		}
+		sizeFactor = lastSizeFactor;
 		if (lastNofThreads < 0) {
 			lastNofThreads = 6;
 		}
@@ -104,6 +110,15 @@ public class ExcavatePetriNetParameters {
 	public void setSimplicityFactor(double simplicityFactor) {
 		this.lastSimplicityFactor = simplicityFactor;
 		this.simplicityFactor = simplicityFactor;
+	}
+
+	public double getSizeFactor() {
+		return sizeFactor;
+	}
+
+	public void setSizeFactor(double sizeFactor) {
+		this.lastSizeFactor = sizeFactor;
+		this.sizeFactor = sizeFactor;
 	}
 
 	public int getNofThreads() {

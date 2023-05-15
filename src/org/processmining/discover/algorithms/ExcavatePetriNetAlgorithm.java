@@ -23,6 +23,7 @@ import org.processmining.acceptingpetrinet.models.AcceptingPetriNet;
 import org.processmining.contexts.uitopia.UIPluginContext;
 import org.processmining.discover.parameters.DiscoverPetriNetParameters;
 import org.processmining.discover.parameters.ExcavatePetriNetParameters;
+import org.processmining.framework.connections.ConnectionCannotBeObtained;
 import org.processmining.framework.plugin.PluginContext;
 import org.processmining.models.graphbased.directed.petrinet.Petrinet;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetGraph;
@@ -30,6 +31,10 @@ import org.processmining.models.graphbased.directed.petrinet.elements.Transition
 import org.processmining.models.semantics.IllegalTransitionException;
 import org.processmining.models.semantics.petrinet.Marking;
 import org.processmining.plugins.connectionfactories.logpetrinet.TransEvClassMapping;
+import org.processmining.plugins.petrinet.behavioralanalysis.woflan.Woflan;
+import org.processmining.plugins.petrinet.behavioralanalysis.woflan.WoflanAssumptions;
+import org.processmining.plugins.petrinet.behavioralanalysis.woflan.WoflanDiagnosis;
+import org.processmining.plugins.petrinet.behavioralanalysis.woflan.WoflanState;
 import org.processmining.plugins.petrinet.replayer.algorithms.costbasedcomplete.CostBasedCompleteParam;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.petrinet.replayresult.PNRepResultImpl;
@@ -75,8 +80,8 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				parameters = new DiscoverPetriNetParameters();
 				parameters.setAbsoluteThreshold(abs);
 				parameters.setRelativeThreshold(rel);
-				parameters.setAbsoluteThreshold2(abs);
-				parameters.setRelativeThreshold2(rel);
+				parameters.setAbsoluteThreshold2(0);
+				parameters.setRelativeThreshold2(0);
 				AcceptingPetriNet apn = apply(context, log, parameters);
 
 				if (apn.getNet().getTransitions().size() > xParameters.getMaxNofTransitions()) {
@@ -87,49 +92,78 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 
 				double time = System.currentTimeMillis();
 				double simplicity = getSimplicity(apn, xParameters);
-				System.out.println("[DiscoverPetriNetPlugin] Computing simplicity took "
-						+ (System.currentTimeMillis() - time) + " milliseconds: " + simplicity + ".");
+				double size = getSize(apn, xParameters);
+				System.out.println("[ExcavatePetriNetAlgorithm] Computing simplicity took "
+						+ (System.currentTimeMillis() - time) + " milliseconds: " + simplicity + ", " + size + ".");
 
-				if (getScore(1.0, 1.0, simplicity) < bestScore) {
+				if (getScore(1.0, 1.0, simplicity, size) < bestScore) {
 					/*
 					 * Even a perfect fitness and precision will not result in a
 					 * new best score.
 					 */
-					System.out.println("[DiscoverPetriNetPlugin] Discarded thresholds " + abs + " and " + rel
+					System.out.println("[ExcavatePetriNetAlgorithm] Discarded thresholds " + abs + " and " + rel
 							+ " due to insufficient simplicity.");
 					continue;
 				}
 
 				time = System.currentTimeMillis();
+				try {
+					WoflanAssumptions assumptions = new WoflanAssumptions();
+					// We sure have an S cover.
+					assumptions.add(WoflanState.SCOVER);
+					/*
+					 *  Prevent Woflan from constructing a coverability graph. 
+					 *  We only want to know whether the ne tis a WF net.
+					 */
+					assumptions.add(WoflanState.BOUNDED);
+					assumptions.add(WoflanState.NOTDEAD);
+					assumptions.add(WoflanState.LIVE);
+					WoflanDiagnosis diagnosis = (new Woflan()).diagnose(context.createChildContext("Woflan"), apn.getNet(), assumptions);
+					System.out.println("[ExcavatePetriNetAlgorithm] Analyzing WF net on discovered net took "
+							+ (System.currentTimeMillis() - time) + " milliseconds.");
+					if (bestApn != null && !diagnosis.isSound()) {
+						/*
+						 * Not a WF net.
+						 */
+						System.out.println("[ExcavatePetriNetAlgorithm] Discarded thresholds " + abs + " and " + rel
+								+ " because result is not a WF net.");
+						continue;
+					}
+				} catch (Exception e) {
+					System.out.println("[ExcavatePetriNetAlgorithm] Could not check WF net due to " + e);
+				}
+				
+				time = System.currentTimeMillis();
 				PNRepResult replay = getReplay(apn, log, xParameters);
-				System.out.println("[DiscoverPetriNetPlugin] Replaying log on discovered net took "
+				System.out.println("[ExcavatePetriNetAlgorithm] Replaying log on discovered net took "
 						+ (System.currentTimeMillis() - time) + " milliseconds.");
 				time = System.currentTimeMillis();
 				double fitness = getFitness(replay, log, xParameters);
-				System.out.println("[DiscoverPetriNetPlugin] Computing fitness took "
+				System.out.println("[ExcavatePetriNetAlgorithm] Computing fitness took "
 						+ (System.currentTimeMillis() - time) + " milliseconds: " + fitness + ".");
 
-				if (getScore(fitness, 1.0, simplicity) < bestScore) {
+				if (getScore(fitness, 1.0, simplicity, size) < bestScore) {
 					/*
 					 * Even a perfect precision will not result in a new best
 					 * score.
 					 */
-					System.out.println("[DiscoverPetriNetPlugin] Discarded thresholds " + abs + " and " + rel
+					System.out.println("[ExcavatePetriNetAlgorithm] Discarded thresholds " + abs + " and " + rel
 							+ " due to insufficient fitness.");
 					continue;
 				}
 
 				time = System.currentTimeMillis();
 				double precision = getPrecision(replay, apn, xParameters);
-				System.out.println("[DiscoverPetriNetPlugin] Computing precision took "
+				System.out.println("[ExcavatePetriNetAlgorithm] Computing precision took "
 						+ (System.currentTimeMillis() - time) + " milliseconds: " + precision + ".");
 
-				double score = getScore(fitness, precision, simplicity);
-				System.out.println("[DiscoverPetriNetPlugin] Found net with thresholds " + abs + " and " + rel
-						+ ", score " + score + " (f=" + fitness + ", p=" + precision + ", s=" + simplicity + ")");
+				double score = getScore(fitness, precision, simplicity, size);
+				System.out.println("[ExcavatePetriNetAlgorithm] Found net with thresholds " + abs + " and " + rel
+						+ ", score " + score + " (f=" + fitness + ", p=" + precision + ", s=" + simplicity + ", n="
+						+ size + ")");
 				if (score > bestScore) {
 					if (uiContext != null) {
-						uiContext.log("Discovered net at spot ("+ abs + ", "+ rel + ") with new best score " + score);
+						uiContext.log("Discovered net at spot (" + abs + ", " + rel + ") with new best score " + score);
 					}
 					bestScore = score;
 					bestApn = apn;
@@ -141,14 +175,28 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		if (uiContext != null) {
 			uiContext.getProgress().setValue(uiContext.getProgress().getMaximum());
 		}
-		System.out.println("[DiscoverPetriNetPlugin] Found best net with thresholds " + bestAbs + " and " + bestRel
+		System.out.println("[ExcavatePetriNetAlgorithm] Found best net with thresholds " + bestAbs + " and " + bestRel
 				+ ", score " + bestScore);
 		return bestApn;
 	}
 
-	private double getScore(double fitness, double precision, double simplicity) {
+	private boolean isWFNet(AcceptingPetriNet apn) {
+		Woflan woflan = new Woflan();
+		WoflanDiagnosis diagnosis = new WoflanDiagnosis(apn.getNet());
+		try {
+			WoflanState state = woflan.diagnose(WoflanState.INIT);
+			return state == WoflanState.WFNET;
+		} catch (ConnectionCannotBeObtained e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	private double getScore(double fitness, double precision, double simplicity, double size) {
 		double fitPrec = 2 * fitness * precision / (fitness + precision);
-		return 2 * fitPrec * simplicity / (fitPrec + simplicity);
+		double SimSize = 2 * simplicity * size / (simplicity + size);
+		return 2 * fitPrec * SimSize / (fitPrec + SimSize);
 	}
 
 	private double getFitness(PNRepResult replay, XLog log, ExcavatePetriNetParameters xParameters) {
@@ -163,8 +211,8 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		pars.setShowInfo(true);
 		EventBasedPrecisionAlgorithm alg = new EventBasedPrecisionAlgorithm();
 		try {
-//			EventBasedPrecision precision = alg.apply(null, replay, apn, pars);
-//			System.out.println("[ExcavatePetriNetALgorithm]\n" + precision.toHTMLString(false));
+			//			EventBasedPrecision precision = alg.apply(null, replay, apn, pars);
+			//			System.out.println("[ExcavatePetriNetALgorithm]\n" + precision.toHTMLString(false));
 			return Math.pow(alg.apply(null, replay, apn, pars).getPrecision(), xParameters.getPrecisionFactor());
 		} catch (IllegalTransitionException e) {
 			// TODO Auto-generated catch block
@@ -175,6 +223,16 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 	private double getSimplicity(AcceptingPetriNet apn, ExcavatePetriNetParameters xParameters) {
 		return Math.pow((apn.getNet().getPlaces().size() + apn.getNet().getTransitions().size())
 				/ (apn.getNet().getEdges().size() + 1.0), xParameters.getSimplicityFactor());
+	}
+
+	private double getSize(AcceptingPetriNet apn, ExcavatePetriNetParameters xParameters) {
+		double cnt = 0;
+		for (Transition transition : apn.getNet().getTransitions()) {
+			if (!transition.isInvisible()) {
+				cnt++;
+			}
+		}
+		return Math.pow((cnt / apn.getNet().getTransitions().size()), xParameters.getSizeFactor());
 	}
 
 	private PNRepResult getReplay(AcceptingPetriNet apn, XLog log, ExcavatePetriNetParameters xParameters) {

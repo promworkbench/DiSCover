@@ -107,9 +107,9 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static boolean lastReduceRestricted = false;
 	private static boolean lastVetoNoise = false;
 	private static int lastAbsoluteThreshold = 1; // These seem reasonable values.
-	private static int lastAbsoluteThreshold2 = 1; 
+	private static int lastAbsoluteThreshold2 = 0; 
 	private static int lastRelativeThreshold = 1;
-	private static int lastRelativeThreshold2 = 1;
+	private static int lastRelativeThreshold2 = 0;
 	private static int lastSafetyThreshold = 95;
 	private static int lastSafetyThreshold2 = 95;
 	private static int LastNofSComponents = 20; // Seems more than enough.

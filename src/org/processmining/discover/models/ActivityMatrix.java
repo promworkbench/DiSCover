@@ -72,23 +72,35 @@ public class ActivityMatrix {
 		nodeCounts = new int[alphabet.size()];
 
 		// Get the index of the previous activity that was not ignored (and the one before that).
-		int lastIdx = log.get(0);
+		int lastIdx = 0;
 		// Do the counting.
+		boolean noise = false;
 		for (int idx = 1; idx < log.size(); idx++) {
-			if (rootMatrix != null && rootMatrix.get(log.get(idx - 1), log.get(idx)) < 0) {
-				/*
-				 * This DF pair was filtered out of the root matrix. As a
-				 * result, we should not add a DF pair in this matrix.
-				 */
-				lastIdx = -1;
+			if (log.get(idx - 1) == 0) {
+				// Starts a new trace. 
+				noise = containsNoise(log, idx, rootMatrix);
 			}
+			if (noise) {
+				/*
+				 * Some DF pair was filtered out in the root matrix. As a result, we assume
+				 * that this trace contains some noise. Leave it out completely.
+				 */
+				continue;
+			}
+//			if (rootMatrix != null && rootMatrix.get(log.get(idx - 1), log.get(idx)) < 0) {
+//				/*
+//				 * This DF pair was filtered out of the root matrix. As a
+//				 * result, we should not add a DF pair in this matrix.
+//				 */
+//				lastIdx = -1;
+//			}
 			if (!ignoreSet.contains(log.get(idx))) {
 				// Not ignored. Count.
 				nodeCounts[log.get(idx)]++;
-				if (lastIdx >= 0) {
-					edgeCounts[lastIdx][log.get(idx)]++;
-				}
-				lastIdx = log.get(idx);
+//				if (lastIdx >= 0) {
+					edgeCounts[log.get(lastIdx)][log.get(idx)]++;
+//				}
+				lastIdx = idx;
 			}
 		}
 	}
@@ -105,6 +117,26 @@ public class ActivityMatrix {
 		}
 	}
 
+	/*
+	 * Return whether the current trace contains a DF pair that is filtered out in the root matrix.
+	 */
+	private boolean containsNoise(ActivityLog log, int idx, ActivityMatrix rootMatrix) {
+		if (rootMatrix == null) {
+			// No root matrix. Hence no such DF pair.
+			return false;
+		}
+		if (rootMatrix.get(log.get(idx - 1), log.get(idx)) < 0) {
+			// Found such a DF pair at the current index.
+			return true;
+		}
+		if (log.get(idx) == 0) {
+			// End of trace. No such DF pair found for this trace.
+			return false;
+		}
+		// Try next index.
+		return containsNoise(log, idx + 1, rootMatrix);
+	}
+	
 	public boolean equals(Object o) {
 		if (o == null) {
 			return false;
