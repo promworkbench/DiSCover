@@ -63,7 +63,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		 */
 		DiscoverPetriNetParameters parameters = new DiscoverPetriNetParameters();
 		AcceptingPetriNet bestApn = null;
-		double bestScore = 0.0;
+		double bestScore = -1.0;
 		/*
 		 * Discover alternative nets by changing the thresholds. Use the
 		 * thresholds itself as a penalty to promote low thresholds.
@@ -202,7 +202,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 	private double getFitness(PNRepResult replay, XLog log, ExcavatePetriNetParameters xParameters) {
 		double mlf = (double) replay.getInfo().get(PNRepResult.MOVELOGFITNESS);
 		double mmf = (double) replay.getInfo().get(PNRepResult.MOVEMODELFITNESS);
-		double mf = 2 * mlf * mmf / (mlf + mmf);
+		double mf = mlf + mmf == 0.0 ? 0.0 : 2 * mlf * mmf / (mlf + mmf);
 		return Math.pow(mf, xParameters.getFitnessFactor());
 	}
 
