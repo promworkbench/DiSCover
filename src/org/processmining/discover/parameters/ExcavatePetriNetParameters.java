@@ -13,6 +13,7 @@ public class ExcavatePetriNetParameters {
 	private double sizeFactor;
 	private int nofThreads;
 	private int maxNofTransitions;
+	private boolean preferWFnet;
 
 	/*
 	 * Use dummy values. The constructor will then use the default values.
@@ -25,11 +26,12 @@ public class ExcavatePetriNetParameters {
 	private static double lastSizeFactor = -1.0;
 	private static int lastNofThreads = -1;
 	private static int lastMaxNofTransitions = -1;
+	private boolean lastPreferWFnet = true;
 
 	public ExcavatePetriNetParameters() {
 		if (lastAbsValues == null) {
 			lastAbsValues = new ArrayList<Integer>();
-			for (int i = 0; i < 6; i++) {
+			for (int i = 0; i < 1; i++) {
 				lastAbsValues.add(i);
 			}
 		}
@@ -65,6 +67,7 @@ public class ExcavatePetriNetParameters {
 			lastMaxNofTransitions = 100;
 		}
 		maxNofTransitions = lastMaxNofTransitions;
+		preferWFnet = lastPreferWFnet;
 	}
 
 	public List<Integer> getAbsValues() {
@@ -137,6 +140,15 @@ public class ExcavatePetriNetParameters {
 	public void setMaxNofTransitions(int maxNofTransitions) {
 		this.lastMaxNofTransitions = maxNofTransitions;
 		this.maxNofTransitions = maxNofTransitions;
+	}
+
+	public boolean isPreferWFnet() {
+		return preferWFnet;
+	}
+
+	public void setPreferWFnet(boolean preferWFnet) {
+		this.preferWFnet = preferWFnet;
+		this.lastPreferWFnet = preferWFnet;
 	}
 
 }

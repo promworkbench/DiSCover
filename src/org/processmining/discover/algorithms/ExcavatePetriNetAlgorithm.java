@@ -23,7 +23,6 @@ import org.processmining.acceptingpetrinet.models.AcceptingPetriNet;
 import org.processmining.contexts.uitopia.UIPluginContext;
 import org.processmining.discover.parameters.DiscoverPetriNetParameters;
 import org.processmining.discover.parameters.ExcavatePetriNetParameters;
-import org.processmining.framework.connections.ConnectionCannotBeObtained;
 import org.processmining.framework.plugin.PluginContext;
 import org.processmining.models.graphbased.directed.petrinet.Petrinet;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetGraph;
@@ -72,6 +71,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		int bestAbs = 0;
 		int bestRel = 0;
 		int i = 0;
+		boolean foundWFnet = false;
 		for (int abs : xParameters.getAbsValues()) {
 			for (int rel : xParameters.getRelValues()) {
 				if (uiContext != null) {
@@ -106,31 +106,17 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 					continue;
 				}
 
-				time = System.currentTimeMillis();
-				try {
-					WoflanAssumptions assumptions = new WoflanAssumptions();
-					// We sure have an S cover.
-					assumptions.add(WoflanState.SCOVER);
-					/*
-					 *  Prevent Woflan from constructing a coverability graph. 
-					 *  We only want to know whether the ne tis a WF net.
-					 */
-					assumptions.add(WoflanState.BOUNDED);
-					assumptions.add(WoflanState.NOTDEAD);
-					assumptions.add(WoflanState.LIVE);
-					WoflanDiagnosis diagnosis = (new Woflan()).diagnose(context.createChildContext("Woflan"), apn.getNet(), assumptions);
+				boolean isWFnet = false;
+				if (xParameters.isPreferWFnet()) {
+					time = System.currentTimeMillis();
+					isWFnet = isWFNet(context, apn);
 					System.out.println("[ExcavatePetriNetAlgorithm] Analyzing WF net on discovered net took "
 							+ (System.currentTimeMillis() - time) + " milliseconds.");
-					if (bestApn != null && !diagnosis.isSound()) {
-						/*
-						 * Not a WF net.
-						 */
-						System.out.println("[ExcavatePetriNetAlgorithm] Discarded thresholds " + abs + " and " + rel
-								+ " because result is not a WF net.");
-						continue;
-					}
-				} catch (Exception e) {
-					System.out.println("[ExcavatePetriNetAlgorithm] Could not check WF net due to " + e);
+				}
+				if (foundWFnet && !isWFnet) {
+					System.out.println("[ExcavatePetriNetAlgorithm] Discarded thresholds " + abs + " and " + rel
+							+ " because result is not a WF net.");
+					continue;
 				}
 				
 				time = System.currentTimeMillis();
@@ -169,6 +155,9 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 					bestApn = apn;
 					bestAbs = abs;
 					bestRel = rel;
+					if (isWFnet) {
+						foundWFnet = true;
+					}
 				}
 			}
 		}
@@ -180,19 +169,30 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		return bestApn;
 	}
 
-	private boolean isWFNet(AcceptingPetriNet apn) {
-		Woflan woflan = new Woflan();
-		WoflanDiagnosis diagnosis = new WoflanDiagnosis(apn.getNet());
+	private boolean isWFNet(PluginContext context, AcceptingPetriNet apn) {
 		try {
-			WoflanState state = woflan.diagnose(WoflanState.INIT);
-			return state == WoflanState.WFNET;
-		} catch (ConnectionCannotBeObtained e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			WoflanAssumptions assumptions = new WoflanAssumptions();
+			// We sure have an S cover.
+			assumptions.add(WoflanState.SCOVER);
+			/*
+			 * Prevent Woflan from constructing a coverability
+			 * graph. We only want to know whether the ne tis a WF
+			 * net.
+			 */
+			assumptions.add(WoflanState.BOUNDED);
+			assumptions.add(WoflanState.NOTDEAD);
+			assumptions.add(WoflanState.LIVE);
+			WoflanDiagnosis diagnosis = (new Woflan()).diagnose(context.createChildContext("Woflan"),
+					apn.getNet(), assumptions);
+			if (diagnosis.isSound()) {
+				return true;
+			}
+		} catch (Exception e) {
+			System.out.println("[ExcavatePetriNetAlgorithm] Could not check WF net due to " + e);
 		}
 		return false;
 	}
-	
+
 	private double getScore(double fitness, double precision, double simplicity, double size) {
 		double fitPrec = 2 * fitness * precision / (fitness + precision);
 		double SimSize = 2 * simplicity * size / (simplicity + size);
@@ -221,8 +221,11 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 	}
 
 	private double getSimplicity(AcceptingPetriNet apn, ExcavatePetriNetParameters xParameters) {
-		return Math.pow((apn.getNet().getPlaces().size() + apn.getNet().getTransitions().size())
-				/ (apn.getNet().getEdges().size() + 1.0), xParameters.getSimplicityFactor());
+		int nodeCount = apn.getNet().getPlaces().size() + apn.getNet().getTransitions().size();
+		int edgeCount = apn.getNet().getEdges().size() + 1;
+		double minCount = 1.0 * Math.min(nodeCount,  edgeCount);
+		double maxCount = 1.0 * Math.max(nodeCount,  edgeCount);
+		return Math.pow(minCount/maxCount, xParameters.getSimplicityFactor());
 	}
 
 	private double getSize(AcceptingPetriNet apn, ExcavatePetriNetParameters xParameters) {
