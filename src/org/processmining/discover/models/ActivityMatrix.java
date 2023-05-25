@@ -31,6 +31,11 @@ public class ActivityMatrix {
 	private int[][] edgeCounts;
 
 	/**
+	 * Whether the DF relation occurs in a trace that is classified as a positive trace.
+	 */
+	private boolean[][] positive;
+
+	/**
 	 * The node counts in the activity log: How often does an activity occur?
 	 */
 	private int[] nodeCounts;
@@ -69,8 +74,17 @@ public class ActivityMatrix {
 
 		// Initialize the arrays.
 		edgeCounts = new int[alphabet.size()][alphabet.size()];
+		positive = new boolean[alphabet.size()][alphabet.size()];
 		nodeCounts = new int[alphabet.size()];
 
+		for (int r = 0; r < alphabet.size(); r++) {
+			nodeCounts[r] = 0;
+			for (int c = 0; c < alphabet.size(); c++) {
+				positive[r][c] = false;
+				edgeCounts[r][c] = 0;
+			}
+		}
+		
 		// Get the index of the previous activity that was not ignored (and the one before that).
 		int lastIdx = 0;
 		// Do the counting.
@@ -82,24 +96,30 @@ public class ActivityMatrix {
 			}
 			if (noise) {
 				/*
-				 * Some DF pair was filtered out in the root matrix. As a result, we assume
-				 * that this trace contains some noise. Leave it out completely.
+				 * Some DF pair was filtered out in the root matrix. As a
+				 * result, we assume that this trace contains some noise. Leave
+				 * it out completely.
 				 */
 				continue;
 			}
-//			if (rootMatrix != null && rootMatrix.get(log.get(idx - 1), log.get(idx)) < 0) {
-//				/*
-//				 * This DF pair was filtered out of the root matrix. As a
-//				 * result, we should not add a DF pair in this matrix.
-//				 */
-//				lastIdx = -1;
-//			}
+			//			if (rootMatrix != null && rootMatrix.get(log.get(idx - 1), log.get(idx)) < 0) {
+			//				/*
+			//				 * This DF pair was filtered out of the root matrix. As a
+			//				 * result, we should not add a DF pair in this matrix.
+			//				 */
+			//				lastIdx = -1;
+			//			}
 			if (!ignoreSet.contains(log.get(idx))) {
 				// Not ignored. Count.
 				nodeCounts[log.get(idx)]++;
-//				if (lastIdx >= 0) {
-					edgeCounts[log.get(lastIdx)][log.get(idx)]++;
-//				}
+				//				if (lastIdx >= 0) {
+
+				edgeCounts[log.get(lastIdx)][log.get(idx)]++;
+				if (log.isPos(idx)) {
+					// Trace classified positive. Mark this relation as such.
+					positive[log.get(lastIdx)][log.get(idx)] = true;
+				}
+				//				}
 				lastIdx = idx;
 			}
 		}
@@ -108,17 +128,20 @@ public class ActivityMatrix {
 	public ActivityMatrix(ActivityMatrix matrix) {
 		this.alphabet = matrix.alphabet;
 		edgeCounts = new int[alphabet.size()][alphabet.size()];
+		positive = new boolean[alphabet.size()][alphabet.size()];
 		nodeCounts = new int[alphabet.size()];
 		for (int i = 0; i < alphabet.size(); i++) {
 			nodeCounts[i] = matrix.nodeCounts[i];
 			for (int j = 0; j < alphabet.size(); j++) {
 				edgeCounts[i][j] = matrix.edgeCounts[i][j];
+				positive[i][j] = matrix.positive[i][j];
 			}
 		}
 	}
 
 	/*
-	 * Return whether the current trace contains a DF pair that is filtered out in the root matrix.
+	 * Return whether the current trace contains a DF pair that is filtered out
+	 * in the root matrix.
 	 */
 	private boolean containsNoise(ActivityLog log, int idx, ActivityMatrix rootMatrix) {
 		if (rootMatrix == null) {
@@ -136,7 +159,7 @@ public class ActivityMatrix {
 		// Try next index.
 		return containsNoise(log, idx + 1, rootMatrix);
 	}
-	
+
 	public boolean equals(Object o) {
 		if (o == null) {
 			return false;
@@ -182,7 +205,7 @@ public class ActivityMatrix {
 
 	public void set(int fromIdx, int toIdx, int value) {
 		if (value != edgeCounts[fromIdx][toIdx]) {
-//			nodeCounts[fromIdx] += (value - edgeCounts[fromIdx][toIdx]);
+			//			nodeCounts[fromIdx] += (value - edgeCounts[fromIdx][toIdx]);
 			edgeCounts[fromIdx][toIdx] = value;
 		}
 	}
@@ -370,10 +393,12 @@ public class ActivityMatrix {
 	public void filterAbsolute(int threshold) {
 		for (int fromIdx = 0; fromIdx < alphabet.size(); fromIdx++) {
 			for (int toIdx = 0; toIdx < alphabet.size(); toIdx++) {
-				if (edgeCounts[fromIdx][toIdx] <= 0) {
+				if (edgeCounts[fromIdx][toIdx] <= 0 || positive[fromIdx][toIdx]) {
+					// Either already classified as noise, or part of a trace classified positive. 
 					continue;
 				}
 				if (edgeCounts[fromIdx][toIdx] <= threshold) {
+					// Classify as noise.
 					set(fromIdx, toIdx, -edgeCounts[fromIdx][toIdx]);
 				}
 			}
@@ -415,7 +440,8 @@ public class ActivityMatrix {
 				if (nodeCounts[toIdx] == 0) {
 					continue;
 				}
-				if (edgeCounts[fromIdx][toIdx] <= 0) {
+				if (edgeCounts[fromIdx][toIdx] <= 0 || positive[fromIdx][toIdx]) {
+					// Either already classified as noise, or part of a trace classified positive. 
 					continue;
 				}
 				if (100 * edgeCounts[fromIdx][toIdx] >= safetyThreshold * Math.min(fromMax[fromIdx], toMax[toIdx])) {
