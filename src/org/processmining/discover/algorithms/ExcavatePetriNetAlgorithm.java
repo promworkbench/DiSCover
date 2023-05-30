@@ -90,6 +90,20 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				AcceptingPetriNet apn = apply(context, log, parameters);
 
 				double time = System.currentTimeMillis();
+
+				boolean isWFnet = false;
+				if (xParameters.isPreferWFnet()) {
+					time = System.currentTimeMillis();
+					isWFnet = isWFNet(context, apn);
+					System.out.println("[ExcavatePetriNetAlgorithm] Analyzing WF net on discovered net took "
+							+ (System.currentTimeMillis() - time) + " milliseconds.");
+				}
+				if (foundWFnet && !isWFnet) {
+					System.out.println("[ExcavatePetriNetAlgorithm] Discarded thresholds " + abs + " and " + rel
+							+ " because result is not a WF net.");
+					continue;
+				}
+
 				double simplicity = getSimplicity(apn, xParameters);
 				double size = getSize(apn, xParameters);
 				System.out.println("[ExcavatePetriNetAlgorithm] Computing simplicity took "
@@ -120,19 +134,6 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				if (apn.getNet().getTransitions().size() > xParameters.getMaxNofTransitions()) {
 					System.out.println("[DiscoverPetriNetPlugin] Discarded thresholds " + abs + " and " + rel
 							+ " for replay due to too many transitions.");
-					continue;
-				}
-
-				boolean isWFnet = false;
-				if (xParameters.isPreferWFnet()) {
-					time = System.currentTimeMillis();
-					isWFnet = isWFNet(context, apn);
-					System.out.println("[ExcavatePetriNetAlgorithm] Analyzing WF net on discovered net took "
-							+ (System.currentTimeMillis() - time) + " milliseconds.");
-				}
-				if (foundWFnet && !isWFnet) {
-					System.out.println("[ExcavatePetriNetAlgorithm] Discarded thresholds " + abs + " and " + rel
-							+ " because result is not a WF net.");
 					continue;
 				}
 				
