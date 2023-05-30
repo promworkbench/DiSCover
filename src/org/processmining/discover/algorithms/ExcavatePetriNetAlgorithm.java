@@ -103,6 +103,12 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 							+ " because result is not a WF net.");
 					continue;
 				}
+				if (isWFnet && !foundWFnet) {
+					foundWFnet = true;
+					bestScore = -1.0;
+					simplestScore = -1.0;
+				}
+				
 
 				double simplicity = getSimplicity(apn, xParameters);
 				double size = getSize(apn, xParameters);
@@ -173,9 +179,6 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 					bestApn = apn;
 					bestAbs = abs;
 					bestRel = rel;
-					if (isWFnet) {
-						foundWFnet = true;
-					}
 				}
 			}
 		}
