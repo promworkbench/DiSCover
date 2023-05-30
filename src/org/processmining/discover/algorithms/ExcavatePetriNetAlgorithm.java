@@ -63,6 +63,8 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		 */
 		DiscoverPetriNetParameters parameters = new DiscoverPetriNetParameters();
 		AcceptingPetriNet bestApn = null;
+		AcceptingPetriNet smallestApn = null;
+		
 		double bestScore = -1.0;
 		/*
 		 * Discover alternative nets by changing the thresholds. Use the
@@ -70,6 +72,8 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		 */
 		int bestAbs = 0;
 		int bestRel = 0;
+		int smallestAbs = 0;
+		int smallestRel = 0;
 		int i = 0;
 		boolean foundWFnet = false;
 		for (int abs : xParameters.getAbsValues()) {
@@ -84,6 +88,12 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				parameters.setRelativeThreshold2(0);
 				AcceptingPetriNet apn = apply(context, log, parameters);
 
+				if (smallestApn == null || smallestApn.getNet().getTransitions().size() > apn.getNet().getTransitions().size()) {
+					smallestApn = apn;
+					smallestAbs = abs;
+					smallestRel = rel;
+				}
+				
 				if (apn.getNet().getTransitions().size() > xParameters.getMaxNofTransitions()) {
 					System.out.println("[DiscoverPetriNetPlugin] Discarded thresholds " + abs + " and " + rel
 							+ " due to too many transitions.");
@@ -163,6 +173,13 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		}
 		if (uiContext != null) {
 			uiContext.getProgress().setValue(uiContext.getProgress().getMaximum());
+		}
+		if (bestApn == null) {
+			/*
+			 * No net found that is small enough. Take the smallest one (number of transitions) found instead.
+			 */
+			System.out.println("[ExcavatePetriNetAlgorithm] Found smallest net with thresholds " + smallestAbs + " and " + smallestRel);
+			return smallestApn;
 		}
 		System.out.println("[ExcavatePetriNetAlgorithm] Found best net with thresholds " + bestAbs + " and " + bestRel
 				+ ", score " + bestScore);
