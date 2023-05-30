@@ -105,7 +105,9 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				}
 				if (isWFnet && !foundWFnet) {
 					foundWFnet = true;
+					bestApn = null;
 					bestScore = -1.0;
+					simplestApn = null;
 					simplestScore = -1.0;
 				}
 				
