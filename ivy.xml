@@ -24,7 +24,7 @@
         <dependency org="prom" name="PNAnalysis" rev="latest" changing="true" transitive="true" />
         <dependency org="prom" name="Alignment" rev="latest" changing="true" transitive="true" />
         <dependency org="prom" name="Precision" rev="latest" changing="true" transitive="true" />
-        <dependency org="prom" name="Woflan" rev="latest" changing="true" transitive="true" />
+        <!--dependency org="prom" name="Woflan" rev="latest" changing="true" transitive="true" /-->
     	<!-- Third party libraries. These may span multiple lines. -->
     	<!-- Please uncomment the second line in the resolve target in your build.xml file
     	     if you have any third party libraries. -->

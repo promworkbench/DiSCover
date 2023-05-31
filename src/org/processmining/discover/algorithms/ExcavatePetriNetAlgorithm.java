@@ -25,15 +25,14 @@ import org.processmining.discover.parameters.DiscoverPetriNetParameters;
 import org.processmining.discover.parameters.ExcavatePetriNetParameters;
 import org.processmining.framework.plugin.PluginContext;
 import org.processmining.models.graphbased.directed.petrinet.Petrinet;
+import org.processmining.models.graphbased.directed.petrinet.PetrinetEdge;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetGraph;
+import org.processmining.models.graphbased.directed.petrinet.PetrinetNode;
+import org.processmining.models.graphbased.directed.petrinet.elements.Place;
 import org.processmining.models.graphbased.directed.petrinet.elements.Transition;
 import org.processmining.models.semantics.IllegalTransitionException;
 import org.processmining.models.semantics.petrinet.Marking;
 import org.processmining.plugins.connectionfactories.logpetrinet.TransEvClassMapping;
-import org.processmining.plugins.petrinet.behavioralanalysis.woflan.Woflan;
-import org.processmining.plugins.petrinet.behavioralanalysis.woflan.WoflanAssumptions;
-import org.processmining.plugins.petrinet.behavioralanalysis.woflan.WoflanDiagnosis;
-import org.processmining.plugins.petrinet.behavioralanalysis.woflan.WoflanState;
 import org.processmining.plugins.petrinet.replayer.algorithms.costbasedcomplete.CostBasedCompleteParam;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.petrinet.replayresult.PNRepResultImpl;
@@ -201,28 +200,115 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 	}
 
 	private boolean isWFNet(PluginContext context, AcceptingPetriNet apn) {
-		try {
-			WoflanAssumptions assumptions = new WoflanAssumptions();
-			// We sure have an S cover.
-			assumptions.add(WoflanState.SCOVER);
-			/*
-			 * Prevent Woflan from constructing a coverability
-			 * graph. We only want to know whether the ne tis a WF
-			 * net.
-			 */
-			assumptions.add(WoflanState.BOUNDED);
-			assumptions.add(WoflanState.NOTDEAD);
-			assumptions.add(WoflanState.LIVE);
-			WoflanDiagnosis diagnosis = (new Woflan()).diagnose(context.createChildContext("Woflan"),
-					apn.getNet(), assumptions);
-			if (diagnosis.isSound()) {
-				return true;
-			}
-		} catch (Exception e) {
-			System.out.println("[ExcavatePetriNetAlgorithm] Could not check WF net due to " + e);
+
+		Map<PetrinetNode, Set<PetrinetNode>> preset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
+		Map<PetrinetNode, Set<PetrinetNode>> postset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
+		for (PetrinetNode node : apn.getNet().getNodes()) {
+			preset.put(node, new HashSet<PetrinetNode>());
+			postset.put(node, new HashSet<PetrinetNode>());
 		}
-		return false;
+		for (PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode> edge : apn.getNet().getEdges()) {
+			postset.get(edge.getSource()).add(edge.getTarget());
+			preset.get(edge.getTarget()).add(edge.getSource());
+		}
+
+		Place in = null;
+		Place out = null;
+		
+		
+		for (Place place: apn.getNet().getPlaces()) {
+			if (preset.get(place).isEmpty()) {
+				if (in != null) {
+					// Multiple source places
+					return false;
+				}
+				in = place;
+			}
+			if (postset.get(place).isEmpty()) {
+				if (out != null) {
+					// Multiple sink places
+					return false;
+				}
+				out = place;
+			}
+		}
+		if (in == null || out == null) {
+			// No source place or no sink place
+			return false;
+		}
+		
+		for (Transition transition : apn.getNet().getTransitions()) {
+			if (preset.get(transition).isEmpty() || postset.get(transition).isEmpty()) {
+				// Transition with either no input places or no output places
+				return false;
+			}
+		}
+		
+		Set<PetrinetNode> frontier = new HashSet<PetrinetNode>();
+		Set<PetrinetNode> covered = new HashSet<PetrinetNode>();
+		
+		frontier.add(in);
+		while (!frontier.isEmpty()) {
+			PetrinetNode node = frontier.iterator().next();
+			frontier.remove(node);
+			for (PetrinetNode postNode : postset.get(node)) {
+				if (!covered.contains(postNode)) {
+					frontier.add(postNode);
+				}
+			}
+			covered.add(node);
+		}
+		if (!covered.equals(apn.getNet().getNodes())) {
+			// Some not not reachable fron source node
+			return false;
+		}
+		
+		frontier.clear();
+		covered.clear();
+		
+		frontier.add(out);
+		while (!frontier.isEmpty()) {
+			PetrinetNode node = frontier.iterator().next();
+			frontier.remove(node);
+			for (PetrinetNode preNode : preset.get(node)) {
+				if (!covered.contains(preNode)) {
+					frontier.add(preNode);
+				}
+			}
+			covered.add(node);
+		}
+		if (!covered.equals(apn.getNet().getNodes())) {
+			// Sink node not reachable from some node
+			return false;
+		}
+		
+		return true;
 	}
+
+//	private boolean isWFNetWoflan(PluginContext context, AcceptingPetriNet apn) {
+//
+//		try {
+//			WoflanAssumptions assumptions = new WoflanAssumptions();
+//			// We sure have an S cover.
+//			assumptions.add(WoflanState.SCOVER);
+//			/*
+//			 * Prevent Woflan from constructing a coverability
+//			 * graph. We only want to know whether the ne tis a WF
+//			 * net.
+//			 */
+//			assumptions.add(WoflanState.BOUNDED);
+//			assumptions.add(WoflanState.NOTDEAD);
+//			assumptions.add(WoflanState.LIVE);
+//			WoflanDiagnosis diagnosis = (new Woflan()).diagnose(context.createChildContext("Woflan"),
+//					apn.getNet(), assumptions);
+//			if (diagnosis.isSound()) {
+//				return true;
+//			}
+//		} catch (Exception e) {
+//			System.out.println("[ExcavatePetriNetAlgorithm] Could not check WF net due to " + e);
+//		}
+//		return false;
+//	}
 
 	private double getScore(double fitness, double precision, double simplicity, double size) {
 		double fitPrec = 2 * fitness * precision / (fitness + precision);
