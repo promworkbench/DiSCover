@@ -142,10 +142,31 @@ public class ActivitySets extends ArrayList<ActivitySet>{
 //			System.out.println("[ActivitySets] " + ignoreSets.size() + " solutions found so far.");
 			return;
 		}
-		if (seen.get(idx).contains(candidateSet)) {
+//		if (seen.get(idx).contains(candidateSet)) {
 //			System.out.println("[ActivitySets] Already seen set " + candidateSet + " at index " + idx);
-			return;
+//			return;
+//		}
+		Set<ActivitySet> toBeRemoved = new HashSet<ActivitySet>();
+		for (ActivitySet seenSet : seen.get(idx)) {
+			if (candidateSet.containsAll(seenSet)) {
+				/*
+				 *  The partial candidate set is a superset of some partial set seen before.
+				 *  As a result, the partial candidate set cannot evolve into a better candidate set 
+				 *  than that seen set can. 
+				 */
+				return;
+			} else if (seenSet.containsAll(candidateSet)) {
+				/*
+				 * The candidate set is a proper subset of set seen earlier. Keeping this set seen
+				 * earlier makes no sense when adding this candidate set, so schedule it for
+				 * removal.
+				 */
+				toBeRemoved.add(seenSet);
+			}
 		}
+		// Remove all the proper super sets of the candidate set.
+		seen.get(idx).removeAll(toBeRemoved);
+		// Add a copy of the candidate set.
 		ActivitySet candidateSetCopy = new ActivitySet(candidateSet);
 		seen.get(idx).add(candidateSetCopy);
 		// Cover the next pair.
