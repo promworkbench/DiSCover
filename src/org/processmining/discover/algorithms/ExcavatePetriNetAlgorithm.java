@@ -60,7 +60,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		/*
 		 * Try to discover a net with as few silent transitions as possible.
 		 */
-		DiscoverPetriNetParameters parameters = new DiscoverPetriNetParameters();
+		DiscoverPetriNetParameters parameters = null;
 		AcceptingPetriNet bestApn = null;
 		AcceptingPetriNet simplestApn = null;
 		
@@ -82,6 +82,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 					uiContext.getProgress().setValue(i++);
 				}
 				parameters = new DiscoverPetriNetParameters();
+				parameters.setClassifier(xParameters.getClassifier());
 				parameters.setAbsoluteThreshold(abs);
 				parameters.setRelativeThreshold(rel);
 				parameters.setAbsoluteThreshold2(0);

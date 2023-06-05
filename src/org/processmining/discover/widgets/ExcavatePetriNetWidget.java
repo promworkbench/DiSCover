@@ -18,6 +18,7 @@ import javax.swing.event.ListSelectionListener;
 
 import org.processmining.discover.parameters.ExcavatePetriNetParameters;
 import org.processmining.framework.util.ui.widgets.ProMList;
+import org.processmining.log.dialogs.ClassifierPanel;
 
 import com.fluxicon.slickerbox.components.NiceSlider;
 import com.fluxicon.slickerbox.components.NiceSlider.Orientation;
@@ -57,6 +58,9 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 		label2.setAlignmentX(Component.CENTER_ALIGNMENT);
 		label2.setHorizontalAlignment(SwingConstants.CENTER);
 		label2.setHorizontalTextPosition(SwingConstants.CENTER);
+
+		JPanel classifierPanel = new ClassifierPanel(parameters.getLog().getClassifiers(), parameters);
+		add(classifierPanel, "3, 4");
 
 		add(label2, "3, 5");
 		

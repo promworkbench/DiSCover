@@ -58,7 +58,7 @@ public class ExcavatePetriNetPlugin extends ExcavatePetriNetAlgorithm {
 			requiredParameterLabels = { 0 } //
 	) //
 	public AcceptingPetriNet run(PluginContext context, XLog log) {
-		ExcavatePetriNetParameters parameters = new ExcavatePetriNetParameters();
+		ExcavatePetriNetParameters parameters = new ExcavatePetriNetParameters(log);
 		List<Integer> absValues = new ArrayList<Integer>();
 		absValues.add(0);
 		parameters.setAbsValues(absValues);
@@ -96,7 +96,7 @@ public class ExcavatePetriNetPlugin extends ExcavatePetriNetAlgorithm {
 			requiredParameterLabels = { 0 } //
 	) //
 	public AcceptingPetriNet runUser(UIPluginContext context, XLog log) {
-		ExcavatePetriNetParameters parameters = new ExcavatePetriNetParameters();
+		ExcavatePetriNetParameters parameters = new ExcavatePetriNetParameters(log);
 		ExcavatePetriNetWidget widget = new ExcavatePetriNetWidget(parameters);
 		InteractionResult result = context.showWizard("Configure Xcavation", true, true, widget);
 		if (result != InteractionResult.FINISHED) {

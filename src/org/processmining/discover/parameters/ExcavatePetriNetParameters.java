@@ -3,8 +3,15 @@ package org.processmining.discover.parameters;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ExcavatePetriNetParameters {
+import org.deckfour.xes.classification.XEventClassifier;
+import org.deckfour.xes.classification.XEventNameClassifier;
+import org.deckfour.xes.model.XLog;
+import org.processmining.log.parameters.ClassifierParameter;
 
+public class ExcavatePetriNetParameters implements ClassifierParameter{
+
+	private XLog log;
+	private XEventClassifier classifier;
 	private List<Integer> absValues;
 	private List<Integer> relValues;
 	private double fitnessFactor;
@@ -18,6 +25,7 @@ public class ExcavatePetriNetParameters {
 	/*
 	 * Use dummy values. The constructor will then use the default values.
 	 */
+	private XEventClassifier lastClassifier = null;
 	private static List<Integer> lastAbsValues = null;
 	private static List<Integer> lastRelValues = null;
 	private static double lastFitnessFactor = -1.0;
@@ -28,7 +36,16 @@ public class ExcavatePetriNetParameters {
 	private static int lastMaxNofTransitions = -1;
 	private boolean lastPreferWFnet = true;
 
-	public ExcavatePetriNetParameters() {
+	public ExcavatePetriNetParameters(XLog log) {
+		this.setLog(log);
+		if (lastClassifier == null || log.getClassifiers().contains(lastClassifier)) {
+			if (log.getClassifiers().isEmpty()) {
+				lastClassifier = new XEventNameClassifier();
+			} else {
+				lastClassifier = log.getClassifiers().get(0);
+			}
+		}
+		classifier = lastClassifier;
 		if (lastAbsValues == null) {
 			lastAbsValues = new ArrayList<Integer>();
 			for (int i = 0; i < 1; i++) {
@@ -68,6 +85,15 @@ public class ExcavatePetriNetParameters {
 		}
 		maxNofTransitions = lastMaxNofTransitions;
 		preferWFnet = lastPreferWFnet;
+	}
+
+	public XEventClassifier getClassifier() {
+		return classifier;
+	}
+
+	public void setClassifier(XEventClassifier classifier) {
+		this.lastClassifier = classifier;
+		this.classifier = classifier;
 	}
 
 	public List<Integer> getAbsValues() {
@@ -149,6 +175,14 @@ public class ExcavatePetriNetParameters {
 	public void setPreferWFnet(boolean preferWFnet) {
 		this.preferWFnet = preferWFnet;
 		this.lastPreferWFnet = preferWFnet;
+	}
+
+	public XLog getLog() {
+		return log;
+	}
+
+	public void setLog(XLog log) {
+		this.log = log;
 	}
 
 }
