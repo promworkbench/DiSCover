@@ -94,35 +94,37 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 			XLogInfo info = XLogInfoFactory.createLogInfo(log, xParameters.getClassifier());
 			CheckerInput input = null;
 			CheckerConfiguration configuration = null;
+			/*
+			 * Collect all positive and negative traces.
+			 */
+			Set<XTrace> positiveTraces = new HashSet<XTrace>();
+			Set<XTrace> negativeTraces = new HashSet<XTrace>();
+			for (XTrace trace : filteredLog) {
+				if (trace.getAttributes().containsKey(ISPOSKEY)) {
+					XAttribute isPosAttribute = trace.getAttributes().get(ISPOSKEY);
+					if (isPosAttribute instanceof XAttributeBoolean) {
+						if (((XAttributeBoolean) isPosAttribute).getValue()) {
+							positiveTraces.add(trace);
+						} else {
+							negativeTraces.add(trace);
+						}
+					}
+				}
+			}
+			if (!positiveTraces.isEmpty() || !negativeTraces.isEmpty()) {
+				filteredLog = (XLog) log.clone();
+			}
+			/*
+			 * Filter the negative traces out.
+			 */
+			filteredLog.removeAll(negativeTraces);
+
 			if (abs > 20) {
 				System.out.println("[ExcavatePetriNetAglorithm] Capped log skeleton threshold to 20.");
 				abs = 20;
 			}
 			if (abs > 0) {
 				try {
-					filteredLog = (XLog) log.clone();
-					/*
-					 * Collect all positive and negative traces.
-					 */
-					Set<XTrace> positiveTraces = new HashSet<XTrace>();
-					Set<XTrace> negativeTraces = new HashSet<XTrace>();
-					for (XTrace trace : filteredLog) {
-						if (trace.getAttributes().containsKey(ISPOSKEY)) {
-							XAttribute isPosAttribute = trace.getAttributes().get(ISPOSKEY);
-							if (isPosAttribute instanceof XAttributeBoolean) {
-								if (((XAttributeBoolean) isPosAttribute).getValue()) {
-									positiveTraces.add(trace);
-								} else {
-									negativeTraces.add(trace);
-								}
-							}
-						}
-					}
-					/*
-					 * Filter the negative traces out.
-					 */
-					filteredLog.removeAll(negativeTraces);
-					
 					/*
 					 * Filter the log using log skeletons.
 					 * 
