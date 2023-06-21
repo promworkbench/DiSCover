@@ -40,7 +40,7 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 	
 	public ExcavatePetriNetWidget(final ExcavatePetriNetParameters parameters) {
 		this.parameters = parameters;
-		double size[][] = { { 100, 100, 20, TableLayoutConstants.FILL }, { 30, 30, 30, 30, TableLayoutConstants.FILL, 30, 30, 30, 30 } };
+		double size[][] = { { 150, 150, 20, TableLayoutConstants.FILL }, { 30, 30, 30, 30, TableLayoutConstants.FILL, 30, 30, 30, 30 } };
 		setLayout(new TableLayout(size));
 
 		final JLabel label1 = new JLabel("Select relative weights for metrics");
@@ -147,23 +147,23 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 		add(tranSlider, "3, 7");
 		
 		DefaultListModel<Integer> absListModel = new DefaultListModel<Integer>();
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 21; i++) {
 			absListModel.addElement(i);
 		}
 		int selectedIndices[] = new int[parameters.getAbsValues().size()];
 		int j = 0;
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 21; i++) {
 			if (parameters.getAbsValues().contains(i)) {
 				selectedIndices[j++] = i;
 			}
 		}
-		absList = new ProMList<Integer>("Absolute", absListModel);
+		absList = new ProMList<Integer>("Log skeleton", absListModel);
 		absList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		if (100 == j) {
+		if (21 == j) {
 			/*
 			 * Faster way to select all items in the list.
 			 */
-			absList.getList().setSelectionInterval(0, 99);
+			absList.getList().setSelectionInterval(0, 20);
 		} else {
 			/*
 			 * Slower way to select some items in the list.

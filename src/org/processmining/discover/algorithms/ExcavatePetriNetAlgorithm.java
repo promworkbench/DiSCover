@@ -24,6 +24,9 @@ import org.processmining.contexts.uitopia.UIPluginContext;
 import org.processmining.discover.parameters.DiscoverPetriNetParameters;
 import org.processmining.discover.parameters.ExcavatePetriNetParameters;
 import org.processmining.framework.plugin.PluginContext;
+import org.processmining.logskeleton.configurations.CheckerConfiguration;
+import org.processmining.logskeleton.inputs.CheckerInput;
+import org.processmining.logskeleton.models.LogSkeleton;
 import org.processmining.models.graphbased.directed.petrinet.Petrinet;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetEdge;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetGraph;
@@ -81,13 +84,70 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				if (uiContext != null) {
 					uiContext.getProgress().setValue(i++);
 				}
+				/*
+				 * If all else fails, use the (non-filtered) log as the filtered log.
+				 */
+				XLog filteredLog = log;
+				XLogInfo info = XLogInfoFactory.createLogInfo(log, xParameters.getClassifier());
+				CheckerInput input = null;
+				CheckerConfiguration configuration = null;
+				if (abs > 20) {
+					System.out.println("[ExcavatePetriNetAglorithm] Capped log skeleton threshold to 20.");
+					abs = 20;
+				}
+				try {
+					/*
+					 * Filter the log using log skeletons.
+					 * 
+					 * First, filter on equivalence.
+					 */
+					LogSkeleton ls = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class, "Build Log Skeleton from Event Log", null, null, filteredLog);
+					ls.setEquivalenceThreshold(100 - abs);
+					input = new CheckerInput(ls, log);
+					configuration = new CheckerConfiguration(input);
+					filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class, "Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
+					/*
+					 * Add classifiers if needed.
+					 */
+					if (filteredLog.getClassifiers().isEmpty()) {
+						filteredLog.getClassifiers().addAll(log.getClassifiers());
+					}
+					/*
+					 * Second, filter on response and precedence.
+					 */
+					ls = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class, "Build Log Skeleton from Event Log", null, null, filteredLog);
+					ls.setResponseThreshold(100 - abs);
+					ls.setPrecedenceThreshold(100 - abs);
+					input = new CheckerInput(ls, log);
+					configuration = new CheckerConfiguration(input);
+					filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class, "Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
+					/*
+					 * Add classifiers if needed.
+					 */
+					if (filteredLog.getClassifiers().isEmpty()) {
+						filteredLog.getClassifiers().addAll(log.getClassifiers());
+					}
+				} catch (Exception e) {
+					System.err.println("[ExcavatePetriNetAglorithm] Failed to filter using a log skeleton: " + e);
+				}
+				XLogInfo filteredInfo = XLogInfoFactory.createLogInfo(filteredLog, xParameters.getClassifier());
+				if (filteredInfo.getEventClasses().size() < info.getEventClasses().size()) {
+					/*
+					 * Lost some activities due to the filtering.
+					 * Do not consider this filtered log.
+					 */
+					System.out.println("[ExcavatePetriNetAlgorithm] Discarded thresholds " + abs + " and " + rel
+							+ " because filtered log does not contain all activities.");
+					continue;
+				}
+				
 				parameters = new DiscoverPetriNetParameters();
 				parameters.setClassifier(xParameters.getClassifier());
-				parameters.setAbsoluteThreshold(abs);
+//				parameters.setAbsoluteThreshold(abs);
 				parameters.setRelativeThreshold(rel);
-				parameters.setAbsoluteThreshold2(0);
+//				parameters.setAbsoluteThreshold2(0);
 				parameters.setRelativeThreshold2(0);
-				AcceptingPetriNet apn = apply(context, log, parameters);
+				AcceptingPetriNet apn = apply(context, filteredLog, parameters);
 
 				double time = System.currentTimeMillis();
 
