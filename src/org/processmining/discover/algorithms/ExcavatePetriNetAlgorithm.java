@@ -18,7 +18,10 @@ import org.deckfour.xes.classification.XEventNameClassifier;
 import org.deckfour.xes.info.XLogInfo;
 import org.deckfour.xes.info.XLogInfoFactory;
 import org.deckfour.xes.info.impl.XLogInfoImpl;
+import org.deckfour.xes.model.XAttribute;
+import org.deckfour.xes.model.XAttributeBoolean;
 import org.deckfour.xes.model.XLog;
+import org.deckfour.xes.model.XTrace;
 import org.processmining.acceptingpetrinet.models.AcceptingPetriNet;
 import org.processmining.contexts.uitopia.UIPluginContext;
 import org.processmining.discover.parameters.DiscoverPetriNetParameters;
@@ -50,6 +53,8 @@ import nl.tue.alignment.Utils;
 import nl.tue.alignment.algorithms.ReplayAlgorithm.Debug;
 
 public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
+
+	private final String ISPOSKEY = "pdc:isPos";
 
 	public AcceptingPetriNet apply(PluginContext context, XLog log, ExcavatePetriNetParameters xParameters) {
 
@@ -95,6 +100,29 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 			}
 			if (abs > 0) {
 				try {
+					filteredLog = (XLog) log.clone();
+					/*
+					 * Collect all positive and negative traces.
+					 */
+					Set<XTrace> positiveTraces = new HashSet<XTrace>();
+					Set<XTrace> negativeTraces = new HashSet<XTrace>();
+					for (XTrace trace : filteredLog) {
+						if (trace.getAttributes().containsKey(ISPOSKEY)) {
+							XAttribute isPosAttribute = trace.getAttributes().get(ISPOSKEY);
+							if (isPosAttribute instanceof XAttributeBoolean) {
+								if (((XAttributeBoolean) isPosAttribute).getValue()) {
+									positiveTraces.add(trace);
+								} else {
+									negativeTraces.add(trace);
+								}
+							}
+						}
+					}
+					/*
+					 * Filter the negative traces out.
+					 */
+					filteredLog.removeAll(negativeTraces);
+					
 					/*
 					 * Filter the log using log skeletons.
 					 * 
@@ -130,6 +158,14 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 					if (filteredLog.getClassifiers().isEmpty()) {
 						filteredLog.getClassifiers().addAll(log.getClassifiers());
 					}
+					/*
+					 * Add positive traces if they were filtered out.
+					 */
+					for (XTrace trace : positiveTraces) {
+						if (!filteredLog.contains(trace)) {
+							filteredLog.add(trace);
+						}
+					}
 				} catch (Exception e) {
 					System.err.println("[ExcavatePetriNetAglorithm] Failed to filter using a log skeleton: " + e);
 				}
@@ -148,7 +184,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 					continue;
 				}
 			}
-			
+
 			for (int rel : xParameters.getRelValues()) {
 				if (uiContext != null) {
 					uiContext.getProgress().setValue(i++);
