@@ -66,7 +66,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		DiscoverPetriNetParameters parameters = null;
 		AcceptingPetriNet bestApn = null;
 		AcceptingPetriNet simplestApn = null;
-		
+
 		double bestScore = -1.0;
 		double simplestScore = -1.0;
 		/*
@@ -80,32 +80,33 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		int i = 0;
 		boolean foundWFnet = false;
 		for (int abs : xParameters.getAbsValues()) {
-			for (int rel : xParameters.getRelValues()) {
-				if (uiContext != null) {
-					uiContext.getProgress().setValue(i++);
-				}
-				/*
-				 * If all else fails, use the (non-filtered) log as the filtered log.
-				 */
-				XLog filteredLog = log;
-				XLogInfo info = XLogInfoFactory.createLogInfo(log, xParameters.getClassifier());
-				CheckerInput input = null;
-				CheckerConfiguration configuration = null;
-				if (abs > 20) {
-					System.out.println("[ExcavatePetriNetAglorithm] Capped log skeleton threshold to 20.");
-					abs = 20;
-				}
+
+			/*
+			 * If all else fails, use the (non-filtered) log as the filtered
+			 * log.
+			 */
+			XLog filteredLog = log;
+			XLogInfo info = XLogInfoFactory.createLogInfo(log, xParameters.getClassifier());
+			CheckerInput input = null;
+			CheckerConfiguration configuration = null;
+			if (abs > 20) {
+				System.out.println("[ExcavatePetriNetAglorithm] Capped log skeleton threshold to 20.");
+				abs = 20;
+			}
+			if (abs > 0) {
 				try {
 					/*
 					 * Filter the log using log skeletons.
 					 * 
 					 * First, filter on equivalence.
 					 */
-					LogSkeleton ls = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class, "Build Log Skeleton from Event Log", null, null, filteredLog);
+					LogSkeleton ls = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
+							"Build Log Skeleton from Event Log", null, null, filteredLog);
 					ls.setEquivalenceThreshold(100 - abs);
 					input = new CheckerInput(ls, log);
 					configuration = new CheckerConfiguration(input);
-					filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class, "Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
+					filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class,
+							"Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
 					/*
 					 * Add classifiers if needed.
 					 */
@@ -115,12 +116,14 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 					/*
 					 * Second, filter on response and precedence.
 					 */
-					ls = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class, "Build Log Skeleton from Event Log", null, null, filteredLog);
+					ls = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
+							"Build Log Skeleton from Event Log", null, null, filteredLog);
 					ls.setResponseThreshold(100 - abs);
 					ls.setPrecedenceThreshold(100 - abs);
 					input = new CheckerInput(ls, log);
 					configuration = new CheckerConfiguration(input);
-					filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class, "Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
+					filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class,
+							"Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
 					/*
 					 * Add classifiers if needed.
 					 */
@@ -133,19 +136,29 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				XLogInfo filteredInfo = XLogInfoFactory.createLogInfo(filteredLog, xParameters.getClassifier());
 				if (filteredInfo.getEventClasses().size() < info.getEventClasses().size()) {
 					/*
-					 * Lost some activities due to the filtering.
-					 * Do not consider this filtered log.
+					 * Lost some activities due to the filtering. Do not
+					 * consider this filtered log.
 					 */
-					System.out.println("[ExcavatePetriNetAlgorithm] Discarded thresholds " + abs + " and " + rel
+					System.out.println("[ExcavatePetriNetAlgorithm] Discarded threshold " + abs
 							+ " because filtered log does not contain all activities.");
+					if (uiContext != null) {
+						i += xParameters.getRelValues().size();
+						uiContext.getProgress().setValue(i);
+					}
 					continue;
 				}
-				
+			}
+			
+			for (int rel : xParameters.getRelValues()) {
+				if (uiContext != null) {
+					uiContext.getProgress().setValue(i++);
+				}
+
 				parameters = new DiscoverPetriNetParameters();
 				parameters.setClassifier(xParameters.getClassifier());
-//				parameters.setAbsoluteThreshold(abs);
+				//				parameters.setAbsoluteThreshold(abs);
 				parameters.setRelativeThreshold(rel);
-//				parameters.setAbsoluteThreshold2(0);
+				//				parameters.setAbsoluteThreshold2(0);
 				parameters.setRelativeThreshold2(0);
 				AcceptingPetriNet apn = apply(context, filteredLog, parameters);
 
@@ -170,7 +183,6 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 					simplestApn = null;
 					simplestScore = -1.0;
 				}
-				
 
 				double simplicity = getSimplicity(apn, xParameters);
 				double size = getSize(apn, xParameters);
@@ -178,17 +190,18 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 						+ (System.currentTimeMillis() - time) + " milliseconds: " + simplicity + ", " + size + ".");
 
 				double simpleScore = getScore(1.0, 1.0, simplicity, size);
-				
+
 				if (simpleScore > simplestScore) {
 					if (uiContext != null) {
-						uiContext.log("Discovered net at spot (" + abs + ", " + rel + ") with new best simple score " + simpleScore);
+						uiContext.log("Discovered net at spot (" + abs + ", " + rel + ") with new best simple score "
+								+ simpleScore);
 					}
 					simplestApn = apn;
 					simplestAbs = abs;
 					simplestRel = rel;
 					simplestScore = simpleScore;
 				}
-				
+
 				if (simpleScore < bestScore) {
 					/*
 					 * Even a perfect fitness and precision will not result in a
@@ -198,13 +211,13 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 							+ " due to insufficient simplicity.");
 					continue;
 				}
-				
+
 				if (apn.getNet().getTransitions().size() > xParameters.getMaxNofTransitions()) {
 					System.out.println("[DiscoverPetriNetPlugin] Discarded thresholds " + abs + " and " + rel
 							+ " for replay due to too many transitions.");
 					continue;
 				}
-				
+
 				time = System.currentTimeMillis();
 				PNRepResult replay = getReplay(apn, log, xParameters);
 				System.out.println("[ExcavatePetriNetAlgorithm] Replaying log on discovered net took "
@@ -249,10 +262,11 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		}
 		if (bestApn == null) {
 			/*
-			 * No net found that is small enough to compute alignments. Take the simplest one found instead.
+			 * No net found that is small enough to compute alignments. Take the
+			 * simplest one found instead.
 			 */
-			System.out.println("[ExcavatePetriNetAlgorithm] Found smallest net with thresholds " + simplestAbs + " and " + simplestRel
-					+ ", score " + simplestScore);
+			System.out.println("[ExcavatePetriNetAlgorithm] Found smallest net with thresholds " + simplestAbs + " and "
+					+ simplestRel + ", score " + simplestScore);
 			return simplestApn;
 		}
 		System.out.println("[ExcavatePetriNetAlgorithm] Found best net with thresholds " + bestAbs + " and " + bestRel
@@ -275,9 +289,8 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 
 		Place in = null;
 		Place out = null;
-		
-		
-		for (Place place: apn.getNet().getPlaces()) {
+
+		for (Place place : apn.getNet().getPlaces()) {
 			if (preset.get(place).isEmpty()) {
 				if (in != null) {
 					// Multiple source places
@@ -297,17 +310,17 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 			// No source place or no sink place
 			return false;
 		}
-		
+
 		for (Transition transition : apn.getNet().getTransitions()) {
 			if (preset.get(transition).isEmpty() || postset.get(transition).isEmpty()) {
 				// Transition with either no input places or no output places
 				return false;
 			}
 		}
-		
+
 		Set<PetrinetNode> frontier = new HashSet<PetrinetNode>();
 		Set<PetrinetNode> covered = new HashSet<PetrinetNode>();
-		
+
 		frontier.add(in);
 		while (!frontier.isEmpty()) {
 			PetrinetNode node = frontier.iterator().next();
@@ -323,10 +336,10 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 			// Some not not reachable fron source node
 			return false;
 		}
-		
+
 		frontier.clear();
 		covered.clear();
-		
+
 		frontier.add(out);
 		while (!frontier.isEmpty()) {
 			PetrinetNode node = frontier.iterator().next();
@@ -342,34 +355,34 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 			// Sink node not reachable from some node
 			return false;
 		}
-		
+
 		return true;
 	}
 
-//	private boolean isWFNetWoflan(PluginContext context, AcceptingPetriNet apn) {
-//
-//		try {
-//			WoflanAssumptions assumptions = new WoflanAssumptions();
-//			// We sure have an S cover.
-//			assumptions.add(WoflanState.SCOVER);
-//			/*
-//			 * Prevent Woflan from constructing a coverability
-//			 * graph. We only want to know whether the ne tis a WF
-//			 * net.
-//			 */
-//			assumptions.add(WoflanState.BOUNDED);
-//			assumptions.add(WoflanState.NOTDEAD);
-//			assumptions.add(WoflanState.LIVE);
-//			WoflanDiagnosis diagnosis = (new Woflan()).diagnose(context.createChildContext("Woflan"),
-//					apn.getNet(), assumptions);
-//			if (diagnosis.isSound()) {
-//				return true;
-//			}
-//		} catch (Exception e) {
-//			System.out.println("[ExcavatePetriNetAlgorithm] Could not check WF net due to " + e);
-//		}
-//		return false;
-//	}
+	//	private boolean isWFNetWoflan(PluginContext context, AcceptingPetriNet apn) {
+	//
+	//		try {
+	//			WoflanAssumptions assumptions = new WoflanAssumptions();
+	//			// We sure have an S cover.
+	//			assumptions.add(WoflanState.SCOVER);
+	//			/*
+	//			 * Prevent Woflan from constructing a coverability
+	//			 * graph. We only want to know whether the ne tis a WF
+	//			 * net.
+	//			 */
+	//			assumptions.add(WoflanState.BOUNDED);
+	//			assumptions.add(WoflanState.NOTDEAD);
+	//			assumptions.add(WoflanState.LIVE);
+	//			WoflanDiagnosis diagnosis = (new Woflan()).diagnose(context.createChildContext("Woflan"),
+	//					apn.getNet(), assumptions);
+	//			if (diagnosis.isSound()) {
+	//				return true;
+	//			}
+	//		} catch (Exception e) {
+	//			System.out.println("[ExcavatePetriNetAlgorithm] Could not check WF net due to " + e);
+	//		}
+	//		return false;
+	//	}
 
 	private double getScore(double fitness, double precision, double simplicity, double size) {
 		double fitPrec = 2 * fitness * precision / (fitness + precision);
@@ -401,9 +414,9 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 	private double getSimplicity(AcceptingPetriNet apn, ExcavatePetriNetParameters xParameters) {
 		int nodeCount = apn.getNet().getPlaces().size() + apn.getNet().getTransitions().size();
 		int edgeCount = apn.getNet().getEdges().size() + 1;
-		double minCount = 1.0 * Math.min(nodeCount,  edgeCount);
-		double maxCount = 1.0 * Math.max(nodeCount,  edgeCount);
-		return Math.pow(minCount/maxCount, xParameters.getSimplicityFactor());
+		double minCount = 1.0 * Math.min(nodeCount, edgeCount);
+		double maxCount = 1.0 * Math.max(nodeCount, edgeCount);
+		return Math.pow(minCount / maxCount, xParameters.getSimplicityFactor());
 	}
 
 	private double getSize(AcceptingPetriNet apn, ExcavatePetriNetParameters xParameters) {
