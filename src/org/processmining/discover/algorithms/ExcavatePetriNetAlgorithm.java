@@ -84,6 +84,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		int simplestRel = 0;
 		int i = 0;
 		boolean foundWFnet = false;
+		Set<Integer> seenSizes = new HashSet<Integer>();
 		for (int abs : xParameters.getAbsValues()) {
 
 			/*
@@ -172,6 +173,18 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 					System.err.println("[ExcavatePetriNetAglorithm] Failed to filter using a log skeleton: " + e);
 				}
 				XLogInfo filteredInfo = XLogInfoFactory.createLogInfo(filteredLog, xParameters.getClassifier());
+				if (seenSizes.contains(filteredLog.size())) {
+					/*
+					 * A filtered log with the same number of traces was already seen.
+					 */
+					System.out.println("[ExcavatePetriNetAlgorithm] Discarded threshold " + abs
+							+ " because filtered log already seen.");
+					if (uiContext != null) {
+						i += xParameters.getRelValues().size();
+						uiContext.getProgress().setValue(i);
+					}
+					continue;
+				}
 				if (filteredInfo.getEventClasses().size() < info.getEventClasses().size()) {
 					/*
 					 * Lost some activities due to the filtering. Do not
@@ -186,6 +199,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 					continue;
 				}
 			}
+			seenSizes.add(filteredLog.size());
 
 			for (int rel : xParameters.getRelValues()) {
 				if (uiContext != null) {
