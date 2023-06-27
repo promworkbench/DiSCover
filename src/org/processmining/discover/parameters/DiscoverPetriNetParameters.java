@@ -347,6 +347,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setUseILP(boolean useILP) {
+		this.lastUseILP = useILP;
 		this.useILP = useILP;
 	}
 

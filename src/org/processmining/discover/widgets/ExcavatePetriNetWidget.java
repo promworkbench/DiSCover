@@ -85,38 +85,38 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 		wfBox.setOpaque(false);
 		add(wfBox, "3, 8");
 		
-		final NiceSlider fitSlider = SlickerFactory.instance().createNiceIntegerSlider("Fitness", 0, 10,
-				(int) (10*parameters.getFitnessFactor()), Orientation.HORIZONTAL);
+		final NiceSlider fitSlider = SlickerFactory.instance().createNiceIntegerSlider("Fitness", 0, 100,
+				(int) (100*parameters.getFitnessFactor()), Orientation.HORIZONTAL);
 		fitSlider.addChangeListener(new ChangeListener() {
 
 			public void stateChanged(ChangeEvent e) {
 				int value = fitSlider.getSlider().getValue();
-				parameters.setFitnessFactor(value / 10.0);
+				parameters.setFitnessFactor(value / 100.0);
 			}
 		});
 		fitSlider.setPreferredSize(new Dimension(100, 30));
 		add(fitSlider, "3, 1");
 		
-		final NiceSlider precSlider = SlickerFactory.instance().createNiceIntegerSlider("Precision", 0, 10,
-				(int) (10*parameters.getPrecisionFactor()), Orientation.HORIZONTAL);
+		final NiceSlider precSlider = SlickerFactory.instance().createNiceIntegerSlider("Precision", 0, 100,
+				(int) (100*parameters.getPrecisionFactor()), Orientation.HORIZONTAL);
 		precSlider.addChangeListener(new ChangeListener() {
 
 			public void stateChanged(ChangeEvent e) {
 				int value = precSlider.getSlider().getValue();
-				parameters.setPrecisionFactor(value / 10.0);
+				parameters.setPrecisionFactor(value / 100.0);
 			}
 		});
 		precSlider.setPreferredSize(new Dimension(100, 30));
 		add(precSlider, "3, 2");
 		
-		final NiceSlider simpSlider = SlickerFactory.instance().createNiceIntegerSlider("Simplicity", 0, 10,
-				(int) (10*parameters.getSimplicityFactor()), Orientation.HORIZONTAL);
+		final NiceSlider simpSlider = SlickerFactory.instance().createNiceIntegerSlider("Simplicity", 0, 100,
+				(int) (100*parameters.getSimplicityFactor()), Orientation.HORIZONTAL);
 		simpSlider.addChangeListener(new ChangeListener() {
 
 			public void stateChanged(ChangeEvent e) {
 				int value = simpSlider.getSlider().getValue();
-				parameters.setSimplicityFactor(value / 10.0);
-				parameters.setSizeFactor(value / 10.0);
+				parameters.setSimplicityFactor(value / 100.0);
+				parameters.setSizeFactor(value / 100.0);
 			}
 		});
 		simpSlider.setPreferredSize(new Dimension(100, 30));
