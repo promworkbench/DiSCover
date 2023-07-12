@@ -241,7 +241,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				System.out.println("[ExcavatePetriNetAlgorithm] Computing simplicity took "
 						+ (System.currentTimeMillis() - time) + " milliseconds: " + simplicity + ", " + size + ".");
 
-				double simpleScore = getScore(1.0, 1.0, simplicity, size);
+				double simpleScore = getScore(1.0, 1.0, simplicity, size, xParameters);
 
 				if (simpleScore > simplestScore) {
 					if (uiContext != null) {
@@ -279,7 +279,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				System.out.println("[ExcavatePetriNetAlgorithm] Computing fitness took "
 						+ (System.currentTimeMillis() - time) + " milliseconds: " + fitness + ".");
 
-				if (getScore(fitness, 1.0, simplicity, size) < bestScore) {
+				if (getScore(fitness, 1.0, simplicity, size, xParameters) < bestScore) {
 					/*
 					 * Even a perfect precision will not result in a new best
 					 * score.
@@ -294,7 +294,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				System.out.println("[ExcavatePetriNetAlgorithm] Computing precision took "
 						+ (System.currentTimeMillis() - time) + " milliseconds: " + precision + ".");
 
-				double score = getScore(fitness, precision, simplicity, size);
+				double score = getScore(fitness, precision, simplicity, size, xParameters);
 				System.out.println("[ExcavatePetriNetAlgorithm] Found net with thresholds " + abs + " and " + rel
 						+ ", score " + score + " (f=" + fitness + ", p=" + precision + ", s=" + simplicity + ", n="
 						+ size + ")");
@@ -436,52 +436,94 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 	//		return false;
 	//	}
 
-	private double getScore(double fitness, double precision, double simplicity, double size) {
+	private double getScore(double fitness, double precision, double simplicity, double size, ExcavatePetriNetParameters xParameters) {
+		double numerator = xParameters.getFitnessFactor() * fitness;
+		double denominator = xParameters.getFitnessFactor();
+		numerator += xParameters.getPrecisionFactor() * precision;
+		denominator += xParameters.getPrecisionFactor();
+		numerator += xParameters.getSimplicityFactor() * simplicity;
+		denominator += xParameters.getSimplicityFactor();
+		numerator += xParameters.getSizeFactor() * size;
+		denominator += xParameters.getSizeFactor();
+		return denominator == 0.0 ? 0.0 : numerator / denominator ;
+	}
+
+	private double getScorePow(double fitness, double precision, double simplicity, double size) {
 		double fitPrec = 2 * fitness * precision / (fitness + precision);
 		double SimSize = 2 * simplicity * size / (simplicity + size);
 		return 2 * fitPrec * SimSize / (fitPrec + SimSize);
 	}
 
+	private double getFitnessPow(PNRepResult replay, XLog log, ExcavatePetriNetParameters xParameters) {
+		return Math.pow(getFitness(replay, log, xParameters), xParameters.getFitnessFactor());
+	}
+
 	private double getFitness(PNRepResult replay, XLog log, ExcavatePetriNetParameters xParameters) {
+		if (xParameters.getFitnessFactor() == 0.0) {
+			return -1.0;
+		}
 		double mlf = (double) replay.getInfo().get(PNRepResult.MOVELOGFITNESS);
 		double mmf = (double) replay.getInfo().get(PNRepResult.MOVEMODELFITNESS);
-		double mf = mlf + mmf == 0.0 ? 0.0 : 2 * mlf * mmf / (mlf + mmf);
-		return Math.pow(mf, xParameters.getFitnessFactor());
+		return mlf + mmf == 0.0 ? 0.0 : 2 * mlf * mmf / (mlf + mmf);
+	}
+
+	private double getPrecisionPow(PNRepResult replay, AcceptingPetriNet apn, ExcavatePetriNetParameters xParameters) {
+		return Math.pow(getPrecision(replay, apn, xParameters), xParameters.getPrecisionFactor());
 	}
 
 	private double getPrecision(PNRepResult replay, AcceptingPetriNet apn, ExcavatePetriNetParameters xParameters) {
+		if (xParameters.getPrecisionFactor() == 0.0) {
+			return -1.0;
+		}
 		EventBasedPrecisionParameters pars = new EventBasedPrecisionParameters(apn);
 		pars.setShowInfo(true);
 		EventBasedPrecisionAlgorithm alg = new EventBasedPrecisionAlgorithm();
 		try {
 			//			EventBasedPrecision precision = alg.apply(null, replay, apn, pars);
 			//			System.out.println("[ExcavatePetriNetALgorithm]\n" + precision.toHTMLString(false));
-			return Math.pow(alg.apply(null, replay, apn, pars).getPrecision(), xParameters.getPrecisionFactor());
+			return alg.apply(null, replay, apn, pars).getPrecision();
 		} catch (IllegalTransitionException e) {
 			// TODO Auto-generated catch block
 			return 0.0;
 		}
 	}
 
+	private double getSimplicityPow(AcceptingPetriNet apn, ExcavatePetriNetParameters xParameters) {
+		return Math.pow(getSimplicity(apn, xParameters), xParameters.getSimplicityFactor());
+	}
+
 	private double getSimplicity(AcceptingPetriNet apn, ExcavatePetriNetParameters xParameters) {
+		if (xParameters.getSimplicityFactor() == 0.0) {
+			return -1.0;
+		}
 		int nodeCount = apn.getNet().getPlaces().size() + apn.getNet().getTransitions().size();
 		int edgeCount = apn.getNet().getEdges().size() + 1;
 		double minCount = 1.0 * Math.min(nodeCount, edgeCount);
 		double maxCount = 1.0 * Math.max(nodeCount, edgeCount);
-		return Math.pow(minCount / maxCount, xParameters.getSimplicityFactor());
+		return minCount / maxCount;
+	}
+
+	private double getSizePow(AcceptingPetriNet apn, ExcavatePetriNetParameters xParameters) {
+		return Math.pow(getSize(apn, xParameters), xParameters.getSizeFactor());
 	}
 
 	private double getSize(AcceptingPetriNet apn, ExcavatePetriNetParameters xParameters) {
+		if (xParameters.getSizeFactor() == 0.0) {
+			return -1.0;
+		}
 		double cnt = 0;
 		for (Transition transition : apn.getNet().getTransitions()) {
 			if (!transition.isInvisible()) {
 				cnt++;
 			}
 		}
-		return Math.pow((cnt / apn.getNet().getTransitions().size()), xParameters.getSizeFactor());
+		return (cnt / apn.getNet().getTransitions().size());
 	}
 
 	private PNRepResult getReplay(AcceptingPetriNet apn, XLog log, ExcavatePetriNetParameters xParameters) {
+		if (xParameters.getFitnessFactor() == 0.0 && xParameters.getPrecisionFactor() == 0.0) {
+			return null;
+		}
 		// matching using A (typical for xes files)
 		XEventClassifier eventClassifier = new XEventNameClassifier();
 		Petrinet net = apn.getNet();
