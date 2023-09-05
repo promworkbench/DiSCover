@@ -48,32 +48,32 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 		classifier = lastClassifier;
 		if (lastAbsValues == null) {
 			lastAbsValues = new ArrayList<Integer>();
-			for (int i = 0; i < 1; i++) {
+			for (int i = 0; i < 6; i++) {
 				lastAbsValues.add(i);
 			}
 		}
 		absValues = new ArrayList<Integer>(lastAbsValues);
 		if (lastRelValues == null) {
 			lastRelValues = new ArrayList<Integer>();
-			for (int i = 0; i < 10; i++) {
+			for (int i = 0; i < 6; i++) {
 				lastRelValues.add(i);
 			}
 		}
 		relValues = new ArrayList<Integer>(lastRelValues);
 		if (lastFitnessFactor < 0.0) {
-			lastFitnessFactor = 1.0;
+			lastFitnessFactor = 0.5;
 		}
 		fitnessFactor = lastFitnessFactor;
 		if (lastPrecisionFactor < 0.0) {
-			lastPrecisionFactor = 1.0;
+			lastPrecisionFactor = 0.55;
 		}
 		precisionFactor = lastPrecisionFactor;
 		if (lastSimplicityFactor < 0.0) {
-			lastSimplicityFactor = 1.0;
+			lastSimplicityFactor = 0.3;
 		}
 		simplicityFactor = lastSimplicityFactor;
 		if (lastSizeFactor < 0.0) {
-			lastSizeFactor = 1.0;
+			lastSizeFactor = 0.3;
 		}
 		sizeFactor = lastSizeFactor;
 		if (lastNofThreads < 0) {
