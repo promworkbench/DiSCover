@@ -1,15 +1,22 @@
 package org.processmining.discover.models;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.processmining.lpengines.factories.LPEngineFactory;
+import org.processmining.lpengines.interfaces.LPEngine;
+import org.processmining.lpengines.interfaces.LPEngine.EngineType;
+import org.processmining.lpengines.interfaces.LPEngine.ObjectiveTargetType;
+import org.processmining.lpengines.interfaces.LPEngine.Operator;
 import org.processmining.processtree.Block;
 import org.processmining.processtree.Node;
 import org.processmining.processtree.ProcessTree;
 
-public class ActivitySets extends ArrayList<ActivitySet>{
+public class ActivitySets extends ArrayList<ActivitySet> {
 
 	/**
 	 * 
@@ -17,13 +24,12 @@ public class ActivitySets extends ArrayList<ActivitySet>{
 	private static final long serialVersionUID = 1802894563746035348L;
 
 	/**
-	 * Discovers the minimal ignore sets from a set of concurrent pairs. An
-	 * ignore set should contain at least one activity from every pair. An
-	 * ignore set is minimal if removing any activity results in some pair not
-	 * being covered anymore.
+	 * Discovers the minimal ignore sets from a set of concurrent pairs. An ignore
+	 * set should contain at least one activity from every pair. An ignore set is
+	 * minimal if removing any activity results in some pair not being covered
+	 * anymore.
 	 * 
-	 * @param pairs
-	 *            Set or concurrent pairs
+	 * @param pairs    Set or concurrent pairs
 	 * @param alphabet The alphabet
 	 */
 	public ActivitySets(ConcurrentActivityPairs pairs, ActivityAlphabet alphabet) {
@@ -32,8 +38,9 @@ public class ActivitySets extends ArrayList<ActivitySet>{
 		for (int idx = 0; idx < pairs.size(); idx++) {
 			seen.add(idx, new HashSet<ActivitySet>());
 		}
-		apply(pairs, 0, new ActivitySet("All except", alphabet), sets, seen);
-//		System.out.println("[ActivitySets] " + sets.size() + " solutions.");
+		apply(pairs, alphabet, sets);
+//		apply(pairs, 0, new ActivitySet("All except", alphabet), sets, seen);
+		System.out.println("[ActivitySets] " + sets.size() + " solutions.");
 		for (ActivitySet set : sets) {
 			add(set);
 		}
@@ -41,7 +48,8 @@ public class ActivitySets extends ArrayList<ActivitySet>{
 
 	/**
 	 * Discovers the minimal ignore sets from a process tree and the alphabet.
-	 * @param tree The process tree
+	 * 
+	 * @param tree     The process tree
 	 * @param alphabet The alphabet
 	 */
 	public ActivitySets(ProcessTree tree, ActivityAlphabet alphabet) {
@@ -51,9 +59,9 @@ public class ActivitySets extends ArrayList<ActivitySet>{
 		sets.add(set);
 		apply(tree, tree.getRoot(), alphabet, sets);
 		/*
-		 * We now have the sets that take for any AND node a single branch.
-		 * We now need to take the complement of those as the remainder will
-		 * ignore these sets. As a result, all others branches will be ignored.
+		 * We now have the sets that take for any AND node a single branch. We now need
+		 * to take the complement of those as the remainder will ignore these sets. As a
+		 * result, all others branches will be ignored.
 		 */
 		for (ActivitySet set2 : sets) {
 			ActivitySet ignoreSet = new ActivitySet("All except", alphabet);
@@ -65,13 +73,13 @@ public class ActivitySets extends ArrayList<ActivitySet>{
 			add(ignoreSet);
 		}
 	}
-	
+
 	public ActivitySets(List<ActivitySet> activitySets) {
 		for (int i = 0; i < activitySets.size(); i++) {
 			add(activitySets.get(i));
 		}
 	}
-	
+
 	private void apply(ProcessTree tree, Node node, ActivityAlphabet alphabet, List<ActivitySet> sets) {
 //		System.out.println("[ActivitySets] sets: " + sets);
 		if (node.isLeaf()) {
@@ -117,8 +125,13 @@ public class ActivitySets extends ArrayList<ActivitySet>{
 			}
 		}
 	}
-	
-	private void apply(ConcurrentActivityPairs pairs, int idx, ActivitySet candidateSet, Set<ActivitySet> ignoreSets, List<Set<ActivitySet>> seen) {
+
+	/*
+	 * Recursive method, may take very long if there happen to be many pairs of concurrent activities,
+	 * May result in many subsets.
+	 */
+	private void apply(ConcurrentActivityPairs pairs, int idx, ActivitySet candidateSet, Set<ActivitySet> ignoreSets,
+			List<Set<ActivitySet>> seen) {
 		if (idx == pairs.size()) {
 			// All pairs are now covered.
 			for (ActivitySet set : ignoreSets) {
@@ -150,16 +163,16 @@ public class ActivitySets extends ArrayList<ActivitySet>{
 		for (ActivitySet seenSet : seen.get(idx)) {
 			if (candidateSet.containsAll(seenSet)) {
 				/*
-				 *  The partial candidate set is a superset of some partial set seen before.
-				 *  As a result, the partial candidate set cannot evolve into a better candidate set 
-				 *  than that seen set can. 
+				 * The partial candidate set is a superset of some partial set seen before. As a
+				 * result, the partial candidate set cannot evolve into a better candidate set
+				 * than that seen set can.
 				 */
 				return;
 			} else if (seenSet.containsAll(candidateSet)) {
 				/*
-				 * The candidate set is a proper subset of set seen earlier. Keeping this set seen
-				 * earlier makes no sense when adding this candidate set, so schedule it for
-				 * removal.
+				 * The candidate set is a proper subset of set seen earlier. Keeping this set
+				 * seen earlier makes no sense when adding this candidate set, so schedule it
+				 * for removal.
 				 */
 				toBeRemoved.add(seenSet);
 			}
@@ -186,4 +199,85 @@ public class ActivitySets extends ArrayList<ActivitySet>{
 		candidateSet.remove(pair.getSecond());
 	}
 
+	/*
+	 * Non-recursive, ILP-based method. 
+	 * Solves for every activity an ILP finding a maximal non-concurrent subset of activities.
+	 * Results in at most as many subsets as there are activities.
+	 */
+	private void apply(ConcurrentActivityPairs pairs, ActivityAlphabet alphabet, Set<ActivitySet> ignoreSets) {
+		for (int idx = 0; idx < alphabet.size(); idx++) {
+			/*
+			 * Get a maximal non-concurrent activity set that includes alphabet.get(idx).
+			 */
+
+			/*
+			 * Create an ILP to solve this which maximizes the number of activities.
+			 */
+			LPEngine engine = LPEngineFactory.createLPEngine(EngineType.LPSOLVE, 0, 0);
+			Map<Integer, Double> objective = new HashMap<Integer, Double>();
+			int variables[] = new int[alphabet.size()];
+			for (int i = 0; i < alphabet.size(); i++) {
+				variables[i] = engine.addVariable(new HashMap<Integer, Double>(), LPEngine.VariableType.INTEGER);
+				objective.put(variables[i], 1.0);
+			}
+			engine.setObjective(objective, ObjectiveTargetType.MAX);
+
+			/*
+			 * The current activity should have weight 1.0.
+			 */
+			Map<Integer, Double> constraint = new HashMap<Integer, Double>();
+			for (int i = 0; i < alphabet.size(); i++) {
+				constraint.put(variables[i], i == idx ? 1.0 : 0.0);
+			}
+			engine.addConstraint(constraint, Operator.GREATER_EQUAL, 1.0);
+
+			/*
+			 * Every activity should have weight at least 0.0 and at most 1.0.
+			 */
+			for (int p = 0; p < alphabet.size(); p++) {
+				constraint = new HashMap<Integer, Double>();
+				for (int i = 0; i < alphabet.size(); i++) {
+					constraint.put(variables[i], i == p ? 1.0 : 0.0);
+				}
+				engine.addConstraint(constraint, Operator.GREATER_EQUAL, 0.0);
+				engine.addConstraint(constraint, Operator.LESS_EQUAL, 1.0);
+			}
+
+			/*
+			 * The sum of concurrent pairs of activities should be at most 1.0.
+			 */
+			for (int p = 0; p < pairs.size(); p++) {
+				constraint = new HashMap<Integer, Double>();
+				for (int i = 0; i < alphabet.size(); i++) {
+					constraint.put(variables[i],
+							i == pairs.get(p).getFirst() || i == pairs.get(p).getSecond() ? 1.0 : 0.0);
+				}
+				engine.addConstraint(constraint, Operator.LESS_EQUAL, 1.0);
+			}
+
+			/*
+			 * Solve it. 
+			 */
+			Map<Integer, Double> solution = engine.solve();
+			
+			/*
+			 * Now get the set of activities *not included* in this maximal set (historic reasons).
+			 */
+			ActivitySet selected = new ActivitySet("All except", alphabet);
+			for (int i = 0; i < alphabet.size(); i++) {
+				if (!solution.containsKey(variables[i]) || solution.get(variables[i]) == 0.0) {
+					selected.add(i);
+				}
+			}
+
+//			System.out.println("[ActivitySets] Solution for " + alphabet.get(idx) + " is " + selected);
+			
+			/*
+			 * If a new set, add it.
+			 */
+			if (!ignoreSets.contains(selected)) {
+				ignoreSets.add(selected);
+			}
+		}
+	}
 }
