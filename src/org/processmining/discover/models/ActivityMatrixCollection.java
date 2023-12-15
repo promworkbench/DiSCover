@@ -38,18 +38,14 @@ public class ActivityMatrixCollection {
 	private int size;
 
 	/**
-	 * Discovers the matrices for the given activity log using the given
-	 * alphabet and the given sets of activities to ignore. For every set of
-	 * activities to ignore, a matrix will be discovered.
+	 * Discovers the matrices for the given activity log using the given alphabet
+	 * and the given sets of activities to ignore. For every set of activities to
+	 * ignore, a matrix will be discovered.
 	 * 
-	 * @param log
-	 *            The activity log
-	 * @param alphabet
-	 *            The given alphabet
-	 * @param ignoreSets
-	 *            THe given activity sets to ignore
-	 * @param rootMatrix
-	 *            The matrix discovered earlier or the entire log
+	 * @param log        The activity log
+	 * @param alphabet   The given alphabet
+	 * @param ignoreSets THe given activity sets to ignore
+	 * @param rootMatrix The matrix discovered earlier or the entire log
 	 */
 	public ActivityMatrixCollection(ActivityLog log, ActivityAlphabet alphabet, ActivitySets ignoreSets,
 			ActivityMatrix rootMatrix) {
@@ -64,9 +60,9 @@ public class ActivityMatrixCollection {
 		for (int idx = 0; idx < size; idx++) {
 			this.matrices[idx] = new ActivityMatrix(log, alphabet, ignoreSets.get(idx), rootMatrix);
 		}
-		if (parameters.getNofSComponents() > 0) {
-			reduce(parameters);
-		}
+//		if (parameters.getNofSComponents() > 0) {
+		reduce(parameters);
+//		}
 	}
 
 	public ActivityMatrixCollection(ActivityMatrixCollection matrices) {
@@ -112,8 +108,7 @@ public class ActivityMatrixCollection {
 	/**
 	 * Returns the matrix at the given index.
 	 * 
-	 * @param idx
-	 *            The given index
+	 * @param idx The given index
 	 * @return The matrix at the given index
 	 */
 	public ActivityMatrix get(int idx) {
@@ -121,9 +116,9 @@ public class ActivityMatrixCollection {
 	}
 
 	/**
-	 * Returns a JComponent(using Dot) containing the directly-follows graphs of
-	 * all matrices side-by-side. The artificial start and end activities will
-	 * be shared by all graphs.
+	 * Returns a JComponent(using Dot) containing the directly-follows graphs of all
+	 * matrices side-by-side. The artificial start and end activities will be shared
+	 * by all graphs.
 	 * 
 	 * @return The JComponent containing all directly-follows graphs.
 	 */
@@ -162,8 +157,7 @@ public class ActivityMatrixCollection {
 	 * Have all matrices veto any noise. If any matrix says it is not noise, the
 	 * matrices will follow this.
 	 * 
-	 * @param alphabet
-	 *            The alphabet of activities.
+	 * @param alphabet The alphabet of activities.
 	 */
 	public void vetoNoise(ActivityAlphabet alphabet) {
 		for (int fromIdx = 0; fromIdx < alphabet.size(); fromIdx++) {
@@ -229,17 +223,18 @@ public class ActivityMatrixCollection {
 				nextActivities.addAll(matrix.getNextActivities().values());
 				previousActivities.addAll(matrix.getPreviousActivities().values());
 			}
-			//		System.out.println("[ActivityMatrixCollection] Reduced from " + size + " to " + selected.size() + " matrices.");
-			//		size = selected.size();
-			//		matrices = new ActivityMatrix[size];
-			//		int idx = 0;
-			//		for (ActivityMatrix matrix : selected) {
-			//			matrices[idx++] = matrix;
-			//		}
+			// System.out.println("[ActivityMatrixCollection] Reduced from " + size + " to "
+			// + selected.size() + " matrices.");
+			// size = selected.size();
+			// matrices = new ActivityMatrix[size];
+			// int idx = 0;
+			// for (ActivityMatrix matrix : selected) {
+			// matrices[idx++] = matrix;
+			// }
 
 			/*
-			 * Create an ILP to get a minimal set of matrices that cover all
-			 * next and previous sets.
+			 * Create an ILP to get a minimal set of matrices that cover all next and
+			 * previous sets.
 			 */
 			LPEngine engine = LPEngineFactory.createLPEngine(EngineType.LPSOLVE, 0, 0);
 			Map<Integer, Double> objective = new HashMap<Integer, Double>();
@@ -273,7 +268,7 @@ public class ActivityMatrixCollection {
 					selected.add(matrices[i]);
 				}
 			}
-			
+
 			if (!selected.isEmpty()) {
 				// Set the matrices.
 				matrices = new ActivityMatrix[selected.size()];
@@ -290,21 +285,23 @@ public class ActivityMatrixCollection {
 		/*
 		 * Limit the number of matrices to the provided limit.
 		 */
-		selected.clear();
 		int limit = parameters.getNofSComponents();
-		if (limit > 0 && size > 0) {
-			for (int i = 0; i < limit; i++) {
-				selected.add(matrices[(i * size) / limit]);
+		if (limit > 0) {
+			selected.clear();
+			if (limit > 0 && size > 0) {
+				for (int i = 0; i < limit; i++) {
+					selected.add(matrices[(i * size) / limit]);
+				}
 			}
+			// Set the matrices.
+			matrices = new ActivityMatrix[selected.size()];
+			int idx = 0;
+			for (ActivityMatrix matrix : selected) {
+				matrices[idx++] = matrix;
+			}
+			System.out.println("[ActivityMatrixCollection] Limited to " + selected.size() + " matrices.");
+			size = selected.size();
 		}
-		// Set the matrices.
-		matrices = new ActivityMatrix[selected.size()];
-		int idx = 0;
-		for (ActivityMatrix matrix : selected) {
-			matrices[idx++] = matrix;
-		}
-		System.out.println("[ActivityMatrixCollection] Limited to " + selected.size() + " matrices.");
-		size = selected.size();
 	}
 
 	/*
@@ -312,8 +309,8 @@ public class ActivityMatrixCollection {
 	 */
 	public void filterAbsolute(int threshold) {
 		/*
-		 * First, restore all matrices, as the provided threshold may be lower
-		 * than the one used to create these matrices.
+		 * First, restore all matrices, as the provided threshold may be lower than the
+		 * one used to create these matrices.
 		 */
 		for (int i = 0; i < size; i++) {
 			matrices[i].restore();
@@ -330,17 +327,16 @@ public class ActivityMatrixCollection {
 				for (int i = 0; i < size; i++) {
 					if (matrices[i].get(fromIdx, toIdx) > 0 && matrices[i].get(fromIdx, toIdx) > threshold) {
 						/*
-						 * Found a matrix where the value of this cell exceeds
-						 * the threshold. This cell should not be changed.
+						 * Found a matrix where the value of this cell exceeds the threshold. This cell
+						 * should not be changed.
 						 */
 						change = false;
 					}
 				}
 				if (change) {
 					/*
-					 * All matrices have a value for this cell below (or equal
-					 * to) the provided threshold. Filter these cells out as
-					 * being noise.
+					 * All matrices have a value for this cell below (or equal to) the provided
+					 * threshold. Filter these cells out as being noise.
 					 */
 					for (int i = 0; i < size; i++) {
 						matrices[i].set(fromIdx, toIdx, -Math.abs(matrices[i].get(fromIdx, toIdx)));

@@ -62,7 +62,7 @@ public class SelectActivitySetsWidget extends JPanel implements ListSelectionLis
 			}
 		});
 		scomSlider.setPreferredSize(new Dimension(100, 30));
-		add(scomSlider, "0, 1");
+		add(scomSlider, "0, 3");
 
 		// Check box for merge
 		final JCheckBox ilpBox = SlickerFactory.instance().createCheckBox("Select components that cover all activities",
@@ -81,7 +81,7 @@ public class SelectActivitySetsWidget extends JPanel implements ListSelectionLis
 
 		});
 		ilpBox.setOpaque(false);
-		add(ilpBox, "0, 2");
+		add(ilpBox, "0, 1");
 
 		// Check box for merge
 		mergeBox.addActionListener(new ActionListener() {
@@ -96,7 +96,7 @@ public class SelectActivitySetsWidget extends JPanel implements ListSelectionLis
 
 		});
 		mergeBox.setOpaque(false);
-		add(mergeBox, "0, 3");
+		add(mergeBox, "0, 2");
 
 	}
 
