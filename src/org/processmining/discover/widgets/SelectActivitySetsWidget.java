@@ -38,12 +38,12 @@ public class SelectActivitySetsWidget extends JPanel implements ListSelectionLis
 
 	public SelectActivitySetsWidget(DiscoverPetriNetParameters parameters) {
 		this.parameters = parameters;
-		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL, 30, 30, 30 } };
+		double size[][] = { { TableLayoutConstants.FILL }, { TableLayoutConstants.FILL, 30, 30, 30, 30, 30 } };
 		setLayout(new TableLayout(size));
 
 		if (parameters.getAllActivitySets() == null) {
 			ConcurrentActivityPairs pairs = new ConcurrentActivityPairs(parameters.getMatrix(), parameters.getAlphabet());
-			ActivitySets activitySets = new ActivitySets(pairs, parameters.getAlphabet());
+			ActivitySets activitySets = new ActivitySets(pairs, parameters.getAlphabet(), parameters.getMode());
 			parameters.setAllActivitySets(new ActivitySets(activitySets));
 			parameters.setActivitySets(new ActivitySets(activitySets));
 		}
@@ -62,7 +62,41 @@ public class SelectActivitySetsWidget extends JPanel implements ListSelectionLis
 			}
 		});
 		scomSlider.setPreferredSize(new Dimension(100, 30));
-		add(scomSlider, "0, 3");
+		add(scomSlider, "0, 5");
+
+		final JCheckBox activityBestBox = SlickerFactory.instance().createCheckBox("Generate a largest component for every activity",
+				parameters.getMode() == ActivitySets.MODE_ACT_BST);
+		final JCheckBox activityFirstBox = SlickerFactory.instance().createCheckBox("Generate a component for every activity",
+				parameters.getMode() == ActivitySets.MODE_ACT_FRST);
+
+		activityFirstBox.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				if (activityFirstBox.isSelected()) {
+					parameters.setMode(ActivitySets.MODE_ACT_FRST);
+					activityBestBox.setSelected(false);
+				} else if (!activityBestBox.isSelected()) {
+					parameters.setMode(ActivitySets.MODE_ALL);
+				}
+			}
+
+		});
+		activityFirstBox.setOpaque(false);
+		add(activityFirstBox, "0, 1");
+
+		activityBestBox.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				if (activityBestBox.isSelected()) {
+					parameters.setMode(ActivitySets.MODE_ACT_BST);
+					activityFirstBox.setSelected(false);
+				} else if (!activityFirstBox.isSelected()) {
+					parameters.setMode(ActivitySets.MODE_ALL);
+				}
+			}
+		});
+		activityBestBox.setOpaque(false);
+		add(activityBestBox, "0, 2");
 
 		// Check box for merge
 		final JCheckBox ilpBox = SlickerFactory.instance().createCheckBox("Select components that cover all activities",
@@ -81,7 +115,7 @@ public class SelectActivitySetsWidget extends JPanel implements ListSelectionLis
 
 		});
 		ilpBox.setOpaque(false);
-		add(ilpBox, "0, 1");
+		add(ilpBox, "0, 3");
 
 		// Check box for merge
 		mergeBox.addActionListener(new ActionListener() {
@@ -96,7 +130,7 @@ public class SelectActivitySetsWidget extends JPanel implements ListSelectionLis
 
 		});
 		mergeBox.setOpaque(false);
-		add(mergeBox, "0, 2");
+		add(mergeBox, "0, 4");
 
 	}
 

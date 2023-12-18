@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.processmining.discover.parameters.DiscoverPetriNetParameters;
 import org.processmining.lpengines.factories.LPEngineFactory;
 import org.processmining.lpengines.interfaces.LPEngine;
 import org.processmining.lpengines.interfaces.LPEngine.EngineType;
@@ -23,6 +24,19 @@ public class ActivitySets extends ArrayList<ActivitySet> {
 	 */
 	private static final long serialVersionUID = 1802894563746035348L;
 
+	/*
+	 * Generate all possible maximal activity sets.
+	 */
+	public static final int MODE_ALL = 0;
+	/*
+	 * Generate a largest maximal activity set for every activity.
+	 */
+	public static final int MODE_ACT_BST = 1;
+	/*
+	 * Generate a maximal activity set for every activity.
+	 */
+	public static final int MODE_ACT_FRST = 2;
+
 	/**
 	 * Discovers the minimal ignore sets from a set of concurrent pairs. An ignore
 	 * set should contain at least one activity from every pair. An ignore set is
@@ -33,14 +47,28 @@ public class ActivitySets extends ArrayList<ActivitySet> {
 	 * @param alphabet The alphabet
 	 */
 	public ActivitySets(ConcurrentActivityPairs pairs, ActivityAlphabet alphabet) {
+		this(pairs, alphabet, MODE_ALL);
+	}
+	
+	public ActivitySets(ConcurrentActivityPairs pairs, ActivityAlphabet alphabet, int mode) {
 		Set<ActivitySet> sets = new HashSet<ActivitySet>();
-//		List<Set<ActivitySet>> seen = new ArrayList<Set<ActivitySet>>(pairs.size());
-//		for (int idx = 0; idx < pairs.size(); idx++) {
-//			seen.add(idx, new HashSet<ActivitySet>());
-//		}
-		apply(pairs, alphabet, sets);
-//		applyILP(pairs, alphabet, sets);
-//		apply(pairs, 0, new ActivitySet("All except", alphabet), sets, seen, false);
+		switch (mode) {
+		case MODE_ACT_BST: {
+			applyILP(pairs, alphabet, sets);
+			break;
+		}
+		case MODE_ACT_FRST: {
+			apply(pairs, alphabet, sets);
+			break;
+		}
+		default: {
+			List<Set<ActivitySet>> seen = new ArrayList<Set<ActivitySet>>(pairs.size());
+			for (int idx = 0; idx < pairs.size(); idx++) {
+				seen.add(idx, new HashSet<ActivitySet>());
+			}
+			apply(pairs, 0, new ActivitySet("All except", alphabet), sets, seen, false);
+		}
+		}
 		System.out.println("[ActivitySets] " + sets.size() + " solutions.");
 		for (ActivitySet set : sets) {
 			add(set);

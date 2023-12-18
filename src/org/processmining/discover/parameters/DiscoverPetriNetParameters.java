@@ -78,6 +78,11 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private int safetyThreshold;
 
 	/**
+	 * Mode to generate maximal activity sets.
+	 */
+	private int mode;
+	
+	/**
 	 * The safety threshold to use for the sub matrices.
 	 */
 	private int safetyThreshold2;
@@ -112,6 +117,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static int lastRelativeThreshold2 = 0;
 	private static int lastSafetyThreshold = 95;
 	private static int lastSafetyThreshold2 = 95;
+	private static int lastMode = ActivitySets.MODE_ALL;
 	private static int LastNofSComponents = 20; // Seems more than enough.
 	private static boolean lastUseILP = false;
 	private static boolean lastUseILP2 = true;
@@ -133,6 +139,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		setSafetyThreshold(lastSafetyThreshold);
 		setSafetyThreshold2(lastSafetyThreshold2);
 		setNofSComponents(LastNofSComponents);
+		setMode(lastMode);
 		setUseILP(lastUseILP);
 		setUseILP2(lastUseILP2);
 		setShowGraph(lastShowGraph);
@@ -412,5 +419,14 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	public void setShowGraph(boolean showGraph) {
 		this.lastShowGraph = showGraph;
 		this.showGraph = showGraph;
+	}
+
+	public int getMode() {
+		return mode;
+	}
+
+	public void setMode(int mode) {
+		this.lastMode = mode;
+		this.mode = mode;
 	}
 }
