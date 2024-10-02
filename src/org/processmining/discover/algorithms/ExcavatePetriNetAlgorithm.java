@@ -75,8 +75,8 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		double bestScore = -1.0;
 		double simplestScore = -1.0;
 		/*
-		 * Discover alternative nets by changing the thresholds. Use the
-		 * thresholds itself as a penalty to promote low thresholds.
+		 * Discover alternative nets by changing the thresholds. Use the thresholds
+		 * itself as a penalty to promote low thresholds.
 		 */
 		int bestAbs = 0;
 		int bestRel = 0;
@@ -88,8 +88,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		for (int abs : xParameters.getAbsValues()) {
 
 			/*
-			 * If all else fails, use the (non-filtered) log as the filtered
-			 * log.
+			 * If all else fails, use the (non-filtered) log as the filtered log.
 			 */
 			XLog filteredLog = log;
 			XLogInfo info = XLogInfoFactory.createLogInfo(log, xParameters.getClassifier());
@@ -120,8 +119,40 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 			 */
 			filteredLog.removeAll(negativeTraces);
 
+			/*
+			 * if smaller than 100, abs will be the target value for et, rt, and pt.
+			 * A value of 21 indicates "do not use". 
+			 */
+			int et = abs;
+			int rt = abs;
+			int pt = abs;
+			int nt = 21;
+
+			if (abs > 100) {
+				/*
+				 * The value of abs exceeds 21.
+				 * It should know be considered as equal to 100 + 22*et + 22*22*rt + 22*22*22*pt + 22*22*22*22*nt.
+				 */
+				abs = abs - 100;
+				et = abs % 22;
+				if (abs > 21) {
+					abs = abs / 22;
+				}
+				rt = abs % 22;
+				if (abs > 21) {
+					abs = abs / 22;
+				}
+				pt = abs % 22;
+				if (abs > 21) {
+					abs = abs / 22;
+				}
+				nt = abs % 22;
+			}
+			System.out.println("[ExcavatePetriNetAglorithm] Usign log skeleton thresholds " + et + ", " + rt + ", " + pt
+					+ " and " + nt + ".");
+
 			if (abs > 20) {
-				System.out.println("[ExcavatePetriNetAglorithm] Capped log skeleton threshold to 20.");
+				System.out.println("[ExcavatePetriNetAglorithm] Capped log skeleton thresholds to 20.");
 				abs = 20;
 			}
 			if (abs > 0) {
@@ -131,35 +162,58 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 					 * 
 					 * First, filter on equivalence.
 					 */
-					LogSkeleton ls = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
-							"Build Log Skeleton from Event Log", null, null, filteredLog);
-					ls.setEquivalenceThreshold(100 - abs);
-					input = new CheckerInput(ls, log);
-					configuration = new CheckerConfiguration(input);
-					filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class,
-							"Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
-					/*
-					 * Add classifiers if needed.
-					 */
-					if (filteredLog.getClassifiers().isEmpty()) {
-						filteredLog.getClassifiers().addAll(log.getClassifiers());
+					if (et < 21) {
+						LogSkeleton ls = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
+								"Build Log Skeleton from Event Log", null, null, filteredLog);
+						ls.setEquivalenceThreshold(100 - et);
+						input = new CheckerInput(ls, log);
+						configuration = new CheckerConfiguration(input);
+						filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class,
+								"Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
+						/*
+						 * Add classifiers if needed.
+						 */
+						if (filteredLog.getClassifiers().isEmpty()) {
+							filteredLog.getClassifiers().addAll(log.getClassifiers());
+						}
 					}
 					/*
 					 * Second, filter on response and precedence.
 					 */
-					ls = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
-							"Build Log Skeleton from Event Log", null, null, filteredLog);
-					ls.setResponseThreshold(100 - abs);
-					ls.setPrecedenceThreshold(100 - abs);
-					input = new CheckerInput(ls, log);
-					configuration = new CheckerConfiguration(input);
-					filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class,
-							"Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
-					/*
-					 * Add classifiers if needed.
-					 */
-					if (filteredLog.getClassifiers().isEmpty()) {
-						filteredLog.getClassifiers().addAll(log.getClassifiers());
+					if (rt < 21 || pt < 21) {
+						LogSkeleton ls = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
+								"Build Log Skeleton from Event Log", null, null, filteredLog);
+						if (rt < 21) {
+							ls.setResponseThreshold(100 - rt);
+						}
+						if (pt < 21) {
+							ls.setPrecedenceThreshold(100 - pt);
+						}
+						input = new CheckerInput(ls, log);
+						configuration = new CheckerConfiguration(input);
+						filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class,
+								"Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
+						/*
+						 * Add classifiers if needed.
+						 */
+						if (filteredLog.getClassifiers().isEmpty()) {
+							filteredLog.getClassifiers().addAll(log.getClassifiers());
+						}
+					}
+					if (nt < 21) {
+						LogSkeleton ls = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
+								"Build Log Skeleton from Event Log", null, null, filteredLog);
+						ls.setNotCoExistenceThreshold(100 - nt);
+						input = new CheckerInput(ls, log);
+						configuration = new CheckerConfiguration(input);
+						filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class,
+								"Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
+						/*
+						 * Add classifiers if needed.
+						 */
+						if (filteredLog.getClassifiers().isEmpty()) {
+							filteredLog.getClassifiers().addAll(log.getClassifiers());
+						}
 					}
 					/*
 					 * Add positive traces if they were filtered out.
@@ -187,8 +241,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				}
 				if (filteredInfo.getEventClasses().size() < info.getEventClasses().size()) {
 					/*
-					 * Lost some activities due to the filtering. Do not
-					 * consider this filtered log.
+					 * Lost some activities due to the filtering. Do not consider this filtered log.
 					 */
 					System.out.println("[ExcavatePetriNetAlgorithm] Discarded threshold " + abs
 							+ " because filtered log does not contain all activities.");
@@ -208,9 +261,9 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 
 				parameters = new DiscoverPetriNetParameters();
 				parameters.setClassifier(xParameters.getClassifier());
-				//				parameters.setAbsoluteThreshold(abs);
+				// parameters.setAbsoluteThreshold(abs);
 				parameters.setRelativeThreshold(rel);
-				//				parameters.setAbsoluteThreshold2(0);
+				// parameters.setAbsoluteThreshold2(0);
 				parameters.setRelativeThreshold2(0);
 				AcceptingPetriNet apn = apply(context, filteredLog, parameters);
 
@@ -256,8 +309,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 
 				if (simpleScore < bestScore) {
 					/*
-					 * Even a perfect fitness and precision will not result in a
-					 * new best score.
+					 * Even a perfect fitness and precision will not result in a new best score.
 					 */
 					System.out.println("[ExcavatePetriNetAlgorithm] Discarded thresholds " + abs + " and " + rel
 							+ " due to insufficient simplicity.");
@@ -281,8 +333,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 
 				if (getScore(fitness, 1.0, simplicity, size, xParameters) < bestScore) {
 					/*
-					 * Even a perfect precision will not result in a new best
-					 * score.
+					 * Even a perfect precision will not result in a new best score.
 					 */
 					System.out.println("[ExcavatePetriNetAlgorithm] Discarded thresholds " + abs + " and " + rel
 							+ " due to insufficient fitness.");
@@ -314,8 +365,8 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		}
 		if (bestApn == null) {
 			/*
-			 * No net found that is small enough to compute alignments. Take the
-			 * simplest one found instead.
+			 * No net found that is small enough to compute alignments. Take the simplest
+			 * one found instead.
 			 */
 			System.out.println("[ExcavatePetriNetAlgorithm] Found smallest net with thresholds " + simplestAbs + " and "
 					+ simplestRel + ", score " + simplestScore);
@@ -411,32 +462,35 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		return true;
 	}
 
-	//	private boolean isWFNetWoflan(PluginContext context, AcceptingPetriNet apn) {
+	// private boolean isWFNetWoflan(PluginContext context, AcceptingPetriNet apn) {
 	//
-	//		try {
-	//			WoflanAssumptions assumptions = new WoflanAssumptions();
-	//			// We sure have an S cover.
-	//			assumptions.add(WoflanState.SCOVER);
-	//			/*
-	//			 * Prevent Woflan from constructing a coverability
-	//			 * graph. We only want to know whether the ne tis a WF
-	//			 * net.
-	//			 */
-	//			assumptions.add(WoflanState.BOUNDED);
-	//			assumptions.add(WoflanState.NOTDEAD);
-	//			assumptions.add(WoflanState.LIVE);
-	//			WoflanDiagnosis diagnosis = (new Woflan()).diagnose(context.createChildContext("Woflan"),
-	//					apn.getNet(), assumptions);
-	//			if (diagnosis.isSound()) {
-	//				return true;
-	//			}
-	//		} catch (Exception e) {
-	//			System.out.println("[ExcavatePetriNetAlgorithm] Could not check WF net due to " + e);
-	//		}
-	//		return false;
-	//	}
+	// try {
+	// WoflanAssumptions assumptions = new WoflanAssumptions();
+	// // We sure have an S cover.
+	// assumptions.add(WoflanState.SCOVER);
+	// /*
+	// * Prevent Woflan from constructing a coverability
+	// * graph. We only want to know whether the ne tis a WF
+	// * net.
+	// */
+	// assumptions.add(WoflanState.BOUNDED);
+	// assumptions.add(WoflanState.NOTDEAD);
+	// assumptions.add(WoflanState.LIVE);
+	// WoflanDiagnosis diagnosis = (new
+	// Woflan()).diagnose(context.createChildContext("Woflan"),
+	// apn.getNet(), assumptions);
+	// if (diagnosis.isSound()) {
+	// return true;
+	// }
+	// } catch (Exception e) {
+	// System.out.println("[ExcavatePetriNetAlgorithm] Could not check WF net due to
+	// " + e);
+	// }
+	// return false;
+	// }
 
-	private double getScore(double fitness, double precision, double simplicity, double size, ExcavatePetriNetParameters xParameters) {
+	private double getScore(double fitness, double precision, double simplicity, double size,
+			ExcavatePetriNetParameters xParameters) {
 		double numerator = xParameters.getFitnessFactor() * fitness;
 		double denominator = xParameters.getFitnessFactor();
 		numerator += xParameters.getPrecisionFactor() * precision;
@@ -445,7 +499,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		denominator += xParameters.getSimplicityFactor();
 		numerator += xParameters.getSizeFactor() * size;
 		denominator += xParameters.getSizeFactor();
-		return denominator == 0.0 ? 0.0 : numerator / denominator ;
+		return denominator == 0.0 ? 0.0 : numerator / denominator;
 	}
 
 	private double getScorePow(double fitness, double precision, double simplicity, double size) {
@@ -479,8 +533,9 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		pars.setShowInfo(true);
 		EventBasedPrecisionAlgorithm alg = new EventBasedPrecisionAlgorithm();
 		try {
-			//			EventBasedPrecision precision = alg.apply(null, replay, apn, pars);
-			//			System.out.println("[ExcavatePetriNetALgorithm]\n" + precision.toHTMLString(false));
+			// EventBasedPrecision precision = alg.apply(null, replay, apn, pars);
+			// System.out.println("[ExcavatePetriNetALgorithm]\n" +
+			// precision.toHTMLString(false));
 			return alg.apply(null, replay, apn, pars).getPrecision();
 		} catch (IllegalTransitionException e) {
 			// TODO Auto-generated catch block
@@ -604,17 +659,20 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		int maximumNumberOfStates = Integer.MAX_VALUE;
 		ReplayerParameters parameters;
 
-		//		parameters = new ReplayerParameters.Dijkstra(false, false, nThreads, Debug.DOT, timeoutMilliseconds,
-		//				maximumNumberOfStates, costUpperBound, false, 2, true);
+		// parameters = new ReplayerParameters.Dijkstra(false, false, nThreads,
+		// Debug.DOT, timeoutMilliseconds,
+		// maximumNumberOfStates, costUpperBound, false, 2, true);
 
-		//Current: 
-		//		parameters = new ReplayerParameters.IncrementalAStar(false, nThreads, false, Debug.NONE, timeoutMilliseconds,
-		//				maximumNumberOfStates, costUpperBound, false, false, 0, 3);
+		// Current:
+		// parameters = new ReplayerParameters.IncrementalAStar(false, nThreads, false,
+		// Debug.NONE, timeoutMilliseconds,
+		// maximumNumberOfStates, costUpperBound, false, false, 0, 3);
 
-		//		//BPM2018: 
-		//		parameters = new ReplayerParameters.IncrementalAStar(false, nThreads, false, Debug.DOT,
-		//						timeoutMilliseconds, maximumNumberOfStates, costUpperBound, false, false);
-		//Traditional
+		// //BPM2018:
+		// parameters = new ReplayerParameters.IncrementalAStar(false, nThreads, false,
+		// Debug.DOT,
+		// timeoutMilliseconds, maximumNumberOfStates, costUpperBound, false, false);
+		// Traditional
 		parameters = new ReplayerParameters.AStar(true, true, true, nThreads, true, Debug.NONE, timeoutMilliseconds,
 				maximumNumberOfStates, costUpperBound, false);
 
@@ -653,51 +711,53 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				throw new RuntimeException("Error while executing replayer in ExecutorService. Interrupted maybe?", e);
 			}
 			switch (result.getResult()) {
-				case DUPLICATE :
-					assert false; // cannot happen in this setting
-					throw new RuntimeException("Result cannot be a duplicate in per-trace computations.");
-				case FAILED :
-					// internal error in the construction of synchronous product or other error.
-					throw new RuntimeException("Error in alignment computations");
-				case SUCCESS :
-					// process succcesful execution of the replayer
-					SyncReplayResult replayResult = result.getSuccesfulResult();
-					int exitCode = replayResult.getInfo().get(Replayer.TRACEEXITCODE).intValue();
-					if ((exitCode & Utils.OPTIMALALIGNMENT) == Utils.OPTIMALALIGNMENT) {
-						// Optimal alignment found.
-						results.add(replayResult);
+			case DUPLICATE:
+				assert false; // cannot happen in this setting
+				throw new RuntimeException("Result cannot be a duplicate in per-trace computations.");
+			case FAILED:
+				// internal error in the construction of synchronous product or other error.
+				throw new RuntimeException("Error in alignment computations");
+			case SUCCESS:
+				// process succcesful execution of the replayer
+				SyncReplayResult replayResult = result.getSuccesfulResult();
+				int exitCode = replayResult.getInfo().get(Replayer.TRACEEXITCODE).intValue();
+				if ((exitCode & Utils.OPTIMALALIGNMENT) == Utils.OPTIMALALIGNMENT) {
+					// Optimal alignment found.
+					results.add(replayResult);
 
-					} else if ((exitCode & Utils.FAILEDALIGNMENT) == Utils.FAILEDALIGNMENT) {
-						// failure in the alignment. Error code shows more details.
-					}
-					if ((exitCode & Utils.ENABLINGBLOCKEDBYOUTPUT) == Utils.ENABLINGBLOCKEDBYOUTPUT) {
-						// in some marking, there were too many tokens in a place, blocking the addition of more tokens. Current upper limit is 128
-					}
-					if ((exitCode & Utils.COSTFUNCTIONOVERFLOW) == Utils.COSTFUNCTIONOVERFLOW) {
-						// in some marking, the cost function went through the upper limit of 2^24
-					}
-					if ((exitCode & Utils.HEURISTICFUNCTIONOVERFLOW) == Utils.HEURISTICFUNCTIONOVERFLOW) {
-						// in some marking, the heuristic function went through the upper limit of 2^24
-					}
-					if ((exitCode & Utils.TIMEOUTREACHED) == Utils.TIMEOUTREACHED
-							|| (exitCode & Utils.SOLVERTIMEOUTREACHED) == Utils.SOLVERTIMEOUTREACHED) {
-						// alignment failed with a timeout (caused in the solver if SOLVERTIMEOUTREACHED is set)
-					}
-					if ((exitCode & Utils.STATELIMITREACHED) == Utils.STATELIMITREACHED) {
-						// alignment failed due to reacing too many states.
-					}
-					if ((exitCode & Utils.COSTLIMITREACHED) == Utils.COSTLIMITREACHED) {
-						// no optimal alignment found with cost less or equal to the given limit.
-					}
-					if ((exitCode & Utils.CANCELLED) == Utils.CANCELLED) {
-						// user-cancelled.
-					}
-					if ((exitCode & Utils.FINALMARKINGUNREACHABLE) == Utils.FINALMARKINGUNREACHABLE) {
-						// user-cancelled.
-						System.err.println("final marking unreachable.");
-					}
+				} else if ((exitCode & Utils.FAILEDALIGNMENT) == Utils.FAILEDALIGNMENT) {
+					// failure in the alignment. Error code shows more details.
+				}
+				if ((exitCode & Utils.ENABLINGBLOCKEDBYOUTPUT) == Utils.ENABLINGBLOCKEDBYOUTPUT) {
+					// in some marking, there were too many tokens in a place, blocking the addition
+					// of more tokens. Current upper limit is 128
+				}
+				if ((exitCode & Utils.COSTFUNCTIONOVERFLOW) == Utils.COSTFUNCTIONOVERFLOW) {
+					// in some marking, the cost function went through the upper limit of 2^24
+				}
+				if ((exitCode & Utils.HEURISTICFUNCTIONOVERFLOW) == Utils.HEURISTICFUNCTIONOVERFLOW) {
+					// in some marking, the heuristic function went through the upper limit of 2^24
+				}
+				if ((exitCode & Utils.TIMEOUTREACHED) == Utils.TIMEOUTREACHED
+						|| (exitCode & Utils.SOLVERTIMEOUTREACHED) == Utils.SOLVERTIMEOUTREACHED) {
+					// alignment failed with a timeout (caused in the solver if SOLVERTIMEOUTREACHED
+					// is set)
+				}
+				if ((exitCode & Utils.STATELIMITREACHED) == Utils.STATELIMITREACHED) {
+					// alignment failed due to reacing too many states.
+				}
+				if ((exitCode & Utils.COSTLIMITREACHED) == Utils.COSTLIMITREACHED) {
+					// no optimal alignment found with cost less or equal to the given limit.
+				}
+				if ((exitCode & Utils.CANCELLED) == Utils.CANCELLED) {
+					// user-cancelled.
+				}
+				if ((exitCode & Utils.FINALMARKINGUNREACHABLE) == Utils.FINALMARKINGUNREACHABLE) {
+					// user-cancelled.
+					System.err.println("final marking unreachable.");
+				}
 
-					break;
+				break;
 			}
 		}
 		return new PNRepResultImpl(results);
