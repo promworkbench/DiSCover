@@ -133,20 +133,20 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				 * The value of abs exceeds 100.
 				 * It should know be considered as equal to 100 + 22*et + 22*22*rt + 22*22*22*pt + 22*22*22*22*nt.
 				 */
-				abs = abs - 100;
-				et = abs % 22;
-				if (abs > 21) {
-					abs = abs / 22;
+				int t = abs - 100;
+				et = t % 22;
+				if (t > 21) {
+					t = t / 22;
 				}
-				rt = abs % 22;
-				if (abs > 21) {
-					abs = abs / 22;
+				rt = t % 22;
+				if (t > 21) {
+					t = t / 22;
 				}
-				pt = abs % 22;
-				if (abs > 21) {
-					abs = abs / 22;
+				pt = t % 22;
+				if (t > 21) {
+					t = t / 22;
 				}
-				nt = abs % 22;
+				nt = t % 22;
 			}
 			System.out.println("[ExcavatePetriNetAglorithm] Usign log skeleton thresholds " + et + ", " + rt + ", " + pt
 					+ " and " + nt + ".");
@@ -239,7 +239,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 					}
 					continue;
 				}
-				if (filteredInfo.getEventClasses().size() < info.getEventClasses().size()) {
+				if (bestScore > -1.0 && filteredInfo.getEventClasses().size() < info.getEventClasses().size()) {
 					/*
 					 * Lost some activities due to the filtering. Do not consider this filtered log.
 					 */
