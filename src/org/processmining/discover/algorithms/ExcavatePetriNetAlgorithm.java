@@ -131,7 +131,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 			if (abs > 100) {
 				/*
 				 * The value of abs exceeds 100.
-				 * It should know be considered as equal to 100 + 22*et + 22*22*rt + 22*22*22*pt + 22*22*22*22*nt.
+				 * It should know be considered as equal to 100 + et + 22*rt + 22*22*pt + 22*22*22*nt.
 				 */
 				int t = abs - 100;
 				et = t % 22;
