@@ -90,6 +90,9 @@ public class ActivityMatrix {
 		// Do the counting.
 		boolean noise = false;
 		for (int idx = 1; idx < log.size(); idx++) {
+			if (log.get(idx) < 0) {
+				System.out.println("[ActivityMatrix] Foudn filtered-out trace at index " + idx);
+			}
 			if (log.get(idx - 1) == 0) {
 				// Starts a new trace. 
 				noise = containsNoise(log, idx, rootMatrix);
@@ -144,6 +147,10 @@ public class ActivityMatrix {
 	 * in the root matrix.
 	 */
 	private boolean containsNoise(ActivityLog log, int idx, ActivityMatrix rootMatrix) {
+		if (log.get(idx) < 0) {
+			// Trace was filtered out, consider as noisy trace.
+			return true;
+		}
 		if (rootMatrix == null) {
 			// No root matrix. Hence no such DF pair.
 			return false;

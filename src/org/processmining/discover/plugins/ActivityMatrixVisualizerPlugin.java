@@ -14,6 +14,7 @@ import org.processmining.discover.models.ActivityMatrix;
 import org.processmining.discover.models.ActivityMatrixCollection;
 import org.processmining.discover.models.ActivitySets;
 import org.processmining.discover.models.ConcurrentActivityPairs;
+import org.processmining.discover.parameters.DiscoverPetriNetParameters;
 import org.processmining.framework.plugin.PluginContext;
 import org.processmining.framework.plugin.annotations.Plugin;
 import org.processmining.framework.plugin.annotations.PluginVariant;
@@ -62,7 +63,7 @@ public class ActivityMatrixVisualizerPlugin {
 		ActivityLog log = new ActivityLog(eventLog, classifier, alphabet);
 		ActivityMatrix matrix = new ActivityMatrix(log, alphabet);
 
-		ConcurrentActivityPairs pairs = new ConcurrentActivityPairs(matrix, alphabet);
+		ConcurrentActivityPairs pairs = new ConcurrentActivityPairs(matrix, alphabet, new DiscoverPetriNetParameters());
 		ActivitySets separated = new ActivitySets(pairs, alphabet);
 		ActivityMatrixCollection matrices = new ActivityMatrixCollection(log, alphabet, separated, matrix);
 

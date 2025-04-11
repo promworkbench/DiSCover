@@ -1,8 +1,10 @@
 package org.processmining.discover.models;
 
 import java.awt.Component;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -179,7 +181,8 @@ public class ActivityMatrixCollection {
 	}
 
 	private void reduce(DiscoverPetriNetParameters parameters) {
-		Set<ActivityMatrix> selected = new HashSet<ActivityMatrix>();
+		List<ActivityMatrix> selected = new ArrayList<ActivityMatrix>();
+		List<ActivitySet> activitySets = new ArrayList<ActivitySet>();
 
 		if (parameters.isUseILP2()) {
 			LPEngine engine = LPEngineFactory.createLPEngine(EngineType.LPSOLVE, 0, 0);
@@ -201,7 +204,10 @@ public class ActivityMatrixCollection {
 			Map<Integer, Double> solution = engine.solve();
 			for (int i = 0; i < matrices.length; i++) {
 				if (solution.containsKey(variables[i]) && solution.get(variables[i]) > 0.0) {
-					selected.add(matrices[i]);
+					if (!selected.contains(matrices[i])) {
+						selected.add(matrices[i]);
+						activitySets.add(parameters.getActivitySets().get(i));
+					}
 				}
 			}
 			if (!selected.isEmpty()) {
@@ -210,6 +216,7 @@ public class ActivityMatrixCollection {
 				for (ActivityMatrix matrix : selected) {
 					matrices[idx++] = matrix;
 				}
+				parameters.setActivitySets(activitySets);
 				System.out.println(
 						"[ActivityMatrixCollection] Reduced from " + size + " to " + selected.size() + " matrices.");
 				size = selected.size();
@@ -265,7 +272,10 @@ public class ActivityMatrixCollection {
 			// Select the matrices for the minimal set.
 			for (int i = 0; i < matrices.length; i++) {
 				if (solution.containsKey(variables[i]) && solution.get(variables[i]) > 0.0) {
-					selected.add(matrices[i]);
+					if (!selected.contains(matrices[i])) {
+						selected.add(matrices[i]);
+						activitySets.add(parameters.getActivitySets().get(i));
+					}
 				}
 			}
 
@@ -276,6 +286,7 @@ public class ActivityMatrixCollection {
 				for (ActivityMatrix matrix : selected) {
 					matrices[idx++] = matrix;
 				}
+				parameters.setActivitySets(activitySets);
 				System.out.println(
 						"[ActivityMatrixCollection] Reduced from " + size + " to " + selected.size() + " matrices.");
 				size = selected.size();
@@ -287,10 +298,14 @@ public class ActivityMatrixCollection {
 		 */
 		int limit = parameters.getNofSComponents();
 		if (limit > 0) {
-			selected.clear();
+			selected = new ArrayList<ActivityMatrix>();
+			activitySets = new ArrayList<ActivitySet>();
 			if (limit > 0 && size > 0) {
 				for (int i = 0; i < limit; i++) {
-					selected.add(matrices[(i * size) / limit]);
+					if (!selected.contains(matrices[(i * size) / limit])) {
+						selected.add(matrices[(i * size) / limit]);
+						activitySets.add(parameters.getActivitySets().get((i * size) / limit));
+					}
 				}
 			}
 			// Set the matrices.
@@ -299,6 +314,7 @@ public class ActivityMatrixCollection {
 			for (ActivityMatrix matrix : selected) {
 				matrices[idx++] = matrix;
 			}
+			parameters.setActivitySets(activitySets);
 			System.out.println("[ActivityMatrixCollection] Limited to " + selected.size() + " matrices.");
 			size = selected.size();
 		}
@@ -406,6 +422,27 @@ public class ActivityMatrixCollection {
 			}
 		}
 
+	}
+
+	public void filter(ActivityLog log, ActivitySets ignoreSets, ActivityMatrix rootMatrix) {
+		boolean didFilter = true;
+		while (didFilter) {
+			didFilter = false;
+			System.out.println("[ActivityMatrixCollection] Filtering log on matrices");
+			for (int m = 0; m < matrices.length; m++) {
+				System.out.println("[ActivityMatrixCollection] Filtering log on matrix " + m);
+				if (log.filter(matrices[m], ignoreSets.get(m))) {
+					didFilter = true;
+				}
+				System.out.println("[ActivityMatrixCollection] Filtered log on matrix " + didFilter);
+			}
+			if (didFilter) {
+				System.out.println("[ActivityMatrixCollection] Creatign new matrices from log");
+				for (int m = 0; m < matrices.length; m++) {
+					matrices[m] = new ActivityMatrix(log, log.getAlphabet(), ignoreSets.get(m), rootMatrix);
+				}
+			}
+		}
 	}
 
 }

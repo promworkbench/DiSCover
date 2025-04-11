@@ -42,7 +42,7 @@ public class SelectActivitySetsWidget extends JPanel implements ListSelectionLis
 		setLayout(new TableLayout(size));
 
 		if (parameters.getAllActivitySets() == null) {
-			ConcurrentActivityPairs pairs = new ConcurrentActivityPairs(parameters.getMatrix(), parameters.getAlphabet());
+			ConcurrentActivityPairs pairs = new ConcurrentActivityPairs(parameters.getMatrix(), parameters.getAlphabet(), parameters);
 			ActivitySets activitySets = new ActivitySets(pairs, parameters.getAlphabet(), parameters.getMode());
 			parameters.setAllActivitySets(new ActivitySets(activitySets));
 			parameters.setActivitySets(new ActivitySets(activitySets));

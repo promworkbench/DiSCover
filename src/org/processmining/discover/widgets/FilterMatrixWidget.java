@@ -142,7 +142,8 @@ public class FilterMatrixWidget extends JPanel {
 	private JPanel getMainComponent(XLog eventLog, DiscoverPetriNetParameters parameters) {
 		JPanel panel = new JPanel();
 		panel.setOpaque(false);
-		double size[][] = { { TableLayoutConstants.FILL }, { 30, TableLayoutConstants.FILL, 30, 30, 30, 30 } };
+//		double size[][] = { { TableLayoutConstants.FILL }, { 30, TableLayoutConstants.FILL, 30, 30, 30, 30, 30 } };
+		double size[][] = { { TableLayoutConstants.FILL }, { 30, TableLayoutConstants.FILL, 30, 30, 30, 30, 30 } };
 		panel.setLayout(new TableLayout(size));
 		//		if (parameters.getMatrix() == null) {
 		parameters.setAlphabet(new ActivityAlphabet(parameters.getActivities()));
@@ -207,6 +208,20 @@ public class FilterMatrixWidget extends JPanel {
 		safSlider.setPreferredSize(new Dimension(100, 30));
 		panel.add(safSlider, "0, 4");
 		
+//		final NiceSlider percSlider = SlickerFactory.instance().createNiceIntegerSlider("Percentage threshold", 0, 99,
+//				parameters.getPercentage(), Orientation.HORIZONTAL);
+//		percSlider.addChangeListener(new ChangeListener() {
+//
+//			public void stateChanged(ChangeEvent e) {
+//				int value = percSlider.getSlider().getValue();
+//				parameters.setPercentage(value);
+//				filter(parameters);
+//				addMatrixWidget(panel, parameters);
+//			}
+//		});
+//		percSlider.setPreferredSize(new Dimension(100, 30));
+//		panel.add(percSlider, "0, 5");
+		
 		// Check box for merge
 		final JCheckBox showGraphBox = SlickerFactory.instance().createCheckBox("Show graph (may take long)",
 				parameters.isShowGraph());
@@ -218,7 +233,21 @@ public class FilterMatrixWidget extends JPanel {
 
 		});
 		showGraphBox.setOpaque(false);
+//		panel.add(showGraphBox, "0, 6");
 		panel.add(showGraphBox, "0, 5");
+
+		final JCheckBox doFilterLogBox = SlickerFactory.instance().createCheckBox("Ensure consistent matrices (log will be filtered as a result)",
+				parameters.isFilterLog());
+		doFilterLogBox.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				parameters.setFilterLog(doFilterLogBox.isSelected());
+			}
+
+		});
+		doFilterLogBox.setOpaque(false);
+//		panel.add(showGraphBox, "0, 6");
+		panel.add(doFilterLogBox, "0, 6");
 
 		return panel;
 	}

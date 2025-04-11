@@ -258,7 +258,14 @@ public class ActivitySets extends ArrayList<ActivitySet> {
 	 * subsets as there are activities.
 	 */
 	private void applyILP(ConcurrentActivityPairs pairs, ActivityAlphabet alphabet, Set<ActivitySet> ignoreSets) {
+		ActivitySet covered = new ActivitySet("Covered", alphabet);
 		for (int idx = 0; idx < alphabet.size(); idx++) {
+			if (covered.contains(idx)) {
+				/*
+				 * This activity has already been covered.
+				 */
+				continue;
+			}
 			/*
 			 * Get a maximal non-concurrent activity set that includes alphabet.get(idx).
 			 */
@@ -321,6 +328,8 @@ public class ActivitySets extends ArrayList<ActivitySet> {
 			for (int i = 0; i < alphabet.size(); i++) {
 				if (!solution.containsKey(variables[i]) || solution.get(variables[i]) == 0.0) {
 					selected.add(i);
+				} else {
+					covered.add(i);
 				}
 			}
 

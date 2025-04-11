@@ -40,6 +40,8 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	 */
 	private boolean vetoNoise;
 
+	private boolean filterLog;
+	
 	/**
 	 * The relative threshold to use.
 	 */
@@ -86,6 +88,12 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	 * The safety threshold to use for the sub matrices.
 	 */
 	private int safetyThreshold2;
+	
+	/**
+	 * The percentage threshold for concurrent pairs 
+	 * A concurrent pair is ignored it its score does not exceed this percentage of the maximal score.
+	 */
+//	private int percentage;
 
 	private XEventClassifier classifier;
 
@@ -111,12 +119,14 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static boolean lastReduceAll = false;
 	private static boolean lastReduceRestricted = false;
 	private static boolean lastVetoNoise = false;
+	private static boolean lastFilterLog = true;
 	private static int lastAbsoluteThreshold = 1; // These seem reasonable values.
 	private static int lastAbsoluteThreshold2 = 0; 
 	private static int lastRelativeThreshold = 1;
 	private static int lastRelativeThreshold2 = 0;
 	private static int lastSafetyThreshold = 95;
 	private static int lastSafetyThreshold2 = 95;
+//	private static int lastPercentage = 0;
 	private static int lastMode = ActivitySets.MODE_ALL;
 	private static int LastNofSComponents = 20; // Seems more than enough.
 	private static boolean lastUseILP = false;
@@ -132,12 +142,14 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		setReduceAll(lastReduceAll);
 		setReduceRestricted(lastReduceRestricted);
 		setVetoNoise(lastVetoNoise);
+		setFilterLog(lastFilterLog);
 		setRelativeThreshold(lastRelativeThreshold);
 		setRelativeThreshold2(lastRelativeThreshold2);
 		setAbsoluteThreshold(lastAbsoluteThreshold);
 		setAbsoluteThreshold2(lastAbsoluteThreshold2);
 		setSafetyThreshold(lastSafetyThreshold);
 		setSafetyThreshold2(lastSafetyThreshold2);
+//		setPercentage(lastPercentage);
 		setNofSComponents(LastNofSComponents);
 		setMode(lastMode);
 		setUseILP(lastUseILP);
@@ -162,7 +174,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setMerge(boolean merge) {
-		this.lastMerge = merge;
+		lastMerge = merge;
 		this.merge = merge;
 	}
 
@@ -171,8 +183,9 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setRelativeThreshold(int relativeThreshold) {
-		this.lastRelativeThreshold = relativeThreshold;
+		lastRelativeThreshold = relativeThreshold;
 		this.relativeThreshold = relativeThreshold;
+		setRelativeThreshold2(relativeThreshold);
 	}
 
 	public int getAbsoluteThreshold() {
@@ -180,8 +193,9 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setAbsoluteThreshold(int absoluteThreshold) {
-		this.lastAbsoluteThreshold = absoluteThreshold;
+		lastAbsoluteThreshold = absoluteThreshold;
 		this.absoluteThreshold = absoluteThreshold;
+		setAbsoluteThreshold2(absoluteThreshold);
 	}
 
 	public boolean isReduce() {
@@ -189,7 +203,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setReduce(boolean reduce) {
-		this.lastReduce = reduce;
+		lastReduce = reduce;
 		this.reduce = reduce;
 	}
 
@@ -198,7 +212,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setVetoNoise(boolean majority) {
-		this.lastVetoNoise = majority;
+		lastVetoNoise = majority;
 		this.vetoNoise = majority;
 	}
 
@@ -207,7 +221,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setNofSComponents(int nofSComponents) {
-		this.LastNofSComponents = nofSComponents;
+		LastNofSComponents = nofSComponents;
 		this.nofSComponents = nofSComponents;
 	}
 
@@ -216,8 +230,9 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setSafetyThreshold(int safetyThreshold) {
-		this.lastSafetyThreshold = safetyThreshold;
+		lastSafetyThreshold = safetyThreshold;
 		this.safetyThreshold = safetyThreshold;
+		setSafetyThreshold2(safetyThreshold);
 	}
 
 	public XEventClassifier getClassifier() {
@@ -354,7 +369,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setUseILP(boolean useILP) {
-		this.lastUseILP = useILP;
+		lastUseILP = useILP;
 		this.useILP = useILP;
 	}
 
@@ -363,7 +378,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setReduceAll(boolean reduceAll) {
-		this.lastReduceAll = reduceAll;
+		lastReduceAll = reduceAll;
 		this.reduceAll = reduceAll;
 	}
 
@@ -372,7 +387,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setReduceRestricted(boolean reduceRestricted) {
-		this.lastReduceRestricted = reduceRestricted;
+		lastReduceRestricted = reduceRestricted;
 		this.reduceRestricted = reduceRestricted;
 	}
 
@@ -381,7 +396,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setAbsoluteThreshold2(int absoluteThreshold2) {
-		this.lastAbsoluteThreshold2 = absoluteThreshold2;
+		lastAbsoluteThreshold2 = absoluteThreshold2;
 		this.absoluteThreshold2 = absoluteThreshold2;
 	}
 
@@ -390,7 +405,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setUseILP2(boolean useILP2) {
-		this.lastUseILP2 = useILP2;
+		lastUseILP2 = useILP2;
 		this.useILP2 = useILP2;
 	}
 
@@ -399,7 +414,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setRelativeThreshold2(int relativeThreshold2) {
-		this.lastRelativeThreshold2 = relativeThreshold2;
+		lastRelativeThreshold2 = relativeThreshold2;
 		this.relativeThreshold2 = relativeThreshold2;
 	}
 
@@ -408,7 +423,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setSafetyThreshold2(int safetyThreshold2) {
-		this.lastSafetyThreshold2 = safetyThreshold2;
+		lastSafetyThreshold2 = safetyThreshold2;
 		this.safetyThreshold2 = safetyThreshold2;
 	}
 
@@ -417,7 +432,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setShowGraph(boolean showGraph) {
-		this.lastShowGraph = showGraph;
+		lastShowGraph = showGraph;
 		this.showGraph = showGraph;
 	}
 
@@ -426,7 +441,26 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setMode(int mode) {
-		this.lastMode = mode;
+		DiscoverPetriNetParameters.lastMode = mode;
 		this.mode = mode;
 	}
+
+	public boolean isFilterLog() {
+		return filterLog;
+	}
+
+	public void setFilterLog(boolean filterLog) {
+		System.out.println("[DiscoverPetriNetParameters] Set filte rlog to " + filterLog);
+		lastFilterLog = filterLog;
+		this.filterLog = filterLog;
+	}
+
+//	public int getPercentage() {
+//		return percentage;
+//	}
+//
+//	public void setPercentage(int percentage) {
+//		DiscoverPetriNetParameters.lastPercentage = percentage;
+//		this.percentage = percentage;
+//	}
 }

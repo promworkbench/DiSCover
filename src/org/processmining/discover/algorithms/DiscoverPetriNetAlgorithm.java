@@ -87,6 +87,11 @@ public class DiscoverPetriNetAlgorithm {
 			 */
 			parameters.getMatrix().filterAbsolute(parameters.getAbsoluteThreshold());
 			parameters.getMatrix().filterRelative(parameters.getRelativeThreshold(), parameters.getSafetyThreshold());
+			if (parameters.isFilterLog()) {
+				if (parameters.getLog().filter(parameters.getMatrix(), new ActivitySet("All except ", parameters.getAlphabet()))) {
+					parameters.setMatrix(new ActivityMatrix(parameters.getLog(), parameters.getAlphabet()));
+				}
+			}
 			System.out.println("[DiscoverPetriNetAlgorithm] Filtering primary matrix took "
 					+ (System.currentTimeMillis() - time) + " milliseconds.");
 			time = System.currentTimeMillis();
@@ -98,7 +103,7 @@ public class DiscoverPetriNetAlgorithm {
 				 * Discover pairs of concurrent activities.
 				 */
 				ConcurrentActivityPairs pairs = new ConcurrentActivityPairs(parameters.getMatrix(),
-						parameters.getAlphabet());
+						parameters.getAlphabet(), parameters);
 				System.out.println("[DiscoverPetriNetAlgorithm] Creating concurrent pairs took "
 						+ (System.currentTimeMillis() - time) + " milliseconds.");
 				time = System.currentTimeMillis();
@@ -144,6 +149,9 @@ public class DiscoverPetriNetAlgorithm {
 			parameters.getMatrixCollection().filterAbsolute(parameters.getAbsoluteThreshold2());
 			parameters.getMatrixCollection().filterRelative(parameters.getRelativeThreshold2(),
 					parameters.getSafetyThreshold2());
+			if (parameters.isFilterLog()) {
+				parameters.getMatrixCollection().filter(parameters.getLog(), parameters.getActivitySets(), parameters.getMatrix());
+			}
 			System.out.println("[DiscoverPetriNetAlgorithm] Filtering secondary matrices took "
 					+ (System.currentTimeMillis() - time) + " milliseconds.");
 			time = System.currentTimeMillis();
