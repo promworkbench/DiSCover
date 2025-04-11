@@ -450,7 +450,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public void setFilterLog(boolean filterLog) {
-		System.out.println("[DiscoverPetriNetParameters] Set filte rlog to " + filterLog);
+//		System.out.println("[DiscoverPetriNetParameters] Set filte rlog to " + filterLog);
 		lastFilterLog = filterLog;
 		this.filterLog = filterLog;
 	}

@@ -428,16 +428,16 @@ public class ActivityMatrixCollection {
 		boolean didFilter = true;
 		while (didFilter) {
 			didFilter = false;
-			System.out.println("[ActivityMatrixCollection] Filtering log on matrices");
+//			System.out.println("[ActivityMatrixCollection] Filtering log on matrices");
 			for (int m = 0; m < matrices.length; m++) {
-				System.out.println("[ActivityMatrixCollection] Filtering log on matrix " + m);
+//				System.out.println("[ActivityMatrixCollection] Filtering log on matrix " + m);
 				if (log.filter(matrices[m], ignoreSets.get(m))) {
 					didFilter = true;
 				}
-				System.out.println("[ActivityMatrixCollection] Filtered log on matrix " + didFilter);
+//				System.out.println("[ActivityMatrixCollection] Filtered log on matrix " + didFilter);
 			}
 			if (didFilter) {
-				System.out.println("[ActivityMatrixCollection] Creatign new matrices from log");
+//				System.out.println("[ActivityMatrixCollection] Creatign new matrices from log");
 				for (int m = 0; m < matrices.length; m++) {
 					matrices[m] = new ActivityMatrix(log, log.getAlphabet(), ignoreSets.get(m), rootMatrix);
 				}

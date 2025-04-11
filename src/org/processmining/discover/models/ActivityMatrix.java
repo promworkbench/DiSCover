@@ -90,9 +90,9 @@ public class ActivityMatrix {
 		// Do the counting.
 		boolean noise = false;
 		for (int idx = 1; idx < log.size(); idx++) {
-			if (log.get(idx) < 0) {
-				System.out.println("[ActivityMatrix] Foudn filtered-out trace at index " + idx);
-			}
+//			if (log.get(idx) < 0) {
+//				System.out.println("[ActivityMatrix] Foudn filtered-out trace at index " + idx);
+//			}
 			if (log.get(idx - 1) == 0) {
 				// Starts a new trace. 
 				noise = containsNoise(log, idx, rootMatrix);

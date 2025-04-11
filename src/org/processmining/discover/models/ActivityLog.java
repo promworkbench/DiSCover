@@ -133,7 +133,7 @@ public class ActivityLog {
 						continue;
 					}
 					if (matrix.get(activities[lastIdx], activities[idx]) <= 0) {
-						System.out.println("[ActivityLog] Dropping edge " + alphabet.get(activities[lastIdx]) + "->" + alphabet.get(activities[idx]) + ": " + matrix.get(activities[lastIdx], activities[idx]));
+//						System.out.println("[ActivityLog] Dropping edge " + alphabet.get(activities[lastIdx]) + "->" + alphabet.get(activities[idx]) + ": " + matrix.get(activities[lastIdx], activities[idx]));
 					}
 					mayStay = mayStay && (matrix.get(activities[lastIdx], activities[idx]) > 0);
 					lastIdx = idx;
