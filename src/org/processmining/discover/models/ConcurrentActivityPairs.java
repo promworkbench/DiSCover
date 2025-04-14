@@ -51,7 +51,7 @@ public class ConcurrentActivityPairs {
 	}
 	
 	private boolean haveSamePredecessor(ActivityMatrix matrix, ActivityAlphabet alphabet, int fromIdx, int toIdx) {
-		for (int idx = 1; idx < alphabet.size(); idx++) {
+		for (int idx = 0; idx < alphabet.size(); idx++) {
 			if (idx == fromIdx || idx == toIdx) {
 				continue;
 			}
@@ -63,7 +63,7 @@ public class ConcurrentActivityPairs {
 	}
 
 	private boolean haveSameSuccessor(ActivityMatrix matrix, ActivityAlphabet alphabet, int fromIdx, int toIdx) {
-		for (int idx = 1; idx < alphabet.size(); idx++) {
+		for (int idx = 0; idx < alphabet.size(); idx++) {
 			if (idx == fromIdx || idx == toIdx) {
 				continue;
 			}
