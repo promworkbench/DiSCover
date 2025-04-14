@@ -35,8 +35,9 @@ public class ExcavatePetriNetPlugin extends ExcavatePetriNetAlgorithm {
 			variantLabel = "Xcavate Petri net", //
 			requiredParameterLabels = { 0, 1 } //
 	) //
-	public AcceptingPetriNet run(PluginContext context, XLog log,ExcavatePetriNetParameters xParameters) {
-		return apply(context, log, xParameters);		
+	public AcceptingPetriNet run(PluginContext context, XLog log, ExcavatePetriNetParameters xParameters) {
+		xParameters.setLog(log);
+		return apply(context, xParameters);		
 	}
 	
 	@Plugin( //
@@ -74,7 +75,7 @@ public class ExcavatePetriNetPlugin extends ExcavatePetriNetAlgorithm {
 		}
 		parameters.setRelValues(relValues);
 		parameters.setSimplicityFactor(0.5);
-		return apply(context, log, parameters);
+		return apply(context, parameters);
 	}
 
 	@Plugin( //
@@ -103,7 +104,7 @@ public class ExcavatePetriNetPlugin extends ExcavatePetriNetAlgorithm {
 			context.getFutureResult(0).cancel(true);
 			return null;
 		}
-		return apply(context, log , parameters);
+		return apply(context, parameters);
 	}
 	
 }

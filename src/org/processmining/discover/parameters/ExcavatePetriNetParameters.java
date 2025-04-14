@@ -21,6 +21,7 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	private int nofThreads;
 	private int maxNofTransitions;
 	private boolean preferWFnet;
+	private int discoveryPerc;
 
 	/*
 	 * Use dummy values. The constructor will then use the default values.
@@ -35,6 +36,7 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	private static int lastNofThreads = -1;
 	private static int lastMaxNofTransitions = -1;
 	private boolean lastPreferWFnet = true;
+	private static int lastDiscoveryPerc = 80;
 
 	public ExcavatePetriNetParameters(XLog log) {
 		this.setLog(log);
@@ -85,6 +87,7 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 		}
 		maxNofTransitions = lastMaxNofTransitions;
 		preferWFnet = lastPreferWFnet;
+		setDiscoveryPerc(lastDiscoveryPerc);
 	}
 
 	public XEventClassifier getClassifier() {
@@ -92,7 +95,7 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	}
 
 	public void setClassifier(XEventClassifier classifier) {
-		this.lastClassifier = classifier;
+		lastClassifier = classifier;
 		this.classifier = classifier;
 	}
 
@@ -101,7 +104,7 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	}
 
 	public void setAbsValues(List<Integer> absValues) {
-		this.lastAbsValues = new ArrayList<Integer>(absValues);
+		lastAbsValues = new ArrayList<Integer>(absValues);
 		this.absValues = new ArrayList<Integer>(absValues);
 	}
 
@@ -110,7 +113,7 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	}
 
 	public void setRelValues(List<Integer> relValues) {
-		this.lastRelValues = new ArrayList<Integer>(relValues);
+		lastRelValues = new ArrayList<Integer>(relValues);
 		this.relValues = new ArrayList<Integer>(relValues);
 	}
 
@@ -119,7 +122,7 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	}
 
 	public void setFitnessFactor(double fitnessFactor) {
-		this.lastFitnessFactor = fitnessFactor;
+		lastFitnessFactor = fitnessFactor;
 		this.fitnessFactor = fitnessFactor;
 	}
 
@@ -128,7 +131,7 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	}
 
 	public void setPrecisionFactor(double precisionFactor) {
-		this.lastPrecisionFactor = precisionFactor;
+		lastPrecisionFactor = precisionFactor;
 		this.precisionFactor = precisionFactor;
 	}
 
@@ -137,7 +140,7 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	}
 
 	public void setSimplicityFactor(double simplicityFactor) {
-		this.lastSimplicityFactor = simplicityFactor;
+		lastSimplicityFactor = simplicityFactor;
 		this.simplicityFactor = simplicityFactor;
 	}
 
@@ -146,7 +149,7 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	}
 
 	public void setSizeFactor(double sizeFactor) {
-		this.lastSizeFactor = sizeFactor;
+		lastSizeFactor = sizeFactor;
 		this.sizeFactor = sizeFactor;
 	}
 
@@ -155,7 +158,7 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	}
 
 	public void setNofThreads(int nofThreads) {
-		this.lastNofThreads = nofThreads;
+		lastNofThreads = nofThreads;
 		this.nofThreads = nofThreads;
 	}
 
@@ -164,7 +167,7 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	}
 
 	public void setMaxNofTransitions(int maxNofTransitions) {
-		this.lastMaxNofTransitions = maxNofTransitions;
+		lastMaxNofTransitions = maxNofTransitions;
 		this.maxNofTransitions = maxNofTransitions;
 	}
 
@@ -173,8 +176,8 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	}
 
 	public void setPreferWFnet(boolean preferWFnet) {
+		lastPreferWFnet = preferWFnet;
 		this.preferWFnet = preferWFnet;
-		this.lastPreferWFnet = preferWFnet;
 	}
 
 	public XLog getLog() {
@@ -183,6 +186,15 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 
 	public void setLog(XLog log) {
 		this.log = log;
+	}
+
+	public int getDiscoveryPerc() {
+		return discoveryPerc;
+	}
+
+	public void setDiscoveryPerc(int discoveryPerc) {
+		lastDiscoveryPerc = discoveryPerc;
+		this.discoveryPerc = discoveryPerc;
 	}
 
 }

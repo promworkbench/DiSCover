@@ -40,7 +40,7 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 	
 	public ExcavatePetriNetWidget(final ExcavatePetriNetParameters parameters) {
 		this.parameters = parameters;
-		double size[][] = { { 150, 150, 20, TableLayoutConstants.FILL }, { 30, 30, 30, 30, TableLayoutConstants.FILL, 30, 30, 30, 30 } };
+		double size[][] = { { 150, 150, 20, TableLayoutConstants.FILL }, { 30, 30, 30, 30, TableLayoutConstants.FILL, 30, 30, 30, 30, 30 } };
 		setLayout(new TableLayout(size));
 
 		final JLabel label1 = new JLabel("Select relative weights for metrics");
@@ -83,7 +83,7 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 
 		});
 		wfBox.setOpaque(false);
-		add(wfBox, "3, 8");
+		add(wfBox, "3, 9");
 		
 		final NiceSlider fitSlider = SlickerFactory.instance().createNiceIntegerSlider("Fitness", 0, 100,
 				(int) (100*parameters.getFitnessFactor()), Orientation.HORIZONTAL);
@@ -146,6 +146,18 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 		tranSlider.setPreferredSize(new Dimension(100, 30));
 		add(tranSlider, "3, 7");
 		
+		final NiceSlider percSlider = SlickerFactory.instance().createNiceIntegerSlider("Percentage of traces to use for discovery", 0, 100,
+				parameters.getDiscoveryPerc(), Orientation.HORIZONTAL);
+		percSlider.addChangeListener(new ChangeListener() {
+
+			public void stateChanged(ChangeEvent e) {
+				int value = percSlider.getSlider().getValue();
+				parameters.setDiscoveryPerc(value);
+			}
+		});
+		percSlider.setPreferredSize(new Dimension(100, 30));
+		add(percSlider, "3, 8");
+		
 		DefaultListModel<Integer> absListModel = new DefaultListModel<Integer>();
 		for (int i = 0; i < 21; i++) {
 			absListModel.addElement(i);
@@ -175,7 +187,7 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 		parameters.setAbsValues(absList.getSelectedValuesList());
 		
 		absList.setPreferredSize(new Dimension(100,100));
-		add(absList, "0, 1, 0, 8");
+		add(absList, "0, 1, 0, 9");
 
 		DefaultListModel<Integer> relListModel = new DefaultListModel<Integer>();
 		for (int i = 0; i < 100; i++) {
@@ -206,7 +218,7 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 		parameters.setRelValues(relList.getSelectedValuesList());
 		
 		relList.setPreferredSize(new Dimension(100,100));
-		add(relList, "1, 1, 1, 8");
+		add(relList, "1, 1, 1, 9");
 
 	}
 

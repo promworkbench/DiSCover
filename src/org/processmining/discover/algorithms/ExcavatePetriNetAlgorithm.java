@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -56,7 +57,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 
 	private final String ISPOSKEY = "pdc:isPos";
 
-	public AcceptingPetriNet apply(PluginContext context, XLog log, ExcavatePetriNetParameters xParameters) {
+	public AcceptingPetriNet apply(PluginContext context, ExcavatePetriNetParameters xParameters) {
 
 		UIPluginContext uiContext = null;
 		if (context instanceof UIPluginContext) {
@@ -72,6 +73,11 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		AcceptingPetriNet bestApn = null;
 		AcceptingPetriNet simplestApn = null;
 
+		XLog log = (XLog) xParameters.getLog().clone();
+		XLog discoverLog = (XLog) xParameters.getLog().clone();
+		XLog classifyLog = (XLog) xParameters.getLog().clone();
+		splitLog(log, discoverLog, classifyLog, xParameters.getDiscoveryPerc());
+		
 		double bestScore = -1.0;
 		double simplestScore = -1.0;
 		/*
@@ -90,8 +96,8 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 			/*
 			 * If all else fails, use the (non-filtered) log as the filtered log.
 			 */
-			XLog filteredLog = log;
-			XLogInfo info = XLogInfoFactory.createLogInfo(log, xParameters.getClassifier());
+			XLog filteredLog = discoverLog;
+			XLogInfo info = XLogInfoFactory.createLogInfo(filteredLog, xParameters.getClassifier());
 			CheckerInput input = null;
 			CheckerConfiguration configuration = null;
 			/*
@@ -112,7 +118,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				}
 			}
 			if (!positiveTraces.isEmpty() || !negativeTraces.isEmpty()) {
-				filteredLog = (XLog) log.clone();
+				filteredLog = (XLog) filteredLog.clone();
 			}
 			/*
 			 * Filter the negative traces out.
@@ -166,7 +172,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 						LogSkeleton ls = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
 								"Build Log Skeleton from Event Log", null, null, filteredLog);
 						ls.setEquivalenceThreshold(100 - et);
-						input = new CheckerInput(ls, log);
+						input = new CheckerInput(ls, discoverLog);
 						configuration = new CheckerConfiguration(input);
 						filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class,
 								"Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
@@ -174,7 +180,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 						 * Add classifiers if needed.
 						 */
 						if (filteredLog.getClassifiers().isEmpty()) {
-							filteredLog.getClassifiers().addAll(log.getClassifiers());
+							filteredLog.getClassifiers().addAll(discoverLog.getClassifiers());
 						}
 					}
 					/*
@@ -189,7 +195,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 						if (pt < 21) {
 							ls.setPrecedenceThreshold(100 - pt);
 						}
-						input = new CheckerInput(ls, log);
+						input = new CheckerInput(ls, discoverLog);
 						configuration = new CheckerConfiguration(input);
 						filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class,
 								"Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
@@ -197,14 +203,14 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 						 * Add classifiers if needed.
 						 */
 						if (filteredLog.getClassifiers().isEmpty()) {
-							filteredLog.getClassifiers().addAll(log.getClassifiers());
+							filteredLog.getClassifiers().addAll(discoverLog.getClassifiers());
 						}
 					}
 					if (nt < 21) {
 						LogSkeleton ls = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
 								"Build Log Skeleton from Event Log", null, null, filteredLog);
 						ls.setNotCoExistenceThreshold(100 - nt);
-						input = new CheckerInput(ls, log);
+						input = new CheckerInput(ls, discoverLog);
 						configuration = new CheckerConfiguration(input);
 						filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class,
 								"Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
@@ -212,7 +218,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 						 * Add classifiers if needed.
 						 */
 						if (filteredLog.getClassifiers().isEmpty()) {
-							filteredLog.getClassifiers().addAll(log.getClassifiers());
+							filteredLog.getClassifiers().addAll(discoverLog.getClassifiers());
 						}
 					}
 					/*
@@ -264,7 +270,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				// parameters.setAbsoluteThreshold(abs);
 				parameters.setRelativeThreshold(rel);
 				// parameters.setAbsoluteThreshold2(0);
-				parameters.setRelativeThreshold2(0);
+//				parameters.setRelativeThreshold2(0);
 				AcceptingPetriNet apn = apply(context, filteredLog, parameters);
 
 				double time = System.currentTimeMillis();
@@ -323,11 +329,11 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				}
 
 				time = System.currentTimeMillis();
-				PNRepResult replay = getReplay(apn, log, xParameters);
+				PNRepResult replay = getReplay(apn, classifyLog, xParameters);
 				System.out.println("[ExcavatePetriNetAlgorithm] Replaying log on discovered net took "
 						+ (System.currentTimeMillis() - time) + " milliseconds.");
 				time = System.currentTimeMillis();
-				double fitness = getFitness(replay, log, xParameters);
+				double fitness = getFitness(replay, classifyLog, xParameters);
 				System.out.println("[ExcavatePetriNetAlgorithm] Computing fitness took "
 						+ (System.currentTimeMillis() - time) + " milliseconds: " + fitness + ".");
 
@@ -776,4 +782,47 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		parameters.setFinalMarkings(finalMarkings.toArray(new Marking[0]));
 		return parameters;
 	}
+	
+	private void splitLog(XLog log, XLog discoverLog, XLog classifyLog, int perc) {
+		List<XTrace> traces = new ArrayList<XTrace>();
+		int size = log.size();
+		
+		discoverLog.clear();
+		classifyLog.clear();
+		
+		// Positive traces should end up in the discover log, negative traces in the classify log.
+		for (XTrace trace : log) {
+			if (trace.getAttributes().containsKey(ISPOSKEY)) {
+				XAttribute isPosAttribute = trace.getAttributes().get(ISPOSKEY);
+				if (isPosAttribute instanceof XAttributeBoolean) {
+					if (((XAttributeBoolean) isPosAttribute).getValue()) {
+						discoverLog.add(trace);
+					} else {
+						classifyLog.add(trace);
+					}
+				} else {
+					traces.add(trace);
+				}
+			} else {
+				traces.add(trace);
+			}
+		}
+		for (XTrace trace : traces) {
+			if (100*discoverLog.size() < perc*size) {
+				discoverLog.add(trace);
+			} else {
+				classifyLog.add(trace);
+			}
+		}
+		if (discoverLog.isEmpty()) {
+			System.out.println("[ExcavatePetriNetAlgorithm] Adding all traces to discover log.");
+			discoverLog.addAll(log);
+		}
+		if (classifyLog.isEmpty()) {
+			System.out.println("[ExcavatePetriNetAlgorithm] Adding all traces to classify log.");
+			classifyLog.addAll(log);
+		}
+		System.out.println("[ExcavatePetriNetAlgorithm] Using " + discoverLog.size() + "/" + size + " traces for discovery and " + classifyLog.size() + "/" + size + " for replay.");
+	}	
+
 }
