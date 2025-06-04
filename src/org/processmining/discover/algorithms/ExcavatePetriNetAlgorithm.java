@@ -163,7 +163,9 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				System.out.println("[ExcavatePetriNetAglorithm] Capped log skeleton thresholds to 20.");
 				abs = 20;
 			}
-			if (abs > 0) {
+			if (abs == 0) {
+				coverage = 1.0;
+			} else if (abs > 0) {
 				try {
 					/*
 					 * Filter the log using log skeletons.
