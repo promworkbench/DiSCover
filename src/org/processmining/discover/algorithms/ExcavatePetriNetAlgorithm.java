@@ -245,7 +245,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 					}
 					continue;
 				}
-				if (bestScore > -1.0 && filteredInfo.getEventClasses().size() < info.getEventClasses().size()) {
+				if (xParameters.isPreferContainAll() && bestScore > -1.0 && filteredInfo.getEventClasses().size() < info.getEventClasses().size()) {
 					/*
 					 * Lost some activities due to the filtering. Do not consider this filtered log.
 					 */

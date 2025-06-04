@@ -22,6 +22,7 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	private int maxNofTransitions;
 	private boolean preferWFnet;
 	private int discoveryPerc;
+	private boolean preferContainAll; // Whether to keep all activities while filtering the log.
 
 	/*
 	 * Use dummy values. The constructor will then use the default values.
@@ -37,6 +38,7 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	private static int lastMaxNofTransitions = -1;
 	private boolean lastPreferWFnet = true;
 	private static int lastDiscoveryPerc = 80;
+	private boolean lastPreferContainAll = true;
 
 	public ExcavatePetriNetParameters(XLog log) {
 		this.setLog(log);
@@ -88,6 +90,7 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 		maxNofTransitions = lastMaxNofTransitions;
 		preferWFnet = lastPreferWFnet;
 		setDiscoveryPerc(lastDiscoveryPerc);
+		setPreferContainAll(lastPreferContainAll);
 	}
 
 	public XEventClassifier getClassifier() {
@@ -195,6 +198,14 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	public void setDiscoveryPerc(int discoveryPerc) {
 		lastDiscoveryPerc = discoveryPerc;
 		this.discoveryPerc = discoveryPerc;
+	}
+
+	public boolean isPreferContainAll() {
+		return preferContainAll;
+	}
+
+	public void setPreferContainAll(boolean keepAll) {
+		this.preferContainAll = keepAll;
 	}
 
 }

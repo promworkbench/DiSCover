@@ -40,7 +40,7 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 	
 	public ExcavatePetriNetWidget(final ExcavatePetriNetParameters parameters) {
 		this.parameters = parameters;
-		double size[][] = { { 150, 150, 20, TableLayoutConstants.FILL }, { 30, 30, 30, 30, TableLayoutConstants.FILL, 30, 30, 30, 30, 30 } };
+		double size[][] = { { 150, 150, 20, TableLayoutConstants.FILL }, { 30, 30, 30, 30, TableLayoutConstants.FILL, 30, 30, 30, 30, 30, 30 } };
 		setLayout(new TableLayout(size));
 
 		final JLabel label1 = new JLabel("Select relative weights for metrics");
@@ -84,6 +84,18 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 		});
 		wfBox.setOpaque(false);
 		add(wfBox, "3, 9");
+		
+		final JCheckBox preferContainAllBox = SlickerFactory.instance().createCheckBox("Prefer nets that contain all activities",
+				parameters.isPreferContainAll());
+		preferContainAllBox.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				parameters.setPreferContainAll(preferContainAllBox.isSelected());
+			}
+
+		});
+		preferContainAllBox.setOpaque(false);
+		add(preferContainAllBox, "3, 10");
 		
 		final NiceSlider fitSlider = SlickerFactory.instance().createNiceIntegerSlider("Fitness", 0, 100,
 				(int) (100*parameters.getFitnessFactor()), Orientation.HORIZONTAL);
@@ -187,7 +199,7 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 		parameters.setAbsValues(absList.getSelectedValuesList());
 		
 		absList.setPreferredSize(new Dimension(100,100));
-		add(absList, "0, 1, 0, 9");
+		add(absList, "0, 1, 0, 10");
 
 		DefaultListModel<Integer> relListModel = new DefaultListModel<Integer>();
 		for (int i = 0; i < 100; i++) {
@@ -218,7 +230,7 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 		parameters.setRelValues(relList.getSelectedValuesList());
 		
 		relList.setPreferredSize(new Dimension(100,100));
-		add(relList, "1, 1, 1, 9");
+		add(relList, "1, 1, 1, 10");
 
 	}
 
