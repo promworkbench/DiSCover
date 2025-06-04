@@ -204,8 +204,9 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 		return preferContainAll;
 	}
 
-	public void setPreferContainAll(boolean keepAll) {
-		this.preferContainAll = keepAll;
+	public void setPreferContainAll(boolean preferContainAll) {
+		lastPreferContainAll = preferContainAll;
+		this.preferContainAll = preferContainAll;
 	}
 
 }
