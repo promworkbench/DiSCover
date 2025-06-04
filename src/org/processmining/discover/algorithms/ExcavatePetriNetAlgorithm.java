@@ -100,6 +100,8 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 			XLogInfo info = XLogInfoFactory.createLogInfo(filteredLog, xParameters.getClassifier());
 			CheckerInput input = null;
 			CheckerConfiguration configuration = null;
+			double coverage = 0.0;
+			
 			/*
 			 * Collect all positive and negative traces.
 			 */
@@ -245,18 +247,19 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 					}
 					continue;
 				}
-				if (xParameters.isPreferContainAll() && bestScore > -1.0 && filteredInfo.getEventClasses().size() < info.getEventClasses().size()) {
-					/*
-					 * Lost some activities due to the filtering. Do not consider this filtered log.
-					 */
-					System.out.println("[ExcavatePetriNetAlgorithm] Discarded threshold " + abs
-							+ " because filtered log does not contain all activities.");
-					if (uiContext != null) {
-						i += xParameters.getRelValues().size();
-						uiContext.getProgress().setValue(i);
-					}
-					continue;
-				}
+				coverage = (1.0 * filteredInfo.getEventClasses().size()) / info.getEventClasses().size();
+//				if (xParameters.isPreferContainAll() && bestScore > -1.0 && filteredInfo.getEventClasses().size() < info.getEventClasses().size()) {
+//					/*
+//					 * Lost some activities due to the filtering. Do not consider this filtered log.
+//					 */
+//					System.out.println("[ExcavatePetriNetAlgorithm] Discarded threshold " + abs
+//							+ " because filtered log does not contain all activities.");
+//					if (uiContext != null) {
+//						i += xParameters.getRelValues().size();
+//						uiContext.getProgress().setValue(i);
+//					}
+//					continue;
+//				}
 			}
 			seenSizes.add(filteredLog.size());
 
@@ -300,7 +303,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				System.out.println("[ExcavatePetriNetAlgorithm] Computing simplicity took "
 						+ (System.currentTimeMillis() - time) + " milliseconds: " + simplicity + ", " + size + ".");
 
-				double simpleScore = getScore(1.0, 1.0, simplicity, size, xParameters);
+				double simpleScore = getScore(1.0, 1.0, simplicity, size, coverage, xParameters);
 
 				if (simpleScore > simplestScore) {
 					if (uiContext != null) {
@@ -337,7 +340,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				System.out.println("[ExcavatePetriNetAlgorithm] Computing fitness took "
 						+ (System.currentTimeMillis() - time) + " milliseconds: " + fitness + ".");
 
-				if (getScore(fitness, 1.0, simplicity, size, xParameters) < bestScore) {
+				if (getScore(fitness, 1.0, simplicity, size, coverage, xParameters) < bestScore) {
 					/*
 					 * Even a perfect precision will not result in a new best score.
 					 */
@@ -351,7 +354,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 				System.out.println("[ExcavatePetriNetAlgorithm] Computing precision took "
 						+ (System.currentTimeMillis() - time) + " milliseconds: " + precision + ".");
 
-				double score = getScore(fitness, precision, simplicity, size, xParameters);
+				double score = getScore(fitness, precision, simplicity, size, coverage, xParameters);
 				System.out.println("[ExcavatePetriNetAlgorithm] Found net with thresholds " + abs + " and " + rel
 						+ ", score " + score + " (f=" + fitness + ", p=" + precision + ", s=" + simplicity + ", n="
 						+ size + ")");
@@ -495,7 +498,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 	// return false;
 	// }
 
-	private double getScore(double fitness, double precision, double simplicity, double size,
+	private double getScore(double fitness, double precision, double simplicity, double size, double coverage,
 			ExcavatePetriNetParameters xParameters) {
 		double numerator = xParameters.getFitnessFactor() * fitness;
 		double denominator = xParameters.getFitnessFactor();
@@ -505,18 +508,20 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		denominator += xParameters.getSimplicityFactor();
 		numerator += xParameters.getSizeFactor() * size;
 		denominator += xParameters.getSizeFactor();
+		numerator += xParameters.getCoverageFactor() * coverage;
+		denominator += xParameters.getCoverageFactor();
 		return denominator == 0.0 ? 0.0 : numerator / denominator;
 	}
 
-	private double getScorePow(double fitness, double precision, double simplicity, double size) {
-		double fitPrec = 2 * fitness * precision / (fitness + precision);
-		double SimSize = 2 * simplicity * size / (simplicity + size);
-		return 2 * fitPrec * SimSize / (fitPrec + SimSize);
-	}
-
-	private double getFitnessPow(PNRepResult replay, XLog log, ExcavatePetriNetParameters xParameters) {
-		return Math.pow(getFitness(replay, log, xParameters), xParameters.getFitnessFactor());
-	}
+//	private double getScorePow(double fitness, double precision, double simplicity, double size) {
+//		double fitPrec = 2 * fitness * precision / (fitness + precision);
+//		double SimSize = 2 * simplicity * size / (simplicity + size);
+//		return 2 * fitPrec * SimSize / (fitPrec + SimSize);
+//	}
+//
+//	private double getFitnessPow(PNRepResult replay, XLog log, ExcavatePetriNetParameters xParameters) {
+//		return Math.pow(getFitness(replay, log, xParameters), xParameters.getFitnessFactor());
+//	}
 
 	private double getFitness(PNRepResult replay, XLog log, ExcavatePetriNetParameters xParameters) {
 		if (xParameters.getFitnessFactor() == 0.0) {

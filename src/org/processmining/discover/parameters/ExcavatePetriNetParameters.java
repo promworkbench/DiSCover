@@ -18,11 +18,12 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	private double precisionFactor;
 	private double simplicityFactor;
 	private double sizeFactor;
+	private double coverageFactor;
 	private int nofThreads;
 	private int maxNofTransitions;
 	private boolean preferWFnet;
 	private int discoveryPerc;
-	private boolean preferContainAll; // Whether to keep all activities while filtering the log.
+//	private boolean preferContainAll; // Whether to keep all activities while filtering the log.
 
 	/*
 	 * Use dummy values. The constructor will then use the default values.
@@ -34,11 +35,12 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	private static double lastPrecisionFactor = -1.0;
 	private static double lastSimplicityFactor = -1.0;
 	private static double lastSizeFactor = -1.0;
+	private static double lastCoverageFactor = -1.0;
 	private static int lastNofThreads = -1;
 	private static int lastMaxNofTransitions = -1;
-	private boolean lastPreferWFnet = true;
+	private static boolean lastPreferWFnet = true;
 	private static int lastDiscoveryPerc = 80;
-	private boolean lastPreferContainAll = true;
+//	private static boolean lastPreferContainAll = true;
 
 	public ExcavatePetriNetParameters(XLog log) {
 		this.setLog(log);
@@ -80,6 +82,10 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 			lastSizeFactor = 0.3;
 		}
 		sizeFactor = lastSizeFactor;
+		if (lastCoverageFactor < 0.0) {
+			lastCoverageFactor = 0.9;
+		}
+		coverageFactor = lastCoverageFactor;
 		if (lastNofThreads < 0) {
 			lastNofThreads = 6;
 		}
@@ -90,7 +96,7 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 		maxNofTransitions = lastMaxNofTransitions;
 		preferWFnet = lastPreferWFnet;
 		setDiscoveryPerc(lastDiscoveryPerc);
-		setPreferContainAll(lastPreferContainAll);
+//		setPreferContainAll(lastPreferContainAll);
 	}
 
 	public XEventClassifier getClassifier() {
@@ -200,13 +206,22 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 		this.discoveryPerc = discoveryPerc;
 	}
 
-	public boolean isPreferContainAll() {
-		return preferContainAll;
+//	public boolean isPreferContainAll() {
+//		return preferContainAll;
+//	}
+//
+//	public void setPreferContainAll(boolean preferContainAll) {
+//		lastPreferContainAll = preferContainAll;
+//		this.preferContainAll = preferContainAll;
+//	}
+
+	public double getCoverageFactor() {
+		return coverageFactor;
 	}
 
-	public void setPreferContainAll(boolean preferContainAll) {
-		lastPreferContainAll = preferContainAll;
-		this.preferContainAll = preferContainAll;
+	public void setCoverageFactor(double coverageFactor) {
+		lastCoverageFactor = coverageFactor;
+		this.coverageFactor = coverageFactor;
 	}
 
 }
