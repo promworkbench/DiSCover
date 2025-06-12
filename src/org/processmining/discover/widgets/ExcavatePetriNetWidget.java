@@ -40,7 +40,7 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 	
 	public ExcavatePetriNetWidget(final ExcavatePetriNetParameters parameters) {
 		this.parameters = parameters;
-		double size[][] = { { 150, 150, 20, TableLayoutConstants.FILL }, { 30, 30, 30, 30, 30, TableLayoutConstants.FILL, 30, 30, 30, 30, 30 } };
+		double size[][] = { { 150, 150, 20, TableLayoutConstants.FILL, TableLayoutConstants.FILL }, { 30, 30, 30, 30, 30, TableLayoutConstants.FILL, 30, 30, 30, 30, 30 } };
 		setLayout(new TableLayout(size));
 
 		final JLabel label1 = new JLabel("Select relative weights for metrics");
@@ -50,7 +50,7 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 		label1.setHorizontalAlignment(SwingConstants.CENTER);
 		label1.setHorizontalTextPosition(SwingConstants.CENTER);
 
-		add(label1, "3, 0");
+		add(label1, "3, 0, 4, 0");
 
 		final JLabel label2 = new JLabel("Select additional settings");
 		label2.setOpaque(false);
@@ -60,9 +60,9 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 		label2.setHorizontalTextPosition(SwingConstants.CENTER);
 
 		JPanel classifierPanel = new ClassifierPanel(parameters.getLog().getClassifiers(), parameters);
-		add(classifierPanel, "3, 5");
+		add(classifierPanel, "3, 5, 4, 5");
 
-		add(label2, "3, 6");
+		add(label2, "3, 6, 4, 6");
 		
 		final JLabel label3 = new JLabel("Select thresholds to try");
 		label3.setOpaque(false);
@@ -84,6 +84,18 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 		});
 		wfBox.setOpaque(false);
 		add(wfBox, "3, 10");
+		
+		final JCheckBox useREBox = SlickerFactory.instance().createCheckBox("Use recursive exclusion",
+				parameters.isUseRecursiveExclusion());
+		useREBox.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				parameters.setUseRecursiveExclusion(useREBox.isSelected());
+			}
+
+		});
+		useREBox.setOpaque(false);
+		add(useREBox, "4, 10");
 		
 //		final JCheckBox preferContainAllBox = SlickerFactory.instance().createCheckBox("Prefer nets that contain all activities",
 //				parameters.isPreferContainAll());
@@ -107,7 +119,7 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 			}
 		});
 		fitSlider.setPreferredSize(new Dimension(100, 30));
-		add(fitSlider, "3, 1");
+		add(fitSlider, "3, 1, 4, 1");
 		
 		final NiceSlider precSlider = SlickerFactory.instance().createNiceIntegerSlider("Precision", 0, 100,
 				(int) (100*parameters.getPrecisionFactor()), Orientation.HORIZONTAL);
@@ -119,7 +131,7 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 			}
 		});
 		precSlider.setPreferredSize(new Dimension(100, 30));
-		add(precSlider, "3, 2");
+		add(precSlider, "3, 2, 4, 2");
 		
 		final NiceSlider simpSlider = SlickerFactory.instance().createNiceIntegerSlider("Simplicity", 0, 100,
 				(int) (100*parameters.getSimplicityFactor()), Orientation.HORIZONTAL);
@@ -132,7 +144,7 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 			}
 		});
 		simpSlider.setPreferredSize(new Dimension(100, 30));
-		add(simpSlider, "3, 3");
+		add(simpSlider, "3, 3, 4, 3");
 		
 		final NiceSlider covSlider = SlickerFactory.instance().createNiceIntegerSlider("Coverage", 0, 100,
 				(int) (100*parameters.getCoverageFactor()), Orientation.HORIZONTAL);
@@ -144,7 +156,7 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 			}
 		});
 		covSlider.setPreferredSize(new Dimension(100, 30));
-		add(covSlider, "3, 4");
+		add(covSlider, "3, 4, 4, 4");
 		
 		final NiceSlider threadSlider = SlickerFactory.instance().createNiceIntegerSlider("Number of threads to use for replay", 0, 64,
 				parameters.getNofThreads(), Orientation.HORIZONTAL);
@@ -156,7 +168,7 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 			}
 		});
 		threadSlider.setPreferredSize(new Dimension(100, 30));
-		add(threadSlider, "3, 7");
+		add(threadSlider, "3, 7, 4, 7");
 		
 		final NiceSlider tranSlider = SlickerFactory.instance().createNiceIntegerSlider("Maximal number of transitions", 0, 100,
 				parameters.getMaxNofTransitions(), Orientation.HORIZONTAL);
@@ -168,7 +180,7 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 			}
 		});
 		tranSlider.setPreferredSize(new Dimension(100, 30));
-		add(tranSlider, "3, 8");
+		add(tranSlider, "3, 8, 4, 8");
 		
 		final NiceSlider percSlider = SlickerFactory.instance().createNiceIntegerSlider("Percentage of traces to use for discovery", 0, 100,
 				parameters.getDiscoveryPerc(), Orientation.HORIZONTAL);
@@ -180,7 +192,7 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 			}
 		});
 		percSlider.setPreferredSize(new Dimension(100, 30));
-		add(percSlider, "3, 9");
+		add(percSlider, "3, 9, 4, 9");
 		
 		DefaultListModel<Integer> absListModel = new DefaultListModel<Integer>();
 		for (int i = 0; i < 21; i++) {

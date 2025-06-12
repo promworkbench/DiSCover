@@ -21,6 +21,7 @@ import org.deckfour.xes.info.XLogInfoFactory;
 import org.deckfour.xes.info.impl.XLogInfoImpl;
 import org.deckfour.xes.model.XAttribute;
 import org.deckfour.xes.model.XAttributeBoolean;
+import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;
 import org.deckfour.xes.model.XTrace;
 import org.processmining.acceptingpetrinet.models.AcceptingPetriNet;
@@ -77,7 +78,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		XLog discoverLog = (XLog) xParameters.getLog().clone();
 		XLog classifyLog = (XLog) xParameters.getLog().clone();
 		splitLog(log, discoverLog, classifyLog, xParameters.getDiscoveryPerc());
-		
+
 		double bestScore = -1.0;
 		double simplestScore = -1.0;
 		/*
@@ -88,168 +89,181 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		int bestRel = 0;
 		int simplestAbs = 0;
 		int simplestRel = 0;
-		int i = 0;
-		boolean foundWFnet = false;
-		Set<Integer> seenSizes = new HashSet<Integer>();
-		for (int abs : xParameters.getAbsValues()) {
 
-			/*
-			 * If all else fails, use the (non-filtered) log as the filtered log.
-			 */
-			XLog filteredLog = discoverLog;
-			XLogInfo info = XLogInfoFactory.createLogInfo(filteredLog, xParameters.getClassifier());
-			CheckerInput input = null;
-			CheckerConfiguration configuration = null;
-			double coverage = 0.0;
-			
-			/*
-			 * Collect all positive and negative traces.
-			 */
-			Set<XTrace> positiveTraces = new HashSet<XTrace>();
-			Set<XTrace> negativeTraces = new HashSet<XTrace>();
-			for (XTrace trace : filteredLog) {
-				if (trace.getAttributes().containsKey(ISPOSKEY)) {
-					XAttribute isPosAttribute = trace.getAttributes().get(ISPOSKEY);
-					if (isPosAttribute instanceof XAttributeBoolean) {
-						if (((XAttributeBoolean) isPosAttribute).getValue()) {
-							positiveTraces.add(trace);
-						} else {
-							negativeTraces.add(trace);
-						}
-					}
+		List<Set<String>> exclusionSets = new ArrayList<Set<String>>();
+		exclusionSets.add(new HashSet<String>());
+		while (!exclusionSets.isEmpty()) {
+			Set<String> currentExclusionSet = exclusionSets.remove(0);
+			if (!currentExclusionSet.isEmpty()) {
+				System.err.println("[ExcavatePetriNetAlgorithm] Excluding " + currentExclusionSet);
+				if (uiContext != null) {
+					uiContext.log("Excluding " + currentExclusionSet);
 				}
 			}
-			if (!positiveTraces.isEmpty() || !negativeTraces.isEmpty()) {
-				filteredLog = (XLog) filteredLog.clone();
-			}
-			/*
-			 * Filter the negative traces out.
-			 */
-			filteredLog.removeAll(negativeTraces);
 
-			/*
-			 * if smaller than 100, abs will be the target value for et, rt, and pt.
-			 * A value of 21 indicates "do not use". 
-			 */
-			int et = abs;
-			int rt = abs;
-			int pt = abs;
-			int nt = 21;
+			int i = 0;
+			boolean foundWFnet = false;
+			Set<Integer> seenSizes = new HashSet<Integer>();
+			for (int abs : xParameters.getAbsValues()) {
 
-			if (abs > 100) {
 				/*
-				 * The value of abs exceeds 100.
-				 * It should know be considered as equal to 100 + et + 22*rt + 22*22*pt + 22*22*22*nt.
+				 * If all else fails, use the (non-filtered) log as the filtered log.
 				 */
-				int t = abs - 100;
-				et = t % 22;
-				if (t > 21) {
-					t = t / 22;
-				}
-				rt = t % 22;
-				if (t > 21) {
-					t = t / 22;
-				}
-				pt = t % 22;
-				if (t > 21) {
-					t = t / 22;
-				}
-				nt = t % 22;
-			}
-			System.out.println("[ExcavatePetriNetAglorithm] Usign log skeleton thresholds " + et + ", " + rt + ", " + pt
-					+ " and " + nt + ".");
+				XLog filteredLog = filter(discoverLog, xParameters.getClassifier(), currentExclusionSet);
+				XLogInfo info = XLogInfoFactory.createLogInfo(filteredLog, xParameters.getClassifier());
+				CheckerInput input = null;
+				CheckerConfiguration configuration = null;
+				double coverage = 0.0;
 
-			if (abs > 20) {
-				System.out.println("[ExcavatePetriNetAglorithm] Capped log skeleton thresholds to 20.");
-				abs = 20;
-			}
-			if (abs == 0) {
-				coverage = 1.0;
-			} else if (abs > 0) {
-				try {
-					/*
-					 * Filter the log using log skeletons.
-					 * 
-					 * First, filter on equivalence.
-					 */
-					if (et < 21) {
-						LogSkeleton ls = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
-								"Build Log Skeleton from Event Log", null, null, filteredLog);
-						ls.setEquivalenceThreshold(100 - et);
-						input = new CheckerInput(ls, discoverLog);
-						configuration = new CheckerConfiguration(input);
-						filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class,
-								"Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
-						/*
-						 * Add classifiers if needed.
-						 */
-						if (filteredLog.getClassifiers().isEmpty()) {
-							filteredLog.getClassifiers().addAll(discoverLog.getClassifiers());
+				/*
+				 * Collect all positive and negative traces.
+				 */
+				Set<XTrace> positiveTraces = new HashSet<XTrace>();
+				Set<XTrace> negativeTraces = new HashSet<XTrace>();
+				for (XTrace trace : filteredLog) {
+					if (trace.getAttributes().containsKey(ISPOSKEY)) {
+						XAttribute isPosAttribute = trace.getAttributes().get(ISPOSKEY);
+						if (isPosAttribute instanceof XAttributeBoolean) {
+							if (((XAttributeBoolean) isPosAttribute).getValue()) {
+								positiveTraces.add(trace);
+							} else {
+								negativeTraces.add(trace);
+							}
 						}
 					}
-					/*
-					 * Second, filter on response and precedence.
-					 */
-					if (rt < 21 || pt < 21) {
-						LogSkeleton ls = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
-								"Build Log Skeleton from Event Log", null, null, filteredLog);
-						if (rt < 21) {
-							ls.setResponseThreshold(100 - rt);
-						}
-						if (pt < 21) {
-							ls.setPrecedenceThreshold(100 - pt);
-						}
-						input = new CheckerInput(ls, discoverLog);
-						configuration = new CheckerConfiguration(input);
-						filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class,
-								"Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
-						/*
-						 * Add classifiers if needed.
-						 */
-						if (filteredLog.getClassifiers().isEmpty()) {
-							filteredLog.getClassifiers().addAll(discoverLog.getClassifiers());
-						}
-					}
-					if (nt < 21) {
-						LogSkeleton ls = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
-								"Build Log Skeleton from Event Log", null, null, filteredLog);
-						ls.setNotCoExistenceThreshold(100 - nt);
-						input = new CheckerInput(ls, discoverLog);
-						configuration = new CheckerConfiguration(input);
-						filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class,
-								"Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
-						/*
-						 * Add classifiers if needed.
-						 */
-						if (filteredLog.getClassifiers().isEmpty()) {
-							filteredLog.getClassifiers().addAll(discoverLog.getClassifiers());
-						}
-					}
-					/*
-					 * Add positive traces if they were filtered out.
-					 */
-					for (XTrace trace : positiveTraces) {
-						if (!filteredLog.contains(trace)) {
-							filteredLog.add(trace);
-						}
-					}
-				} catch (Exception e) {
-					System.err.println("[ExcavatePetriNetAglorithm] Failed to filter using a log skeleton: " + e);
 				}
-				XLogInfo filteredInfo = XLogInfoFactory.createLogInfo(filteredLog, xParameters.getClassifier());
-				if (seenSizes.contains(filteredLog.size())) {
-					/*
-					 * A filtered log with the same number of traces was already seen.
-					 */
-					System.out.println("[ExcavatePetriNetAlgorithm] Discarded threshold " + abs
-							+ " because filtered log already seen.");
-					if (uiContext != null) {
-						i += xParameters.getRelValues().size();
-						uiContext.getProgress().setValue(i);
-					}
-					continue;
+				if (!positiveTraces.isEmpty() || !negativeTraces.isEmpty()) {
+					filteredLog = (XLog) filteredLog.clone();
 				}
-				coverage = (1.0 * filteredInfo.getEventClasses().size()) / info.getEventClasses().size();
+				/*
+				 * Filter the negative traces out.
+				 */
+				filteredLog.removeAll(negativeTraces);
+
+				/*
+				 * if smaller than 100, abs will be the target value for et, rt, and pt. A value
+				 * of 21 indicates "do not use".
+				 */
+				int et = abs;
+				int rt = abs;
+				int pt = abs;
+				int nt = 21;
+
+				if (abs > 100) {
+					/*
+					 * The value of abs exceeds 100. It should know be considered as equal to 100 +
+					 * et + 22*rt + 22*22*pt + 22*22*22*nt.
+					 */
+					int t = abs - 100;
+					et = t % 22;
+					if (t > 21) {
+						t = t / 22;
+					}
+					rt = t % 22;
+					if (t > 21) {
+						t = t / 22;
+					}
+					pt = t % 22;
+					if (t > 21) {
+						t = t / 22;
+					}
+					nt = t % 22;
+				}
+				System.out.println("[ExcavatePetriNetAglorithm] Usign log skeleton thresholds " + et + ", " + rt + ", "
+						+ pt + " and " + nt + ".");
+
+				if (abs > 20) {
+					System.out.println("[ExcavatePetriNetAglorithm] Capped log skeleton thresholds to 20.");
+					abs = 20;
+				}
+				if (abs == 0) {
+					coverage = 1.0;
+				} else if (abs > 0) {
+					try {
+						/*
+						 * Filter the log using log skeletons.
+						 * 
+						 * First, filter on equivalence.
+						 */
+						if (et < 21) {
+							LogSkeleton ls = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
+									"Build Log Skeleton from Event Log", null, null, filteredLog);
+							ls.setEquivalenceThreshold(100 - et);
+							input = new CheckerInput(ls, discoverLog);
+							configuration = new CheckerConfiguration(input);
+							filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class,
+									"Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
+							/*
+							 * Add classifiers if needed.
+							 */
+							if (filteredLog.getClassifiers().isEmpty()) {
+								filteredLog.getClassifiers().addAll(discoverLog.getClassifiers());
+							}
+						}
+						/*
+						 * Second, filter on response and precedence.
+						 */
+						if (rt < 21 || pt < 21) {
+							LogSkeleton ls = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
+									"Build Log Skeleton from Event Log", null, null, filteredLog);
+							if (rt < 21) {
+								ls.setResponseThreshold(100 - rt);
+							}
+							if (pt < 21) {
+								ls.setPrecedenceThreshold(100 - pt);
+							}
+							input = new CheckerInput(ls, discoverLog);
+							configuration = new CheckerConfiguration(input);
+							filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class,
+									"Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
+							/*
+							 * Add classifiers if needed.
+							 */
+							if (filteredLog.getClassifiers().isEmpty()) {
+								filteredLog.getClassifiers().addAll(discoverLog.getClassifiers());
+							}
+						}
+						if (nt < 21) {
+							LogSkeleton ls = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
+									"Build Log Skeleton from Event Log", null, null, filteredLog);
+							ls.setNotCoExistenceThreshold(100 - nt);
+							input = new CheckerInput(ls, discoverLog);
+							configuration = new CheckerConfiguration(input);
+							filteredLog = context.tryToFindOrConstructFirstNamedObject(XLog.class,
+									"Filter Event Log on Log Skeleton", null, null, ls, filteredLog, configuration);
+							/*
+							 * Add classifiers if needed.
+							 */
+							if (filteredLog.getClassifiers().isEmpty()) {
+								filteredLog.getClassifiers().addAll(discoverLog.getClassifiers());
+							}
+						}
+						/*
+						 * Add positive traces if they were filtered out.
+						 */
+						for (XTrace trace : positiveTraces) {
+							if (!filteredLog.contains(trace)) {
+								filteredLog.add(trace);
+							}
+						}
+					} catch (Exception e) {
+						System.err.println("[ExcavatePetriNetAglorithm] Failed to filter using a log skeleton: " + e);
+					}
+					XLogInfo filteredInfo = XLogInfoFactory.createLogInfo(filteredLog, xParameters.getClassifier());
+					if (seenSizes.contains(filteredLog.size())) {
+						/*
+						 * A filtered log with the same number of traces was already seen.
+						 */
+						System.out.println("[ExcavatePetriNetAlgorithm] Discarded threshold " + abs
+								+ " because filtered log already seen.");
+						if (uiContext != null) {
+							i += xParameters.getRelValues().size();
+							uiContext.getProgress().setValue(i);
+						}
+						continue;
+					}
+					coverage = (1.0 * filteredInfo.getEventClasses().size())
+							/ (currentExclusionSet.size() + info.getEventClasses().size());
 //				if (xParameters.isPreferContainAll() && bestScore > -1.0 && filteredInfo.getEventClasses().size() < info.getEventClasses().size()) {
 //					/*
 //					 * Lost some activities due to the filtering. Do not consider this filtered log.
@@ -262,112 +276,127 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 //					}
 //					continue;
 //				}
-			}
-			seenSizes.add(filteredLog.size());
-
-			for (int rel : xParameters.getRelValues()) {
-				if (uiContext != null) {
-					uiContext.getProgress().setValue(i++);
 				}
+				seenSizes.add(filteredLog.size());
 
-				parameters = new DiscoverPetriNetParameters();
-				parameters.setClassifier(xParameters.getClassifier());
-				// parameters.setAbsoluteThreshold(abs);
-				parameters.setRelativeThreshold(rel);
-				// parameters.setAbsoluteThreshold2(0);
+				for (int rel : xParameters.getRelValues()) {
+					if (uiContext != null) {
+						uiContext.getProgress().setValue(i++);
+					}
+
+					parameters = new DiscoverPetriNetParameters();
+					parameters.setClassifier(xParameters.getClassifier());
+					// parameters.setAbsoluteThreshold(abs);
+					parameters.setRelativeThreshold(rel);
+					// parameters.setAbsoluteThreshold2(0);
 //				parameters.setRelativeThreshold2(0);
-				AcceptingPetriNet apn = apply(context, filteredLog, parameters);
+					AcceptingPetriNet apn = apply(context, filteredLog, parameters);
 
-				double time = System.currentTimeMillis();
+					double time = System.currentTimeMillis();
 
-				boolean isWFnet = false;
-				if (xParameters.isPreferWFnet()) {
+					boolean isWFnet = false;
+					if (xParameters.isPreferWFnet()) {
+						time = System.currentTimeMillis();
+						isWFnet = isWFNet(context, apn);
+						System.out.println("[ExcavatePetriNetAlgorithm] Analyzing WF net on discovered net took "
+								+ (System.currentTimeMillis() - time) + " milliseconds.");
+					}
+					if (foundWFnet && !isWFnet) {
+						System.out.println("[ExcavatePetriNetAlgorithm] Discarded thresholds " + abs + " and " + rel
+								+ " because result is not a WF net.");
+						continue;
+					}
+//				if (isWFnet && !foundWFnet) {
+//					foundWFnet = true;
+//					bestApn = null;
+//					bestScore = -1.0;
+//					simplestApn = null;
+//					simplestScore = -1.0;
+//				}
+
+					double simplicity = getSimplicity(apn, xParameters);
+					double size = getSize(apn, xParameters);
+					System.out.println("[ExcavatePetriNetAlgorithm] Computing simplicity took "
+							+ (System.currentTimeMillis() - time) + " milliseconds: " + simplicity + ", " + size + ".");
+
+					double simpleScore = getScore(1.0, 1.0, simplicity, size, coverage, xParameters);
+
+					if (simpleScore > simplestScore) {
+						if (uiContext != null) {
+							uiContext.log("Discovered net at spot (" + abs + ", " + rel + ", " + currentExclusionSet
+									+ ") with new best simple score " + simpleScore);
+						}
+						simplestApn = apn;
+						simplestAbs = abs;
+						simplestRel = rel;
+						simplestScore = simpleScore;
+					}
+
+					if (simpleScore < bestScore) {
+						/*
+						 * Even a perfect fitness and precision will not result in a new best score.
+						 */
+						System.out.println("[ExcavatePetriNetAlgorithm] Discarded thresholds " + abs + " and " + rel
+								+ " due to insufficient simplicity.");
+						continue;
+					}
+
+					if (apn.getNet().getTransitions().size() > xParameters.getMaxNofTransitions()) {
+						System.out.println("[DiscoverPetriNetPlugin] Discarded thresholds " + abs + " and " + rel
+								+ " for replay due to too many transitions.");
+						continue;
+					}
+
 					time = System.currentTimeMillis();
-					isWFnet = isWFNet(context, apn);
-					System.out.println("[ExcavatePetriNetAlgorithm] Analyzing WF net on discovered net took "
+					PNRepResult replay = getReplay(apn, classifyLog, xParameters);
+					System.out.println("[ExcavatePetriNetAlgorithm] Replaying log on discovered net took "
 							+ (System.currentTimeMillis() - time) + " milliseconds.");
-				}
-				if (foundWFnet && !isWFnet) {
-					System.out.println("[ExcavatePetriNetAlgorithm] Discarded thresholds " + abs + " and " + rel
-							+ " because result is not a WF net.");
-					continue;
-				}
-				if (isWFnet && !foundWFnet) {
-					foundWFnet = true;
-					bestApn = null;
-					bestScore = -1.0;
-					simplestApn = null;
-					simplestScore = -1.0;
-				}
+					time = System.currentTimeMillis();
+					double fitness = getFitness(replay, classifyLog, xParameters);
+					System.out.println("[ExcavatePetriNetAlgorithm] Computing fitness took "
+							+ (System.currentTimeMillis() - time) + " milliseconds: " + fitness + ".");
 
-				double simplicity = getSimplicity(apn, xParameters);
-				double size = getSize(apn, xParameters);
-				System.out.println("[ExcavatePetriNetAlgorithm] Computing simplicity took "
-						+ (System.currentTimeMillis() - time) + " milliseconds: " + simplicity + ", " + size + ".");
-
-				double simpleScore = getScore(1.0, 1.0, simplicity, size, coverage, xParameters);
-
-				if (simpleScore > simplestScore) {
-					if (uiContext != null) {
-						uiContext.log("Discovered net at spot (" + abs + ", " + rel + ") with new best simple score "
-								+ simpleScore);
+					if (getScore(fitness, 1.0, simplicity, size, coverage, xParameters) < bestScore) {
+						/*
+						 * Even a perfect precision will not result in a new best score.
+						 */
+						System.out.println("[ExcavatePetriNetAlgorithm] Discarded thresholds " + abs + " and " + rel
+								+ " due to insufficient fitness.");
+						continue;
 					}
-					simplestApn = apn;
-					simplestAbs = abs;
-					simplestRel = rel;
-					simplestScore = simpleScore;
-				}
 
-				if (simpleScore < bestScore) {
-					/*
-					 * Even a perfect fitness and precision will not result in a new best score.
-					 */
-					System.out.println("[ExcavatePetriNetAlgorithm] Discarded thresholds " + abs + " and " + rel
-							+ " due to insufficient simplicity.");
-					continue;
-				}
+					time = System.currentTimeMillis();
+					double precision = getPrecision(replay, apn, xParameters);
+					System.out.println("[ExcavatePetriNetAlgorithm] Computing precision took "
+							+ (System.currentTimeMillis() - time) + " milliseconds: " + precision + ".");
 
-				if (apn.getNet().getTransitions().size() > xParameters.getMaxNofTransitions()) {
-					System.out.println("[DiscoverPetriNetPlugin] Discarded thresholds " + abs + " and " + rel
-							+ " for replay due to too many transitions.");
-					continue;
-				}
+					double score = getScore(fitness, precision, simplicity, size, coverage, xParameters);
+					System.out.println("[ExcavatePetriNetAlgorithm] Found net with thresholds " + abs + " and " + rel
+							+ ", score " + score + " (f=" + fitness + ", p=" + precision + ", s=" + simplicity + ", n="
+							+ size + ")");
+					if (score > bestScore) {
+						if (uiContext != null) {
+							uiContext.log("Discovered net at spot (" + abs + ", " + rel + ", " + currentExclusionSet
+									+ ") with new best score " + score);
+						}
+						bestScore = score;
+						bestApn = apn;
+						bestAbs = abs;
+						bestRel = rel;
 
-				time = System.currentTimeMillis();
-				PNRepResult replay = getReplay(apn, classifyLog, xParameters);
-				System.out.println("[ExcavatePetriNetAlgorithm] Replaying log on discovered net took "
-						+ (System.currentTimeMillis() - time) + " milliseconds.");
-				time = System.currentTimeMillis();
-				double fitness = getFitness(replay, classifyLog, xParameters);
-				System.out.println("[ExcavatePetriNetAlgorithm] Computing fitness took "
-						+ (System.currentTimeMillis() - time) + " milliseconds: " + fitness + ".");
-
-				if (getScore(fitness, 1.0, simplicity, size, coverage, xParameters) < bestScore) {
-					/*
-					 * Even a perfect precision will not result in a new best score.
-					 */
-					System.out.println("[ExcavatePetriNetAlgorithm] Discarded thresholds " + abs + " and " + rel
-							+ " due to insufficient fitness.");
-					continue;
-				}
-
-				time = System.currentTimeMillis();
-				double precision = getPrecision(replay, apn, xParameters);
-				System.out.println("[ExcavatePetriNetAlgorithm] Computing precision took "
-						+ (System.currentTimeMillis() - time) + " milliseconds: " + precision + ".");
-
-				double score = getScore(fitness, precision, simplicity, size, coverage, xParameters);
-				System.out.println("[ExcavatePetriNetAlgorithm] Found net with thresholds " + abs + " and " + rel
-						+ ", score " + score + " (f=" + fitness + ", p=" + precision + ", s=" + simplicity + ", n="
-						+ size + ")");
-				if (score > bestScore) {
-					if (uiContext != null) {
-						uiContext.log("Discovered net at spot (" + abs + ", " + rel + ") with new best score " + score);
+						if (xParameters.isUseRecursiveExclusion()) {
+							// Create new exclusion sets from current exclusion set.
+							for (XEventClass label : info.getEventClasses().getClasses()) {
+								Set<String> newSet = new HashSet<String>(currentExclusionSet);
+								newSet.add(label.getId());
+								if (!exclusionSets.contains(newSet)) {
+									System.err.println(
+											"[ExcavatePetriNetAglorithm] Adding " + newSet + " as exclusion set.");
+									exclusionSets.add(newSet);
+								}
+							}
+						}
 					}
-					bestScore = score;
-					bestApn = apn;
-					bestAbs = abs;
-					bestRel = rel;
 				}
 			}
 		}
@@ -789,15 +818,16 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		parameters.setFinalMarkings(finalMarkings.toArray(new Marking[0]));
 		return parameters;
 	}
-	
+
 	private void splitLog(XLog log, XLog discoverLog, XLog classifyLog, int perc) {
 		List<XTrace> traces = new ArrayList<XTrace>();
 		int size = log.size();
-		
+
 		discoverLog.clear();
 		classifyLog.clear();
-		
-		// Positive traces should end up in the discover log, negative traces in the classify log.
+
+		// Positive traces should end up in the discover log, negative traces in the
+		// classify log.
 		for (XTrace trace : log) {
 			if (trace.getAttributes().containsKey(ISPOSKEY)) {
 				XAttribute isPosAttribute = trace.getAttributes().get(ISPOSKEY);
@@ -815,7 +845,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 			}
 		}
 		for (XTrace trace : traces) {
-			if (100*discoverLog.size() < perc*size) {
+			if (100 * discoverLog.size() < perc * size) {
 				discoverLog.add(trace);
 			} else {
 				classifyLog.add(trace);
@@ -829,7 +859,24 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 			System.out.println("[ExcavatePetriNetAlgorithm] Adding all traces to classify log.");
 			classifyLog.addAll(log);
 		}
-		System.out.println("[ExcavatePetriNetAlgorithm] Using " + discoverLog.size() + "/" + size + " traces for discovery and " + classifyLog.size() + "/" + size + " for replay.");
-	}	
+		System.out.println("[ExcavatePetriNetAlgorithm] Using " + discoverLog.size() + "/" + size
+				+ " traces for discovery and " + classifyLog.size() + "/" + size + " for replay.");
+	}
 
+	private XLog filter(XLog log, XEventClassifier classifier, Set<String> out) {
+		XLog filteredLog = (XLog) log.clone();
+		for (XTrace trace : filteredLog) {
+			Set<XEvent> events = new HashSet<XEvent>();
+			for (XEvent event : trace) {
+				String label = classifier.getClassIdentity(event);
+				if (out.contains(label)) {
+					events.add(event);
+				}
+			}
+			for (XEvent event : events) {
+				trace.remove(event);
+			}
+		}
+		return filteredLog;
+	}
 }
