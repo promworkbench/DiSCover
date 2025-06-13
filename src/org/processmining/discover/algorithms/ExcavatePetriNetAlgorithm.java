@@ -696,7 +696,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		int nThreads = xParameters.getNofThreads();
 		int costUpperBound = Integer.MAX_VALUE;
 		// timeout per trace in milliseconds
-		int timeoutMilliseconds = 10 * 1000;
+		int timeoutMilliseconds = xParameters.getTimeoutMillis();
 
 		int maximumNumberOfStates = Integer.MAX_VALUE;
 		ReplayerParameters parameters;

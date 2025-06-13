@@ -24,6 +24,7 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	private boolean preferWFnet;
 	private int discoveryPerc;
 	private boolean useRecursiveExclusion;
+	private int timeoutMillis;
 //	private boolean preferContainAll; // Whether to keep all activities while filtering the log.
 
 	/*
@@ -42,6 +43,7 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	private static boolean lastPreferWFnet = true;
 	private static int lastDiscoveryPerc = 80;
 	private static boolean lastUseRecursiveExclusion = false;
+	private static int lastTimeoutMillis = 60 * 1000;
 //	private static boolean lastPreferContainAll = true;
 
 	public ExcavatePetriNetParameters(XLog log) {
@@ -99,6 +101,7 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 		preferWFnet = lastPreferWFnet;
 		setDiscoveryPerc(lastDiscoveryPerc);
 		setUseRecursiveExclusion(lastUseRecursiveExclusion);
+		setTimeoutMillis(lastTimeoutMillis);
 //		setPreferContainAll(lastPreferContainAll);
 	}
 
@@ -234,6 +237,15 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	public void setUseRecursiveExclusion(boolean useRecursiveExclusion) {
 		lastUseRecursiveExclusion = useRecursiveExclusion;
 		this.useRecursiveExclusion = useRecursiveExclusion;
+	}
+
+	public int getTimeoutMillis() {
+		return timeoutMillis;
+	}
+
+	public void setTimeoutMillis(int timeoutMillis) {
+		lastTimeoutMillis = timeoutMillis;
+		this.timeoutMillis = timeoutMillis;
 	}
 
 }
