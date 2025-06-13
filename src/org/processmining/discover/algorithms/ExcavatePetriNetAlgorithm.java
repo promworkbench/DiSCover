@@ -389,7 +389,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 							for (XEventClass label : info.getEventClasses().getClasses()) {
 								Set<String> newSet = new HashSet<String>(currentExclusionSet);
 								newSet.add(label.getId());
-								if (!exclusionSets.contains(newSet)) {
+								if (newSet.size() > currentExclusionSet.size() && !exclusionSets.contains(newSet)) {
 									System.err.println(
 											"[ExcavatePetriNetAglorithm] Adding " + newSet + " as exclusion set.");
 									exclusionSets.add(newSet);

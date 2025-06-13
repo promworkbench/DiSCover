@@ -40,8 +40,8 @@ public class DiscoverPetriNetAlgorithm {
 	public AcceptingPetriNet apply(PluginContext context, XLog eventLog, ProcessTree tree,
 			DiscoverPetriNetParameters parameters) {
 		/*
-		 * Get the first classifier. If the event log has no classifier, use the
-		 * default classifier.
+		 * Get the first classifier. If the event log has no classifier, use the default
+		 * classifier.
 		 */
 		if (parameters.getClassifier() == null) {
 			if (eventLog.getClassifiers().isEmpty()) {
@@ -88,7 +88,8 @@ public class DiscoverPetriNetAlgorithm {
 			parameters.getMatrix().filterAbsolute(parameters.getAbsoluteThreshold());
 			parameters.getMatrix().filterRelative(parameters.getRelativeThreshold(), parameters.getSafetyThreshold());
 			if (parameters.isFilterLog()) {
-				if (parameters.getLog().filter(parameters.getMatrix(), new ActivitySet("All except ", parameters.getAlphabet()))) {
+				if (parameters.getLog().filter(parameters.getMatrix(),
+						new ActivitySet("All except ", parameters.getAlphabet()))) {
 					parameters.setMatrix(new ActivityMatrix(parameters.getLog(), parameters.getAlphabet()));
 				}
 			}
@@ -109,10 +110,9 @@ public class DiscoverPetriNetAlgorithm {
 				time = System.currentTimeMillis();
 
 				/*
-				 * Create sets of activities from these pairs. Every set covers
-				 * at least one activity for every pair. These sets will be
-				 * minimal in the sense that removing an activity from it will
-				 * result in some pairs being uncovered.
+				 * Create sets of activities from these pairs. Every set covers at least one
+				 * activity for every pair. These sets will be minimal in the sense that
+				 * removing an activity from it will result in some pairs being uncovered.
 				 * 
 				 * This may take some time.
 				 */
@@ -136,8 +136,8 @@ public class DiscoverPetriNetAlgorithm {
 		}
 
 		/*
-		 * For every activity set, filter these activities out of the activity
-		 * log and discover a directly-follows matrix for it.
+		 * For every activity set, filter these activities out of the activity log and
+		 * discover a directly-follows matrix for it.
 		 */
 		if (parameters.getMatrixCollection() == null) {
 			parameters.setMatrixCollection(new ActivityMatrixCollection(parameters.getLog(), parameters.getAlphabet(),
@@ -150,7 +150,8 @@ public class DiscoverPetriNetAlgorithm {
 			parameters.getMatrixCollection().filterRelative(parameters.getRelativeThreshold2(),
 					parameters.getSafetyThreshold2());
 			if (parameters.isFilterLog()) {
-				parameters.getMatrixCollection().filter(parameters.getLog(), parameters.getActivitySets(), parameters.getMatrix());
+				parameters.getMatrixCollection().filter(parameters.getLog(), parameters.getActivitySets(),
+						parameters.getMatrix());
 			}
 			System.out.println("[DiscoverPetriNetAlgorithm] Filtering secondary matrices took "
 					+ (System.currentTimeMillis() - time) + " milliseconds.");
@@ -160,16 +161,17 @@ public class DiscoverPetriNetAlgorithm {
 		/*
 		 * Filter all created matrices.
 		 */
-		//		for (int idx = 0; idx < matrices.size(); idx++) {
-		//			matrices.get(idx).filterAbsolute(parameters.getAbsoluteThreshold());
-		//			matrices.get(idx).filterRelative(parameters.getRelativeThreshold(), parameters.getSafetyThreshold());
-		//		}
-		//		System.out.println("[DiscoverPetriNetAlgorithm] Filtering secondary matrices took " + (System.currentTimeMillis() - time) + " milliseconds.");
-		//		time = System.currentTimeMillis();
+		// for (int idx = 0; idx < matrices.size(); idx++) {
+		// matrices.get(idx).filterAbsolute(parameters.getAbsoluteThreshold());
+		// matrices.get(idx).filterRelative(parameters.getRelativeThreshold(),
+		// parameters.getSafetyThreshold());
+		// }
+		// System.out.println("[DiscoverPetriNetAlgorithm] Filtering secondary matrices
+		// took " + (System.currentTimeMillis() - time) + " milliseconds.");
+		// time = System.currentTimeMillis();
 
 		/*
-		 * If selected, use majority vote for whether to consider some edge as
-		 * noise.
+		 * If selected, use majority vote for whether to consider some edge as noise.
 		 */
 		if (parameters.isVetoNoise()) {
 			parameters.getMatrixCollection().vetoNoise(parameters.getAlphabet());
@@ -179,10 +181,9 @@ public class DiscoverPetriNetAlgorithm {
 		}
 
 		/*
-		 * Discover an accepting Petri net from the matrices. Every matrix
-		 * corresponds to a state machine WF-net. These WF-nets are merged on
-		 * the visible transitions, that is, on the transitions that represent
-		 * activities.
+		 * Discover an accepting Petri net from the matrices. Every matrix corresponds
+		 * to a state machine WF-net. These WF-nets are merged on the visible
+		 * transitions, that is, on the transitions that represent activities.
 		 */
 		AcceptingPetriNet apn = createNet(parameters);
 		System.out.println("[DiscoverPetriNetAlgorithm] Creating accepting Petri net took "
@@ -190,8 +191,8 @@ public class DiscoverPetriNetAlgorithm {
 		time = System.currentTimeMillis();
 
 		/*
-		 * If selected by the user, reduce the accepting Petri net as much as
-		 * possible. This may take considerable time.
+		 * If selected by the user, reduce the accepting Petri net as much as possible.
+		 * This may take considerable time.
 		 */
 		if (parameters.isReduce()) {
 			System.out.println("[DiscoverPetriNetAlgorithm] Reducing the net, please be patient...");
@@ -205,10 +206,10 @@ public class DiscoverPetriNetAlgorithm {
 			reduceNet(apn);
 			System.out.println("[DiscoverPetriNetAlgorithm] Reducing using rules...");
 			apn = redAlgorithm.apply(context, apn, redParameters);
-			//			System.out.println("[DiscoverPetriNetAlgorithm] Reducing same contexts...");
-			//			reduceSameContext(apn);
-			//			System.out.println("[DiscoverPetriNetAlgorithm] Reducing using rules...");
-			//			apn = redAlgorithm.apply(context, apn, redParameters);
+			// System.out.println("[DiscoverPetriNetAlgorithm] Reducing same contexts...");
+			// reduceSameContext(apn);
+			// System.out.println("[DiscoverPetriNetAlgorithm] Reducing using rules...");
+			// apn = redAlgorithm.apply(context, apn, redParameters);
 			System.out.println("[DiscoverPetriNetAlgorithm] Reduced the net.");
 			System.out.println("[DiscoverPetriNetAlgorithm] Reducing accepting Petri net took "
 					+ (System.currentTimeMillis() - time) + " milliseconds.");
@@ -260,7 +261,8 @@ public class DiscoverPetriNetAlgorithm {
 		finalMarkings.add(finalMarking);
 
 		Map<Integer, Transition> transitions = new HashMap<Integer, Transition>();
-		//		Map<Pair<ActivitySet, ActivitySet>, Transition> silentTransitions = new HashMap<Pair<ActivitySet, ActivitySet>, Transition>();
+		// Map<Pair<ActivitySet, ActivitySet>, Transition> silentTransitions = new
+		// HashMap<Pair<ActivitySet, ActivitySet>, Transition>();
 		// Add visible shared transitions.
 		if (parameters.isMerge()) {
 			for (int nodeIdx = 1; nodeIdx < parameters.getAlphabet().size(); nodeIdx++) {
@@ -279,8 +281,7 @@ public class DiscoverPetriNetAlgorithm {
 			Map<Integer, ActivitySet> previousActivities = subMatrix.getPreviousActivities();
 
 			/*
-			 * Find the tau-clusters for this matrix. First, initialize the
-			 * tau-clusters.
+			 * Find the tau-clusters for this matrix. First, initialize the tau-clusters.
 			 */
 			Map<String, Set<String>> clusters = new HashMap<String, Set<String>>();
 			for (int nodeIdx = 0; nodeIdx < parameters.getAlphabet().size(); nodeIdx++) {
@@ -306,8 +307,7 @@ public class DiscoverPetriNetAlgorithm {
 				}
 			}
 			/*
-			 * Second, merge tau-clusters if they have an object (must be place)
-			 * in common.
+			 * Second, merge tau-clusters if they have an object (must be place) in common.
 			 */
 			boolean change = true;
 			while (change) {
@@ -338,7 +338,7 @@ public class DiscoverPetriNetAlgorithm {
 						transitions.put(nodeIdx, net.addTransition(parameters.getAlphabet().get(nodeIdx)));
 					}
 				}
-				//				silentTransitions.clear();
+				// silentTransitions.clear();
 			}
 			// Add places
 			Map<ActivitySet, Place> nextPlaces = new HashMap<ActivitySet, Place>();
@@ -392,14 +392,15 @@ public class DiscoverPetriNetAlgorithm {
 						 */
 						continue;
 					}
-					//					Pair<ActivitySet, ActivitySet> pair = new Pair<ActivitySet, ActivitySet>(nextActivities.get(nodeIdx), previousActivities.get(nextIdx));
-					//					Transition transition = silentTransitions.get(pair);
-					//					if (transition == null) {
+					// Pair<ActivitySet, ActivitySet> pair = new Pair<ActivitySet,
+					// ActivitySet>(nextActivities.get(nodeIdx), previousActivities.get(nextIdx));
+					// Transition transition = silentTransitions.get(pair);
+					// if (transition == null) {
 					Transition transition = net.addTransition("(" + parameters.getAlphabet().get(nodeIdx) + ","
 							+ parameters.getAlphabet().get(nextIdx) + ")");
 					transition.setInvisible(true);
-					//						silentTransitions.put(pair, transition);
-					//					}
+					// silentTransitions.put(pair, transition);
+					// }
 					net.addArc(nextPlaces.get(nextActivities.get(nodeIdx)), transition);
 					net.addArc(transition, previousPlaces.get(previousActivities.get(nextIdx)));
 				}
