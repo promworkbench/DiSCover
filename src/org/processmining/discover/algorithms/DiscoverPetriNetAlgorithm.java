@@ -198,7 +198,7 @@ public class DiscoverPetriNetAlgorithm {
 		time = System.currentTimeMillis();
 
 		enhanceNet(context, apn, eventLog, parameters);
-		
+
 		/*
 		 * If selected by the user, reduce the accepting Petri net as much as possible.
 		 * This may take considerable time.
@@ -598,60 +598,115 @@ public class DiscoverPetriNetAlgorithm {
 			}
 		}
 	}
-	
-	private void enhanceNet(PluginContext context, AcceptingPetriNet apn, XLog eventLog, DiscoverPetriNetParameters parameters) {
+
+	private void enhanceNet(PluginContext context, AcceptingPetriNet apn, XLog eventLog,
+			DiscoverPetriNetParameters parameters) {
 		if (!parameters.isEnhanceWithLS()) {
 			return;
 		}
 		try {
 			LogSkeleton lsLog = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
 					"Build Log Skeleton from Event Log", null, null, eventLog);
-			
+
 			XLog apnLog = generateLog(apn);
 			LogSkeleton lsModel = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
 					"Build Log Skeleton from Event Log", null, null, apnLog);
-			
+
 			Map<String, Transition> transitionMap = new HashMap<String, Transition>();
 			for (Transition transition : apn.getNet().getTransitions()) {
-				if (!transition.isInvisible()
-						|| transition.getLabel().equals(ActivityAlphabet.START) 
+				if (!transition.isInvisible() || transition.getLabel().equals(ActivityAlphabet.START)
 						|| transition.getLabel().equals(ActivityAlphabet.END)) {
 					transitionMap.put(transition.getLabel(), transition);
 				}
 			}
-			
+
 			for (String activity : lsLog.getActivities()) {
 				if (lsLog.getMin(activity) == 1 && lsLog.getMax(activity) == 1) {
 					if (!(lsModel.getMin(activity) == 1 && lsModel.getMax(activity) == 1)) {
-						Place p11 = apn.getNet().addPlace("p11_" + activity);
-						apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p11);
-						apn.getNet().addArc(p11, transitionMap.get(activity));
-						Place q11 = apn.getNet().addPlace("q11_" + activity);
-						apn.getNet().addArc(transitionMap.get(activity), q11);
-						apn.getNet().addArc(q11, transitionMap.get(ActivityAlphabet.END));
+						Place p = apn.getNet().addPlace("p11_" + activity);
+						apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p);
+						apn.getNet().addArc(p, transitionMap.get(activity));
+						Place q = apn.getNet().addPlace("q11_" + activity);
+						apn.getNet().addArc(transitionMap.get(activity), q);
+						apn.getNet().addArc(q, transitionMap.get(ActivityAlphabet.END));
 					}
 				}
 				if (lsLog.getMin(activity) == 0 && lsLog.getMax(activity) == 1) {
 					if (!(lsModel.getMin(activity) == 0 && lsModel.getMax(activity) == 1)) {
-						Place p11 = apn.getNet().addPlace("p01_" + activity);
-						apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p11);
-						apn.getNet().addArc(p11, transitionMap.get(activity));
-						Place q11 = apn.getNet().addPlace("q01_" + activity);
-						apn.getNet().addArc(transitionMap.get(activity), q11);
-						apn.getNet().addArc(q11, transitionMap.get(ActivityAlphabet.END));
-						Transition skipTransition = apn.getNet().addTransition("t01_"+ activity);
-						skipTransition.setInvisible(true);
-						apn.getNet().addArc(p11, skipTransition);
-						apn.getNet().addArc(skipTransition, q11);
+						Place p = apn.getNet().addPlace("p01_" + activity);
+						apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p);
+						apn.getNet().addArc(p, transitionMap.get(activity));
+						Place q = apn.getNet().addPlace("q01_" + activity);
+						apn.getNet().addArc(transitionMap.get(activity), q);
+						apn.getNet().addArc(q, transitionMap.get(ActivityAlphabet.END));
+						Transition t = apn.getNet().addTransition("t01_" + activity);
+						t.setInvisible(true);
+						apn.getNet().addArc(p, t);
+						apn.getNet().addArc(t, q);
+					}
+				}
+				for (String source : lsLog.getActivities()) {
+					for (String target : lsLog.getActivities()) {
+						if (source == target) {
+							continue;
+						}
+						if (lsLog.hasNonRedundantResponse(source, target, lsLog.getActivities())) {
+							if (!lsModel.hasNonRedundantResponse(source, target, lsModel.getActivities())) {
+								Place p = apn.getNet().addPlace("pr_" + source + "_" + target);
+								apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p);
+								apn.getNet().addArc(p, transitionMap.get(ActivityAlphabet.END));
+								Place q = apn.getNet().addPlace("qr_" + source + "_" + target);
+								apn.getNet().addArc(transitionMap.get(source), p);
+								apn.getNet().addArc(p, transitionMap.get(source));
+								apn.getNet().addArc(transitionMap.get(target), p);
+								apn.getNet().addArc(q, transitionMap.get(target));
+								Transition t = apn.getNet().addTransition("tr_" + source + "_" + target);
+								t.setInvisible(true);
+								apn.getNet().addArc(t, q);
+								apn.getNet().addArc(p, t);
+							}
+						}
+						if (lsLog.hasNonRedundantPrecedence(source, target, lsLog.getActivities())) {
+							if (!lsModel.hasNonRedundantPrecedence(source, target, lsModel.getActivities())) {
+								Place p = apn.getNet().addPlace("pp_" + source + "_" + target);
+								apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p);
+								apn.getNet().addArc(p, transitionMap.get(ActivityAlphabet.END));
+								Place q = apn.getNet().addPlace("qp_" + source + "_" + target);
+								apn.getNet().addArc(transitionMap.get(source), p);
+								apn.getNet().addArc(p, transitionMap.get(source));
+								apn.getNet().addArc(transitionMap.get(target), q);
+								apn.getNet().addArc(p, transitionMap.get(target));
+								Transition t = apn.getNet().addTransition("tp_" + source + "_" + target);
+								t.setInvisible(true);
+								apn.getNet().addArc(t, p);
+								apn.getNet().addArc(q, t);
+							}
+						}
+						if (lsLog.hasNonRedundantNotResponse(source, target, lsLog.getActivities())) {
+							if (!lsModel.hasNonRedundantNotResponse(source, target, lsModel.getActivities())) {
+								Place p = apn.getNet().addPlace("pn_" + source + "_" + target);
+								apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p);
+								Place q = apn.getNet().addPlace("qn_" + source + "_" + target);
+								apn.getNet().addArc(q, transitionMap.get(ActivityAlphabet.END));
+								apn.getNet().addArc(transitionMap.get(source), p);
+								apn.getNet().addArc(p, transitionMap.get(source));
+								apn.getNet().addArc(transitionMap.get(target), q);
+								apn.getNet().addArc(q, transitionMap.get(target));
+								Transition t = apn.getNet().addTransition("tn_" + source + "_" + target);
+								t.setInvisible(true);
+								apn.getNet().addArc(t, q);
+								apn.getNet().addArc(p, t);
+							}
+						}
 					}
 				}
 			}
-			
+
 		} catch (ConnectionCannotBeObtained e) {
 			// Ignore: No enhancements possible.
 		}
 	}
-	
+
 	private XLog generateLog(AcceptingPetriNet apn) {
 		Map<PetrinetNode, Set<PetrinetNode>> preset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
 		Map<PetrinetNode, Set<PetrinetNode>> postset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
@@ -666,32 +721,41 @@ public class DiscoverPetriNetAlgorithm {
 		XLog log = XFactoryRegistry.instance().currentDefault().createLog();
 		log.getClassifiers().add(new XEventNameClassifier());
 		for (int i = 0; i < 1000; i++) {
-//			System.out.println("[DiscoverPetriNetAlgorithm] Generating trace " + i);
+			System.out.println("[DiscoverPetriNetAlgorithm] Generating trace " + i);
 			XTrace trace = XFactoryRegistry.instance().currentDefault().createTrace();
+			boolean incomplete = true;
 			Marking marking = new Marking(apn.getInitialMarking());
+			while (incomplete) {
 //			System.out.println("[DiscoverPetriNetAlgorithm] Marking " + marking);
-			while (!apn.getFinalMarkings().contains(marking)) {
-				List<Transition> enabled = getEnabledTransitions(apn, marking, preset, postset);
-				Transition transition = enabled.get(new Random().nextInt(enabled.size()));
+				while (!apn.getFinalMarkings().contains(marking) && trace.size() < 1000) {
+					List<Transition> enabled = getEnabledTransitions(apn, marking, preset, postset);
+					Transition transition = enabled.get(new Random().nextInt(enabled.size()));
 //				System.out.println("[DiscoverPetriNetAlgorithm] Firing transition " + transition.getLabel());
-				marking = fireTransition(transition, marking, preset, postset);
+					marking = fireTransition(transition, marking, preset, postset);
 //				System.out.println("[DiscoverPetriNetAlgorithm] Marking " + marking);
-				if (!transition.isInvisible()) {
-					XEvent event = XFactoryRegistry.instance().currentDefault().createEvent();
-					XConceptExtension.instance().assignName(event, transition.getLabel());
-					trace.add(event);
+					if (!transition.isInvisible()) {
+						XEvent event = XFactoryRegistry.instance().currentDefault().createEvent();
+						XConceptExtension.instance().assignName(event, transition.getLabel());
+						trace.add(event);
+					}
+				}
+				if (trace.size() < 1000) {
+					incomplete = false;
+				} else {
+					System.out.println("[DiscoverPetriNetAlgorithm] Regenerating trace " + i);
+					trace.clear();
 				}
 			}
 			log.add(trace);
 		}
 		return log;
 	}
-	
-	private List<Transition> getEnabledTransitions(AcceptingPetriNet apn, Marking marking, Map<PetrinetNode, Set<PetrinetNode>> preset, Map<PetrinetNode, Set<PetrinetNode>> postset) {
+
+	private List<Transition> getEnabledTransitions(AcceptingPetriNet apn, Marking marking,
+			Map<PetrinetNode, Set<PetrinetNode>> preset, Map<PetrinetNode, Set<PetrinetNode>> postset) {
 		List<Transition> enabled = new ArrayList<Transition>();
 		for (Transition transition : apn.getNet().getTransitions()) {
-			if (!transition.isInvisible() 
-					|| transition.getLabel().equals(ActivityAlphabet.START) 
+			if (!transition.isInvisible() || transition.getLabel().equals(ActivityAlphabet.START)
 					|| transition.getLabel().equals(ActivityAlphabet.END)) {
 				boolean isEnabled = true;
 				for (PetrinetNode node : preset.get(transition)) {
@@ -705,8 +769,9 @@ public class DiscoverPetriNetAlgorithm {
 		}
 		return enabled;
 	}
-	
-	private boolean hasToken(Place place, Marking marking, Map<PetrinetNode, Set<PetrinetNode>> preset, Map<PetrinetNode, Set<PetrinetNode>> postset) {
+
+	private boolean hasToken(Place place, Marking marking, Map<PetrinetNode, Set<PetrinetNode>> preset,
+			Map<PetrinetNode, Set<PetrinetNode>> postset) {
 		if (marking.contains(place)) {
 			return true;
 		}
@@ -727,9 +792,10 @@ public class DiscoverPetriNetAlgorithm {
 		}
 		return false;
 	}
-	
-	private Marking fireTransition(Transition transition, Marking marking, Map<PetrinetNode, Set<PetrinetNode>> preset, Map<PetrinetNode, Set<PetrinetNode>> postset) {
-		Marking newMarking = new Marking (marking);
+
+	private Marking fireTransition(Transition transition, Marking marking, Map<PetrinetNode, Set<PetrinetNode>> preset,
+			Map<PetrinetNode, Set<PetrinetNode>> postset) {
+		Marking newMarking = new Marking(marking);
 		for (PetrinetNode node : preset.get(transition)) {
 			Place place = (Place) node;
 			removeToken(place, newMarking, preset);
@@ -740,7 +806,7 @@ public class DiscoverPetriNetAlgorithm {
 		}
 		return newMarking;
 	}
-	
+
 	private void removeToken(Place place, Marking marking, Map<PetrinetNode, Set<PetrinetNode>> preset) {
 		if (marking.contains(place)) {
 			marking.remove(place);
