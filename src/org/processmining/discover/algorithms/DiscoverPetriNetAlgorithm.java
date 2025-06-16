@@ -724,15 +724,15 @@ public class DiscoverPetriNetAlgorithm {
 			System.out.println("[DiscoverPetriNetAlgorithm] Generating trace " + i);
 			XTrace trace = XFactoryRegistry.instance().currentDefault().createTrace();
 			boolean incomplete = true;
-			Marking marking = new Marking(apn.getInitialMarking());
 			while (incomplete) {
-//			System.out.println("[DiscoverPetriNetAlgorithm] Marking " + marking);
+				Marking marking = new Marking(apn.getInitialMarking());
+//				System.out.println("[DiscoverPetriNetAlgorithm] Marking " + marking);
 				while (!apn.getFinalMarkings().contains(marking) && trace.size() < 1000) {
 					List<Transition> enabled = getEnabledTransitions(apn, marking, preset, postset);
 					Transition transition = enabled.get(new Random().nextInt(enabled.size()));
-//				System.out.println("[DiscoverPetriNetAlgorithm] Firing transition " + transition.getLabel());
+//					System.out.println("[DiscoverPetriNetAlgorithm] Firing transition " + transition.getLabel());
 					marking = fireTransition(transition, marking, preset, postset);
-//				System.out.println("[DiscoverPetriNetAlgorithm] Marking " + marking);
+//					System.out.println("[DiscoverPetriNetAlgorithm] Marking " + marking);
 					if (!transition.isInvisible()) {
 						XEvent event = XFactoryRegistry.instance().currentDefault().createEvent();
 						XConceptExtension.instance().assignName(event, transition.getLabel());
