@@ -624,6 +624,9 @@ public class DiscoverPetriNetAlgorithm {
 			}
 
 			for (String activity : lsLog.getActivities()) {
+				if (apn.getNet().getTransitions().size() > 100) {
+					return;
+				}
 				if (lsLog.getMin(activity) == 1 && lsLog.getMax(activity) == 1) {
 					if (!(lsModel.getMin(activity) == 1 && lsModel.getMax(activity) == 1)) {
 						Place p = apn.getNet().addPlace("p11_" + activity);
