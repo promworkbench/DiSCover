@@ -604,6 +604,9 @@ public class DiscoverPetriNetAlgorithm {
 		if (!parameters.isEnhanceWithLS()) {
 			return;
 		}
+		if (apn.getNet().getTransitions().size() > 100) {
+			return;
+		}
 		try {
 			LogSkeleton lsLog = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
 					"Build Log Skeleton from Event Log", null, null, eventLog);
