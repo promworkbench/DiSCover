@@ -633,6 +633,12 @@ public class DiscoverPetriNetAlgorithm {
 				if (!transitionMap.containsKey(activity)) {
 					continue;
 				}
+				if (activity.equals(ActivityAlphabet.START)) {
+					continue;
+				}
+				if (activity.equals(ActivityAlphabet.END)) {
+					continue;
+				}
 				if (lsLog.getMin(activity) == 1 && lsLog.getMax(activity) == 1) {
 					if (!(lsModel.getMin(activity) == 1 && lsModel.getMax(activity) == 1)) {
 						Place p = apn.getNet().addPlace("p11_" + activity);
@@ -657,6 +663,12 @@ public class DiscoverPetriNetAlgorithm {
 					return;
 				}
 				if (!transitionMap.containsKey(activity)) {
+					continue;
+				}
+				if (activity.equals(ActivityAlphabet.START)) {
+					continue;
+				}
+				if (activity.equals(ActivityAlphabet.END)) {
 					continue;
 				}
 				if (lsLog.getMin(activity) == 0 && lsLog.getMax(activity) == 1) {
@@ -692,6 +704,9 @@ public class DiscoverPetriNetAlgorithm {
 						return;
 					}
 					if (source == target) {
+						continue;
+					}
+					if (source.equals(ActivityAlphabet.START)) {
 						continue;
 					}
 					if (lsLog.hasNonRedundantResponse(source, target, lsLog.getActivities())) {
@@ -731,6 +746,9 @@ public class DiscoverPetriNetAlgorithm {
 						return;
 					}
 					if (source == target) {
+						continue;
+					}
+					if (source.equals(ActivityAlphabet.START)) {
 						continue;
 					}
 					if (lsLog.hasNonRedundantPrecedence(target, source, lsLog.getActivities())) {
