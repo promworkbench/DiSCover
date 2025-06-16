@@ -630,10 +630,13 @@ public class DiscoverPetriNetAlgorithm {
 				if (lsLog.getMin(activity) == 1 && lsLog.getMax(activity) == 1) {
 					if (!(lsModel.getMin(activity) == 1 && lsModel.getMax(activity) == 1)) {
 						Place p = apn.getNet().addPlace("p11_" + activity);
-						apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p);
-						apn.getNet().addArc(p, transitionMap.get(activity));
 						Place q = apn.getNet().addPlace("q11_" + activity);
+						
+						apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p);
+						
+						apn.getNet().addArc(p, transitionMap.get(activity));
 						apn.getNet().addArc(transitionMap.get(activity), q);
+						
 						apn.getNet().addArc(q, transitionMap.get(ActivityAlphabet.END));
 					}
 				}
@@ -645,96 +648,115 @@ public class DiscoverPetriNetAlgorithm {
 				if (lsLog.getMin(activity) == 0 && lsLog.getMax(activity) == 1) {
 					if (!(lsModel.getMin(activity) == 0 && lsModel.getMax(activity) == 1)) {
 						Place p = apn.getNet().addPlace("p01_" + activity);
-						apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p);
-						apn.getNet().addArc(p, transitionMap.get(activity));
 						Place q = apn.getNet().addPlace("q01_" + activity);
-						apn.getNet().addArc(transitionMap.get(activity), q);
-						apn.getNet().addArc(q, transitionMap.get(ActivityAlphabet.END));
 						Transition t = apn.getNet().addTransition("t01_" + activity);
 						t.setInvisible(true);
+
+						apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p);
+						
+						apn.getNet().addArc(p, transitionMap.get(activity));
+						apn.getNet().addArc(transitionMap.get(activity), q);
+						
 						apn.getNet().addArc(p, t);
 						apn.getNet().addArc(t, q);
+						
+						apn.getNet().addArc(q, transitionMap.get(ActivityAlphabet.END));
 					}
 				}
 			}
-			for (String source : lsLog.getActivities()) {
-				for (String target : lsLog.getActivities()) {
-					if (apn.getNet().getTransitions().size() > 100) {
-						return;
-					}
-					if (source == target) {
-						continue;
-					}
-					if (lsLog.hasNonRedundantResponse(source, target, lsLog.getActivities())) {
-						if (!lsModel.hasNonRedundantResponse(source, target, lsModel.getActivities())) {
-							Place p = apn.getNet().addPlace("pr_" + source + "_" + target);
-							apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p);
-							apn.getNet().addArc(p, transitionMap.get(ActivityAlphabet.END));
-							Place q = apn.getNet().addPlace("qr_" + source + "_" + target);
-							apn.getNet().addArc(transitionMap.get(source), p);
-							apn.getNet().addArc(p, transitionMap.get(source));
-							apn.getNet().addArc(transitionMap.get(target), p);
-							apn.getNet().addArc(q, transitionMap.get(target));
-							Transition t = apn.getNet().addTransition("tr_" + source + "_" + target);
-							t.setInvisible(true);
-							apn.getNet().addArc(t, q);
-							apn.getNet().addArc(p, t);
-						}
-					}
-				}
-			}
-			for (String source : lsLog.getActivities()) {
-				for (String target : lsLog.getActivities()) {
-					if (apn.getNet().getTransitions().size() > 100) {
-						return;
-					}
-					if (source == target) {
-						continue;
-					}
-					if (lsLog.hasNonRedundantPrecedence(source, target, lsLog.getActivities())) {
-						if (!lsModel.hasNonRedundantPrecedence(source, target, lsModel.getActivities())) {
-							Place p = apn.getNet().addPlace("pp_" + source + "_" + target);
-							apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p);
-							apn.getNet().addArc(p, transitionMap.get(ActivityAlphabet.END));
-							Place q = apn.getNet().addPlace("qp_" + source + "_" + target);
-							apn.getNet().addArc(transitionMap.get(source), p);
-							apn.getNet().addArc(p, transitionMap.get(source));
-							apn.getNet().addArc(transitionMap.get(target), q);
-							apn.getNet().addArc(p, transitionMap.get(target));
-							Transition t = apn.getNet().addTransition("tp_" + source + "_" + target);
-							t.setInvisible(true);
-							apn.getNet().addArc(t, p);
-							apn.getNet().addArc(q, t);
-						}
-					}
-				}
-			}
-			for (String source : lsLog.getActivities()) {
-				for (String target : lsLog.getActivities()) {
-					if (apn.getNet().getTransitions().size() > 100) {
-						return;
-					}
-					if (source == target) {
-						continue;
-					}
-					if (lsLog.hasNonRedundantNotResponse(source, target, lsLog.getActivities())) {
-						if (!lsModel.hasNonRedundantNotResponse(source, target, lsModel.getActivities())) {
-							Place p = apn.getNet().addPlace("pn_" + source + "_" + target);
-							apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p);
-							Place q = apn.getNet().addPlace("qn_" + source + "_" + target);
-							apn.getNet().addArc(q, transitionMap.get(ActivityAlphabet.END));
-							apn.getNet().addArc(transitionMap.get(source), p);
-							apn.getNet().addArc(p, transitionMap.get(source));
-							apn.getNet().addArc(transitionMap.get(target), q);
-							apn.getNet().addArc(q, transitionMap.get(target));
-							Transition t = apn.getNet().addTransition("tn_" + source + "_" + target);
-							t.setInvisible(true);
-							apn.getNet().addArc(t, q);
-							apn.getNet().addArc(p, t);
-						}
-					}
-				}
-			}
+//			for (String source : lsLog.getActivities()) {
+//				for (String target : lsLog.getActivities()) {
+//					if (apn.getNet().getTransitions().size() > 100) {
+//						return;
+//					}
+//					if (source == target) {
+//						continue;
+//					}
+//					if (lsLog.hasNonRedundantResponse(source, target, lsLog.getActivities())) {
+//						if (!lsModel.hasNonRedundantResponse(source, target, lsModel.getActivities())) {
+//							Place p = apn.getNet().addPlace("pr_" + source + "_" + target);
+//							Place q = apn.getNet().addPlace("qr_" + source + "_" + target);
+//							Transition t = apn.getNet().addTransition("tr_" + source + "_" + target);
+//							t.setInvisible(true);
+//							
+//							apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p);
+//							
+//							apn.getNet().addArc(p, t);
+//							apn.getNet().addArc(t, q);
+//							
+//							apn.getNet().addArc(transitionMap.get(source), q);
+//							apn.getNet().addArc(q, transitionMap.get(source));
+//							
+//							apn.getNet().addArc(q, transitionMap.get(target));
+//							apn.getNet().addArc(transitionMap.get(target), p);
+//							
+//							apn.getNet().addArc(p, transitionMap.get(ActivityAlphabet.END));
+//						}
+//					}
+//				}
+//			}
+//			for (String source : lsLog.getActivities()) {
+//				for (String target : lsLog.getActivities()) {
+//					if (apn.getNet().getTransitions().size() > 100) {
+//						return;
+//					}
+//					if (source == target) {
+//						continue;
+//					}
+//					if (lsLog.hasNonRedundantPrecedence(source, target, lsLog.getActivities())) {
+//						if (!lsModel.hasNonRedundantPrecedence(source, target, lsModel.getActivities())) {
+//							Place p = apn.getNet().addPlace("pp_" + source + "_" + target);
+//							Place q = apn.getNet().addPlace("qp_" + source + "_" + target);
+//							Transition t = apn.getNet().addTransition("tp_" + source + "_" + target);
+//							t.setInvisible(true);
+//
+//							apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p);
+//							
+//							apn.getNet().addArc(p, transitionMap.get(target));
+//							apn.getNet().addArc(transitionMap.get(target), q);
+//							
+//							apn.getNet().addArc(q, transitionMap.get(source));
+//							apn.getNet().addArc(transitionMap.get(source), q);
+//							
+//							apn.getNet().addArc(q, t);
+//							apn.getNet().addArc(t, p);
+//							
+//							apn.getNet().addArc(p, transitionMap.get(ActivityAlphabet.END));
+//						}
+//					}
+//				}
+//			}
+//			for (String source : lsLog.getActivities()) {
+//				for (String target : lsLog.getActivities()) {
+//					if (apn.getNet().getTransitions().size() > 100) {
+//						return;
+//					}
+//					if (source == target) {
+//						continue;
+//					}
+//					if (lsLog.hasNonRedundantNotResponse(source, target, lsLog.getActivities())) {
+//						if (!lsModel.hasNonRedundantNotResponse(source, target, lsModel.getActivities())) {
+//							Place p = apn.getNet().addPlace("pn_" + source + "_" + target);
+//							Place q = apn.getNet().addPlace("qn_" + source + "_" + target);
+//							Transition t = apn.getNet().addTransition("tn_" + source + "_" + target);
+//							t.setInvisible(true);
+//
+//							apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p);
+//							
+//							apn.getNet().addArc(transitionMap.get(source), p);
+//							apn.getNet().addArc(p, transitionMap.get(source));
+//							
+//							apn.getNet().addArc(p, t);
+//							apn.getNet().addArc(t, q);
+//							
+//							apn.getNet().addArc(transitionMap.get(target), q);
+//							apn.getNet().addArc(q, transitionMap.get(target));
+//							
+//							apn.getNet().addArc(q, transitionMap.get(ActivityAlphabet.END));
+//						}
+//					}
+//				}
+//			}
 
 		} catch (ConnectionCannotBeObtained e) {
 			// Ignore: No enhancements possible.
