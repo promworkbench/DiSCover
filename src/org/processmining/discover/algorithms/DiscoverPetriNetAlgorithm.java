@@ -627,16 +627,19 @@ public class DiscoverPetriNetAlgorithm {
 				if (apn.getNet().getTransitions().size() > 100) {
 					return;
 				}
+				if (!transitionMap.containsKey(activity)) {
+					continue;
+				}
 				if (lsLog.getMin(activity) == 1 && lsLog.getMax(activity) == 1) {
 					if (!(lsModel.getMin(activity) == 1 && lsModel.getMax(activity) == 1)) {
 						Place p = apn.getNet().addPlace("p11_" + activity);
 						Place q = apn.getNet().addPlace("q11_" + activity);
-						
+
 						apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p);
-						
+
 						apn.getNet().addArc(p, transitionMap.get(activity));
 						apn.getNet().addArc(transitionMap.get(activity), q);
-						
+
 						apn.getNet().addArc(q, transitionMap.get(ActivityAlphabet.END));
 					}
 				}
@@ -644,6 +647,9 @@ public class DiscoverPetriNetAlgorithm {
 			for (String activity : lsLog.getActivities()) {
 				if (apn.getNet().getTransitions().size() > 100) {
 					return;
+				}
+				if (!transitionMap.containsKey(activity)) {
+					continue;
 				}
 				if (lsLog.getMin(activity) == 0 && lsLog.getMax(activity) == 1) {
 					if (!(lsModel.getMin(activity) == 0 && lsModel.getMax(activity) == 1)) {
@@ -653,13 +659,13 @@ public class DiscoverPetriNetAlgorithm {
 						t.setInvisible(true);
 
 						apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p);
-						
+
 						apn.getNet().addArc(p, transitionMap.get(activity));
 						apn.getNet().addArc(transitionMap.get(activity), q);
-						
+
 						apn.getNet().addArc(p, t);
 						apn.getNet().addArc(t, q);
-						
+
 						apn.getNet().addArc(q, transitionMap.get(ActivityAlphabet.END));
 					}
 				}
@@ -777,29 +783,35 @@ public class DiscoverPetriNetAlgorithm {
 		XLog log = XFactoryRegistry.instance().currentDefault().createLog();
 		log.getClassifiers().add(new XEventNameClassifier());
 		for (int i = 0; i < 1000; i++) {
-			System.out.println("[DiscoverPetriNetAlgorithm] Generating trace " + i);
+//			System.out.println("[DiscoverPetriNetAlgorithm] Generating trace " + i);
 			XTrace trace = XFactoryRegistry.instance().currentDefault().createTrace();
 			boolean incomplete = true;
+			int threshold = 1000;
 			while (incomplete) {
 				Marking marking = new Marking(apn.getInitialMarking());
 //				System.out.println("[DiscoverPetriNetAlgorithm] Marking " + marking);
-				while (!apn.getFinalMarkings().contains(marking) && trace.size() < 1000) {
+				while (!apn.getFinalMarkings().contains(marking) && trace.size() < threshold) {
 					List<Transition> enabled = getEnabledTransitions(apn, marking, preset, postset);
-					Transition transition = enabled.get(new Random().nextInt(enabled.size()));
-//					System.out.println("[DiscoverPetriNetAlgorithm] Firing transition " + transition.getLabel());
-					marking = fireTransition(transition, marking, preset, postset);
-//					System.out.println("[DiscoverPetriNetAlgorithm] Marking " + marking);
-					if (!transition.isInvisible()) {
-						XEvent event = XFactoryRegistry.instance().currentDefault().createEvent();
-						XConceptExtension.instance().assignName(event, transition.getLabel());
-						trace.add(event);
+					if (enabled.isEmpty()) {
+						threshold = 0; // Start again.
+					} else {
+						Transition transition = enabled.get(new Random().nextInt(enabled.size()));
+//						System.out.println("[DiscoverPetriNetAlgorithm] Firing transition " + transition.getLabel());
+						marking = fireTransition(transition, marking, preset, postset);
+//						System.out.println("[DiscoverPetriNetAlgorithm] Marking " + marking);
+						if (!transition.isInvisible()) {
+							XEvent event = XFactoryRegistry.instance().currentDefault().createEvent();
+							XConceptExtension.instance().assignName(event, transition.getLabel());
+							trace.add(event);
+						}
 					}
 				}
-				if (trace.size() < 1000) {
+				if (trace.size() < threshold) {
 					incomplete = false;
 				} else {
 					System.out.println("[DiscoverPetriNetAlgorithm] Regenerating trace " + i);
 					trace.clear();
+					threshold = 1000;
 				}
 			}
 			log.add(trace);
