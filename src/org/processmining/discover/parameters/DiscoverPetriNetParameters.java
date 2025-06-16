@@ -74,6 +74,8 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	
 	private boolean showGraph;
 
+	private boolean enhanceWithLS;
+
 	/**
 	 * The safety threshold to use.
 	 */
@@ -132,6 +134,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static boolean lastUseILP = false;
 	private static boolean lastUseILP2 = true;
 	private static boolean lastShowGraph = false;
+	private static boolean lastEnhanceWithLS = false;
 
 	/**
 	 * Creates default parameter settings.
@@ -155,6 +158,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		setUseILP(lastUseILP);
 		setUseILP2(lastUseILP2);
 		setShowGraph(lastShowGraph);
+		setEnhanceWithLS(lastEnhanceWithLS);
 		setClassifier(null, false);
 		setActivities(null, false);
 		setAlphabet(null, false);
@@ -453,6 +457,15 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 //		System.out.println("[DiscoverPetriNetParameters] Set filte rlog to " + filterLog);
 		lastFilterLog = filterLog;
 		this.filterLog = filterLog;
+	}
+
+	public boolean isEnhanceWithLS() {
+		return enhanceWithLS;
+	}
+
+	public void setEnhanceWithLS(boolean enhanceWithLS) {
+		lastEnhanceWithLS = enhanceWithLS;
+		this.enhanceWithLS = enhanceWithLS;
 	}
 
 //	public int getPercentage() {

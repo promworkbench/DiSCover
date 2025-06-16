@@ -5,10 +5,15 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import org.deckfour.xes.classification.XEventNameClassifier;
+import org.deckfour.xes.extension.std.XConceptExtension;
+import org.deckfour.xes.factory.XFactoryRegistry;
+import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;
+import org.deckfour.xes.model.XTrace;
 import org.processmining.acceptingpetrinet.models.AcceptingPetriNet;
 import org.processmining.acceptingpetrinet.models.impl.AcceptingPetriNetFactory;
 import org.processmining.acceptingpetrinetclassicalreductor.algorithms.ReduceUsingMurataRulesAlgorithm;
@@ -21,7 +26,9 @@ import org.processmining.discover.models.ActivitySet;
 import org.processmining.discover.models.ActivitySets;
 import org.processmining.discover.models.ConcurrentActivityPairs;
 import org.processmining.discover.parameters.DiscoverPetriNetParameters;
+import org.processmining.framework.connections.ConnectionCannotBeObtained;
 import org.processmining.framework.plugin.PluginContext;
+import org.processmining.logskeleton.models.LogSkeleton;
 import org.processmining.models.graphbased.directed.petrinet.Petrinet;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetEdge;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetNode;
@@ -190,6 +197,8 @@ public class DiscoverPetriNetAlgorithm {
 				+ (System.currentTimeMillis() - time) + " milliseconds.");
 		time = System.currentTimeMillis();
 
+		enhanceNet(context, apn, eventLog, parameters);
+		
 		/*
 		 * If selected by the user, reduce the accepting Petri net as much as possible.
 		 * This may take considerable time.
@@ -586,6 +595,171 @@ public class DiscoverPetriNetAlgorithm {
 				apn.getNet().addArc(seen.get(context), postPlace);
 			} else {
 				seen.put(context, transition);
+			}
+		}
+	}
+	
+	private void enhanceNet(PluginContext context, AcceptingPetriNet apn, XLog eventLog, DiscoverPetriNetParameters parameters) {
+		if (!parameters.isEnhanceWithLS()) {
+			return;
+		}
+		try {
+			LogSkeleton lsLog = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
+					"Build Log Skeleton from Event Log", null, null, eventLog);
+			
+			XLog apnLog = generateLog(apn);
+			LogSkeleton lsModel = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
+					"Build Log Skeleton from Event Log", null, null, apnLog);
+			
+			Map<String, Transition> transitionMap = new HashMap<String, Transition>();
+			for (Transition transition : apn.getNet().getTransitions()) {
+				if (!transition.isInvisible()
+						|| transition.getLabel().equals(ActivityAlphabet.START) 
+						|| transition.getLabel().equals(ActivityAlphabet.END)) {
+					transitionMap.put(transition.getLabel(), transition);
+				}
+			}
+			
+			for (String activity : lsLog.getActivities()) {
+				if (lsLog.getMin(activity) == 1 && lsLog.getMax(activity) == 1) {
+					if (!(lsModel.getMin(activity) == 1 && lsModel.getMax(activity) == 1)) {
+						Place p11 = apn.getNet().addPlace("p11_" + activity);
+						apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p11);
+						apn.getNet().addArc(p11, transitionMap.get(activity));
+						Place q11 = apn.getNet().addPlace("q11_" + activity);
+						apn.getNet().addArc(transitionMap.get(activity), q11);
+						apn.getNet().addArc(q11, transitionMap.get(ActivityAlphabet.END));
+					}
+				}
+				if (lsLog.getMin(activity) == 0 && lsLog.getMax(activity) == 1) {
+					if (!(lsModel.getMin(activity) == 0 && lsModel.getMax(activity) == 1)) {
+						Place p11 = apn.getNet().addPlace("p01_" + activity);
+						apn.getNet().addArc(transitionMap.get(ActivityAlphabet.START), p11);
+						apn.getNet().addArc(p11, transitionMap.get(activity));
+						Place q11 = apn.getNet().addPlace("q01_" + activity);
+						apn.getNet().addArc(transitionMap.get(activity), q11);
+						apn.getNet().addArc(q11, transitionMap.get(ActivityAlphabet.END));
+						Transition skipTransition = apn.getNet().addTransition("t01_"+ activity);
+						skipTransition.setInvisible(true);
+						apn.getNet().addArc(p11, skipTransition);
+						apn.getNet().addArc(skipTransition, q11);
+					}
+				}
+			}
+			
+		} catch (ConnectionCannotBeObtained e) {
+			// Ignore: No enhancements possible.
+		}
+	}
+	
+	private XLog generateLog(AcceptingPetriNet apn) {
+		Map<PetrinetNode, Set<PetrinetNode>> preset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
+		Map<PetrinetNode, Set<PetrinetNode>> postset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
+		for (PetrinetNode node : apn.getNet().getNodes()) {
+			preset.put(node, new HashSet<PetrinetNode>());
+			postset.put(node, new HashSet<PetrinetNode>());
+		}
+		for (PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode> edge : apn.getNet().getEdges()) {
+			postset.get(edge.getSource()).add(edge.getTarget());
+			preset.get(edge.getTarget()).add(edge.getSource());
+		}
+		XLog log = XFactoryRegistry.instance().currentDefault().createLog();
+		log.getClassifiers().add(new XEventNameClassifier());
+		for (int i = 0; i < 1000; i++) {
+//			System.out.println("[DiscoverPetriNetAlgorithm] Generating trace " + i);
+			XTrace trace = XFactoryRegistry.instance().currentDefault().createTrace();
+			Marking marking = new Marking(apn.getInitialMarking());
+//			System.out.println("[DiscoverPetriNetAlgorithm] Marking " + marking);
+			while (!apn.getFinalMarkings().contains(marking)) {
+				List<Transition> enabled = getEnabledTransitions(apn, marking, preset, postset);
+				Transition transition = enabled.get(new Random().nextInt(enabled.size()));
+//				System.out.println("[DiscoverPetriNetAlgorithm] Firing transition " + transition.getLabel());
+				marking = fireTransition(transition, marking, preset, postset);
+//				System.out.println("[DiscoverPetriNetAlgorithm] Marking " + marking);
+				if (!transition.isInvisible()) {
+					XEvent event = XFactoryRegistry.instance().currentDefault().createEvent();
+					XConceptExtension.instance().assignName(event, transition.getLabel());
+					trace.add(event);
+				}
+			}
+			log.add(trace);
+		}
+		return log;
+	}
+	
+	private List<Transition> getEnabledTransitions(AcceptingPetriNet apn, Marking marking, Map<PetrinetNode, Set<PetrinetNode>> preset, Map<PetrinetNode, Set<PetrinetNode>> postset) {
+		List<Transition> enabled = new ArrayList<Transition>();
+		for (Transition transition : apn.getNet().getTransitions()) {
+			if (!transition.isInvisible() 
+					|| transition.getLabel().equals(ActivityAlphabet.START) 
+					|| transition.getLabel().equals(ActivityAlphabet.END)) {
+				boolean isEnabled = true;
+				for (PetrinetNode node : preset.get(transition)) {
+					Place place = (Place) node;
+					isEnabled = isEnabled && hasToken(place, marking, preset, postset);
+				}
+				if (isEnabled) {
+					enabled.add(transition);
+				}
+			}
+		}
+		return enabled;
+	}
+	
+	private boolean hasToken(Place place, Marking marking, Map<PetrinetNode, Set<PetrinetNode>> preset, Map<PetrinetNode, Set<PetrinetNode>> postset) {
+		if (marking.contains(place)) {
+			return true;
+		}
+		for (PetrinetNode node : preset.get(place)) {
+			Transition transition = (Transition) node;
+			if (!transition.isInvisible()) {
+				continue;
+			}
+			if (transition.getLabel().equals(ActivityAlphabet.START)) {
+				continue;
+			}
+			if (transition.getLabel().equals(ActivityAlphabet.END)) {
+				continue;
+			}
+			if (marking.contains(preset.get(transition).iterator().next())) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private Marking fireTransition(Transition transition, Marking marking, Map<PetrinetNode, Set<PetrinetNode>> preset, Map<PetrinetNode, Set<PetrinetNode>> postset) {
+		Marking newMarking = new Marking (marking);
+		for (PetrinetNode node : preset.get(transition)) {
+			Place place = (Place) node;
+			removeToken(place, newMarking, preset);
+		}
+		for (PetrinetNode node : postset.get(transition)) {
+			Place place = (Place) node;
+			newMarking.add(place);
+		}
+		return newMarking;
+	}
+	
+	private void removeToken(Place place, Marking marking, Map<PetrinetNode, Set<PetrinetNode>> preset) {
+		if (marking.contains(place)) {
+			marking.remove(place);
+			return;
+		}
+		for (PetrinetNode node : preset.get(place)) {
+			Transition transition = (Transition) node;
+			if (!transition.isInvisible()) {
+				continue;
+			}
+			if (transition.getLabel().equals(ActivityAlphabet.START)) {
+				continue;
+			}
+			if (transition.getLabel().equals(ActivityAlphabet.END)) {
+				continue;
+			}
+			if (marking.contains(preset.get(transition).iterator().next())) {
+				marking.remove(preset.get(transition).iterator().next());
+				return;
 			}
 		}
 	}

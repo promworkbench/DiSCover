@@ -29,7 +29,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 	 * @param parameters The given parameter settings
 	 */
 	public DiscoverPetriNetWidget(final DiscoverPetriNetParameters parameters) {
-		double size[][] = { { 30, TableLayoutConstants.FILL }, { 30, 30, 30, 30, 30, TableLayoutConstants.FILL } };
+		double size[][] = { { 30, TableLayoutConstants.FILL }, { 30, 30, 30, 30, 30, 30, TableLayoutConstants.FILL } };
 		setLayout(new TableLayout(size));
 
 
@@ -121,7 +121,20 @@ public class DiscoverPetriNetWidget extends JPanel {
 		reduceRestrictedBox.setOpaque(false);
 		reduceRestrictedBox.setVisible(reduceBox.isSelected());
 		add(reduceRestrictedBox, "1, 3");
+
+		final JCheckBox enhanceBox = SlickerFactory.instance().createCheckBox("Enhance using log skeletons",
+				parameters.isEnhanceWithLS());
+		enhanceBox.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				parameters.setEnhanceWithLS(enhanceBox.isSelected());
+			}
+
+		});
+		enhanceBox.setOpaque(false);
+		add(enhanceBox, "0, 5, 1, 5");
 		
+
 		// Check box for majority
 //		final JCheckBox majorityBox = SlickerFactory.instance().createCheckBox("Use veto for noise",
 //				parameters.isVetoNoise());
