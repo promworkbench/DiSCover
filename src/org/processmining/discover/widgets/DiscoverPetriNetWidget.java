@@ -1,6 +1,7 @@
 package org.processmining.discover.widgets;
 
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -8,9 +9,13 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.processmining.discover.parameters.DiscoverPetriNetParameters;
 
+import com.fluxicon.slickerbox.components.NiceSlider;
+import com.fluxicon.slickerbox.components.NiceSlider.Orientation;
 import com.fluxicon.slickerbox.factory.SlickerFactory;
 
 import info.clearthought.layout.TableLayout;
@@ -122,18 +127,18 @@ public class DiscoverPetriNetWidget extends JPanel {
 		reduceRestrictedBox.setVisible(reduceBox.isSelected());
 		add(reduceRestrictedBox, "1, 3");
 
-		final JCheckBox enhanceBox = SlickerFactory.instance().createCheckBox("Enhance using log skeletons",
-				parameters.isEnhanceWithLS());
-		enhanceBox.addActionListener(new ActionListener() {
+		final NiceSlider enhancementSlider = SlickerFactory.instance().createNiceIntegerSlider("Max. number of log skeleton fragments to add", 0, 100,
+				(int) (100*parameters.getNofEnhancements()), Orientation.HORIZONTAL);
+		enhancementSlider.addChangeListener(new ChangeListener() {
 
-			public void actionPerformed(ActionEvent e) {
-				parameters.setEnhanceWithLS(enhanceBox.isSelected());
+			public void stateChanged(ChangeEvent e) {
+				int value = enhancementSlider.getSlider().getValue();
+				parameters.setNofEnhancements(value);
 			}
-
 		});
-		enhanceBox.setOpaque(false);
-		add(enhanceBox, "0, 5, 1, 5");
-		
+		enhancementSlider.setPreferredSize(new Dimension(100, 30));
+		add(enhancementSlider, "0, 5, 1, 5");
+
 
 		// Check box for majority
 //		final JCheckBox majorityBox = SlickerFactory.instance().createCheckBox("Use veto for noise",

@@ -601,7 +601,8 @@ public class DiscoverPetriNetAlgorithm {
 
 	private void enhanceNet(PluginContext context, AcceptingPetriNet apn, XLog eventLog,
 			DiscoverPetriNetParameters parameters) {
-		if (!parameters.isEnhanceWithLS()) {
+		int max = parameters.getNofEnhancements();
+		if (max == 0) {
 			return;
 		}
 		if (apn.getNet().getTransitions().size() > 100) {
@@ -623,13 +624,9 @@ public class DiscoverPetriNetAlgorithm {
 					transitionMap.put(transition.getLabel(), transition);
 				}
 			}
-
-			int max = 5; // Add at most 5 enhancements. 
 			
+			List<String> activities = new ArrayList<String>();
 			for (String activity : lsLog.getActivities()) {
-				if (max == 0) {
-					return;
-				}
 				if (!transitionMap.containsKey(activity)) {
 					continue;
 				}
@@ -638,6 +635,13 @@ public class DiscoverPetriNetAlgorithm {
 				}
 				if (activity.equals(ActivityAlphabet.END)) {
 					continue;
+				}
+				activities.add(activity);
+			}
+
+			for (String activity : activities) {
+				if (max == 0) {
+					return;
 				}
 				if (lsLog.getMin(activity) == 1 && lsLog.getMax(activity) == 1) {
 					if (!(lsModel.getMin(activity) == 1 && lsModel.getMax(activity) == 1)) {
@@ -658,18 +662,9 @@ public class DiscoverPetriNetAlgorithm {
 				}
 			}
 			
-			for (String activity : lsLog.getActivities()) {
+			for (String activity : activities) {
 				if (max == 0) {
 					return;
-				}
-				if (!transitionMap.containsKey(activity)) {
-					continue;
-				}
-				if (activity.equals(ActivityAlphabet.START)) {
-					continue;
-				}
-				if (activity.equals(ActivityAlphabet.END)) {
-					continue;
 				}
 				if (lsLog.getMin(activity) == 0 && lsLog.getMax(activity) == 1) {
 					if (!(lsModel.getMin(activity) == 0 && lsModel.getMax(activity) == 1)) {
@@ -695,18 +690,12 @@ public class DiscoverPetriNetAlgorithm {
 				}
 			}
 			
-			for (String target : lsLog.getActivities()) {
-				if (target.equals(ActivityAlphabet.END)) {
-					continue;
-				}
-				for (String source : lsLog.getActivities()) {
+			for (String target : activities) {
+				for (String source : activities) {
 					if (max == 0) {
 						return;
 					}
 					if (source == target) {
-						continue;
-					}
-					if (source.equals(ActivityAlphabet.START)) {
 						continue;
 					}
 					if (lsLog.hasNonRedundantResponse(source, target, lsLog.getActivities())) {
@@ -737,18 +726,12 @@ public class DiscoverPetriNetAlgorithm {
 				}
 			}
 			
-			for (String target : lsLog.getActivities()) {
-				if (target.equals(ActivityAlphabet.END)) {
-					continue;
-				}
-				for (String source : lsLog.getActivities()) {
+			for (String target : activities) {
+				for (String source : activities) {
 					if (max == 0) {
 						return;
 					}
 					if (source == target) {
-						continue;
-					}
-					if (source.equals(ActivityAlphabet.START)) {
 						continue;
 					}
 					if (lsLog.hasNonRedundantPrecedence(target, source, lsLog.getActivities())) {
@@ -779,18 +762,12 @@ public class DiscoverPetriNetAlgorithm {
 				}
 			}
 			
-			for (String source : lsLog.getActivities()) {
-				if (source.equals(ActivityAlphabet.START)) {
-					continue;
-				}
-				for (String target : lsLog.getActivities()) {
+			for (String source : activities) {
+				for (String target : activities) {
 					if (max == 0) {
 						return;
 					}
 					if (source == target) {
-						continue;
-					}
-					if (target.equals(ActivityAlphabet.END)) {
 						continue;
 					}
 					if (lsLog.hasNonRedundantNotResponse(source, target, lsLog.getActivities())) {
@@ -850,6 +827,7 @@ public class DiscoverPetriNetAlgorithm {
 				while (!apn.getFinalMarkings().contains(marking) && trace.size() < threshold) {
 					List<Transition> enabled = getEnabledTransitions(apn, marking, preset, postset);
 					if (enabled.isEmpty()) {
+						System.err.println("[DiscoverPetriNetAlgorithm] Hit deadlock " + marking + ", trace " + trace.toString());
 						threshold = 0; // Start again.
 					} else {
 						Transition transition = enabled.get(new Random().nextInt(enabled.size()));
