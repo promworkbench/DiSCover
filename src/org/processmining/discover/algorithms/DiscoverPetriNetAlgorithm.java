@@ -605,9 +605,6 @@ public class DiscoverPetriNetAlgorithm {
 		if (max == 0) {
 			return;
 		}
-		if (apn.getNet().getTransitions().size() > 100) {
-			return;
-		}
 		try {
 			System.out.println("[DiscoverPetriNetAlgorithm] Enhancing the net, please be patient...");
 			LogSkeleton lsLog = context.tryToFindOrConstructFirstNamedObject(LogSkeleton.class,
