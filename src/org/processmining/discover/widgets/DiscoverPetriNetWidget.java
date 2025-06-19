@@ -128,7 +128,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 		add(reduceRestrictedBox, "1, 3");
 
 		final NiceSlider enhancementSlider = SlickerFactory.instance().createNiceIntegerSlider("Max. number of log skeleton fragments to add", 0, 100,
-				(int) (100*parameters.getNofEnhancements()), Orientation.HORIZONTAL);
+				(int) (parameters.getNofEnhancements()), Orientation.HORIZONTAL);
 		enhancementSlider.addChangeListener(new ChangeListener() {
 
 			public void stateChanged(ChangeEvent e) {
