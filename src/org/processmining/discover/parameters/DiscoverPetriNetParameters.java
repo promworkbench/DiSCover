@@ -74,7 +74,9 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	
 	private boolean showGraph;
 
-	private int nofEnhancements;
+	private boolean addUnaryPlaces;
+	
+	private boolean addBinaryPlaces;
 
 	/**
 	 * The safety threshold to use.
@@ -134,7 +136,8 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static boolean lastUseILP = false;
 	private static boolean lastUseILP2 = true;
 	private static boolean lastShowGraph = false;
-	private static int lastNofEnhancements = 0;
+	private static boolean lastAddUnaryPlaces = false;	
+	private static boolean lastAddBinaryPlaces = false;
 
 	/**
 	 * Creates default parameter settings.
@@ -158,7 +161,8 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		setUseILP(lastUseILP);
 		setUseILP2(lastUseILP2);
 		setShowGraph(lastShowGraph);
-		setNofEnhancements(lastNofEnhancements);
+		setAddUnaryPlaces(lastAddUnaryPlaces);
+		setAddBinaryPlaces(lastAddBinaryPlaces);
 		setClassifier(null, false);
 		setActivities(null, false);
 		setAlphabet(null, false);
@@ -459,13 +463,22 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		this.filterLog = filterLog;
 	}
 
-	public int getNofEnhancements() {
-		return nofEnhancements;
+	public boolean isAddUnaryPlaces() {
+		return addUnaryPlaces;
 	}
 
-	public void setNofEnhancements(int nofEnhancements) {
-		lastNofEnhancements = nofEnhancements;
-		this.nofEnhancements = nofEnhancements;
+	public void setAddUnaryPlaces(boolean addUnaryPlaces) {
+		lastAddUnaryPlaces = addUnaryPlaces;
+		this.addUnaryPlaces = addUnaryPlaces;
+	}
+
+	public boolean isAddBinaryPlaces() {
+		return addBinaryPlaces;
+	}
+
+	public void setAddBinaryPlaces(boolean addBinaryPlaces) {
+		lastAddBinaryPlaces = addBinaryPlaces;
+		this.addBinaryPlaces = addBinaryPlaces;
 	}
 
 //	public int getPercentage() {

@@ -604,6 +604,10 @@ public class DiscoverPetriNetAlgorithm {
 	}
 
 	private void enhanceNet(PluginContext context, AcceptingPetriNet apn, XLog log, DiscoverPetriNetParameters parameters) {
+		if (!parameters.isAddUnaryPlaces() && !parameters.isAddBinaryPlaces()) {
+			// Nothing to add.
+			return;
+		}
 		System.out.println("[DiscoverPetriNetAlgorithm] Enhancing net");
 		long time = System.currentTimeMillis();
 		Map<String, Transition> transitionMap = new HashMap<String, Transition>();
@@ -615,43 +619,57 @@ public class DiscoverPetriNetAlgorithm {
 		}
 		System.out.println("[DiscoverPetriNetAlgorithm] Getting activities took " + (System.currentTimeMillis() - time) + " milliseconds.");
 		time = System.currentTimeMillis();
-		List<Pair<String,String>> places = new ArrayList<Pair<String,String>>();
+		List<Pair<String,String>> binaryPlaces = new ArrayList<Pair<String,String>>();
+		List<Pair<String,Integer>> unaryPlaces = new ArrayList<Pair<String,Integer>>();
 		for (String source : transitionMap.keySet()) {
 			for (String target : transitionMap.keySet()) {
 				if (!source.contentEquals(target)) {
 					if (isPlace(source, target, log, parameters)) {
-						places.add(new Pair<String,String>(source, target));
+						binaryPlaces.add(new Pair<String,String>(source, target));
 					}
 				}
+			}
+			int tokens = getTokens(source, log, parameters);
+			if (tokens > 1) {
+				unaryPlaces.add(new Pair<String,Integer>(source, tokens));
 			}
 		}
 		System.out.println("[DiscoverPetriNetAlgorithm] Getting candidate places took " + (System.currentTimeMillis() - time) + " milliseconds.");
 		time = System.currentTimeMillis();
 		
 		Set<Pair<String,String>> redundantPlaces = new HashSet<Pair<String,String>>();
-		for (Pair<String,String> source : places) {
-			for (Pair<String,String> target : places) {
+		for (Pair<String,String> source : binaryPlaces) {
+			for (Pair<String,String> target : binaryPlaces) {
 				if (!source.getSecond().equals(target.getFirst())) {
 					continue;
 				}
 				redundantPlaces.add(new Pair<String, String>(source.getFirst(), target.getSecond()));
 			}			
 		}
-		System.out.println("[DiscoverPetriNetAlgorithm] Removing redundant places took " + (System.currentTimeMillis() - time) + " milliseconds.");
+		System.out.println("[DiscoverPetriNetAlgorithm] Removing redundant binary places took " + (System.currentTimeMillis() - time) + " milliseconds.");
 		time = System.currentTimeMillis();
 		
-		places.removeAll(redundantPlaces);
+		binaryPlaces.removeAll(redundantPlaces);
 		
-		for (Pair<String,String> place : places) {
-			System.out.println("[DiscoverPetriNetAlgorithm] Enhancing net with place px_"+ place.getFirst() + "_" + place.getSecond());
+		for (Pair<String,String> place : binaryPlaces) {
+			System.out.println("[DiscoverPetriNetAlgorithm] Enhancing net with unmarked binary place px_"+ place.getFirst() + "_" + place.getSecond());
 			Place p = apn.getNet().addPlace("px_"+ place.getFirst() + "_" + place.getSecond());
 			apn.getNet().addArc(transitionMap.get(place.getFirst()), p);
 			apn.getNet().addArc(p, transitionMap.get(place.getSecond()));
+		}
+		for (Pair<String,Integer> pair : unaryPlaces) {
+			System.out.println("[DiscoverPetriNetAlgorithm] Enhancing net with marked unary place pi_"+ pair.getFirst() + "_" + pair.getSecond());
+			Place p = apn.getNet().addPlace("pi_"+ pair.getFirst() + "_" + pair.getSecond());
+			apn.getNet().addArc(p, transitionMap.get(pair.getFirst()));
+			apn.getInitialMarking().add(p, pair.getSecond());
 		}
 		System.out.println("[DiscoverPetriNetAlgorithm] Adding places took " + (System.currentTimeMillis() - time) + " milliseconds.");
 	}
 
 	private boolean isPlace(String source, String target, XLog log, DiscoverPetriNetParameters parameters) {
+		if (!parameters.isAddBinaryPlaces()) {
+			return false;
+		}
 		if (source.equals(ActivityAlphabet.END) || target.equals(ActivityAlphabet.START)) {
 			return false;
 		}
@@ -668,7 +686,7 @@ public class DiscoverPetriNetAlgorithm {
 					} else if (activity.equals(target)) {
 						count--;
 					}
-					if (count < 0 || count > 1) {
+					if (count < 0 /*|| count > 1*/) {
 						return false;
 					}
 				}
@@ -681,5 +699,30 @@ public class DiscoverPetriNetAlgorithm {
 			}
 		}
 		return true;
+	}
+	
+	private int getTokens(String target, XLog log, DiscoverPetriNetParameters parameters) {
+		if (!parameters.isAddUnaryPlaces()) {
+			return -1;
+		}
+		if (target.equals(ActivityAlphabet.END) || target.equals(ActivityAlphabet.START)) {
+			return -1; // No place
+		}
+		int tokens = -1; // Undecided
+		for (XTrace trace : log) {
+			int count = 0;
+			for (XEvent event : trace) {
+				String activity = parameters.getClassifier().getClassIdentity(event);
+				if (activity.equals(target)) {
+					count++;
+				}
+			}
+			if (tokens == -1) {
+				tokens = count;
+			} else if (tokens != count) {
+				return -1;
+			}
+		}
+		return tokens;
 	}
 }

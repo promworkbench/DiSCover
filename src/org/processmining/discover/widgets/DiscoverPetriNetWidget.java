@@ -34,7 +34,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 	 * @param parameters The given parameter settings
 	 */
 	public DiscoverPetriNetWidget(final DiscoverPetriNetParameters parameters) {
-		double size[][] = { { 30, TableLayoutConstants.FILL }, { 30, 30, 30, 30, 30, 30, TableLayoutConstants.FILL } };
+		double size[][] = { { 30, TableLayoutConstants.FILL }, { 30, 30, 30, 30, 30, 30, 30, TableLayoutConstants.FILL } };
 		setLayout(new TableLayout(size));
 
 
@@ -127,17 +127,29 @@ public class DiscoverPetriNetWidget extends JPanel {
 		reduceRestrictedBox.setVisible(reduceBox.isSelected());
 		add(reduceRestrictedBox, "1, 3");
 
-		final NiceSlider enhancementSlider = SlickerFactory.instance().createNiceIntegerSlider("Max. number of log skeleton fragments to add", 0, 100,
-				(int) (parameters.getNofEnhancements()), Orientation.HORIZONTAL);
-		enhancementSlider.addChangeListener(new ChangeListener() {
+		final JCheckBox addUnaryPlacesBox = SlickerFactory.instance().createCheckBox("Add valid marked unary places",
+				parameters.isAddUnaryPlaces());
+		addUnaryPlacesBox.addActionListener(new ActionListener() {
 
-			public void stateChanged(ChangeEvent e) {
-				int value = enhancementSlider.getSlider().getValue();
-				parameters.setNofEnhancements(value);
+			public void actionPerformed(ActionEvent e) {
+				parameters.setAddUnaryPlaces(addUnaryPlacesBox.isSelected());
 			}
+
 		});
-		enhancementSlider.setPreferredSize(new Dimension(100, 30));
-		add(enhancementSlider, "0, 5, 1, 5");
+		addUnaryPlacesBox.setOpaque(false);
+		add(addUnaryPlacesBox, "0, 5, 1, 5");
+
+		final JCheckBox addBinaryPlacesBox = SlickerFactory.instance().createCheckBox("Add valid unmarked binary places",
+				parameters.isAddBinaryPlaces());
+		addBinaryPlacesBox.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				parameters.setAddBinaryPlaces(addBinaryPlacesBox.isSelected());
+			}
+
+		});
+		addBinaryPlacesBox.setOpaque(false);
+		add(addBinaryPlacesBox, "0, 6, 1, 6");
 
 
 		// Check box for majority
