@@ -244,6 +244,8 @@ public class DiscoverPetriNetAlgorithm {
 					+ (System.currentTimeMillis() - time) + " milliseconds.");
 		}
 
+		fixEnhancements(context, apn, parameters);
+		
 		/*
 		 * Return the discovered accepting Petri net.
 		 */
@@ -724,5 +726,40 @@ public class DiscoverPetriNetAlgorithm {
 			}
 		}
 		return tokens;
+	}
+	
+	private void fixEnhancements(PluginContext context, AcceptingPetriNet apn, DiscoverPetriNetParameters parameters) {
+		System.out.println("[DiscoverPetriNetAlgorithm] Fixing enhancements");
+		boolean nextIteration = true;
+		while (nextIteration) {
+			nextIteration = false;
+			Map<PetrinetNode, Set<PetrinetNode>> preset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
+			Map<PetrinetNode, Set<PetrinetNode>> postset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
+			for (PetrinetNode node : apn.getNet().getNodes()) {
+				preset.put(node, new HashSet<PetrinetNode>());
+				postset.put(node, new HashSet<PetrinetNode>());
+			}
+			for (PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode> edge : apn.getNet().getEdges()) {
+				postset.get(edge.getSource()).add(edge.getTarget());
+				preset.get(edge.getTarget()).add(edge.getSource());
+			}
+			for (Transition transition : apn.getNet().getTransitions()) {
+				if (transition.isInvisible()) {
+					continue;
+				}
+				if (postset.get(transition).containsAll(preset.get(transition))) {
+					Set<PetrinetNode> nodes = new HashSet<PetrinetNode>(postset.get(transition));
+					nodes.removeAll(preset.get(transition));
+					for (PetrinetNode node : nodes) {
+						Place place = (Place) node;
+						if (place.getLabel().startsWith("px_")) {
+							System.out.println("[DiscoverPetriNetAlgorithm] Removing unbounded place " + place.getLabel());
+							apn.getNet().removePlace(place);
+							nextIteration = true;
+						}
+					}
+				}
+			}
+		}
 	}
 }
