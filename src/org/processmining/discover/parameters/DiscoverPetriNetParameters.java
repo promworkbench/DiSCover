@@ -74,9 +74,9 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	
 	private boolean showGraph;
 
-	private boolean addUnaryPlaces;
+	private boolean addOccurrencePlaces;
 	
-	private boolean addBinaryPlaces;
+	private boolean addEquivalencePlaces;
 
 	/**
 	 * The safety threshold to use.
@@ -136,8 +136,8 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static boolean lastUseILP = false;
 	private static boolean lastUseILP2 = true;
 	private static boolean lastShowGraph = false;
-	private static boolean lastAddUnaryPlaces = false;	
-	private static boolean lastAddBinaryPlaces = false;
+	private static boolean lastAddOccurrencePlaces = false;	
+	private static boolean lastAddEquivalencePlaces = false;
 
 	/**
 	 * Creates default parameter settings.
@@ -161,8 +161,8 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		setUseILP(lastUseILP);
 		setUseILP2(lastUseILP2);
 		setShowGraph(lastShowGraph);
-		setAddUnaryPlaces(lastAddUnaryPlaces);
-		setAddBinaryPlaces(lastAddBinaryPlaces);
+		setAddOccurrencePlaces(lastAddOccurrencePlaces);
+		setAddEquivalencePlaces(lastAddEquivalencePlaces);
 		setClassifier(null, false);
 		setActivities(null, false);
 		setAlphabet(null, false);
@@ -463,22 +463,22 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		this.filterLog = filterLog;
 	}
 
-	public boolean isAddUnaryPlaces() {
-		return addUnaryPlaces;
+	public boolean isAddOccurrencePlaces() {
+		return addOccurrencePlaces;
 	}
 
-	public void setAddUnaryPlaces(boolean addUnaryPlaces) {
-		lastAddUnaryPlaces = addUnaryPlaces;
-		this.addUnaryPlaces = addUnaryPlaces;
+	public void setAddOccurrencePlaces(boolean addUnaryPlaces) {
+		lastAddOccurrencePlaces = addUnaryPlaces;
+		this.addOccurrencePlaces = addUnaryPlaces;
 	}
 
-	public boolean isAddBinaryPlaces() {
-		return addBinaryPlaces;
+	public boolean isAddEquivalencePlaces() {
+		return addEquivalencePlaces;
 	}
 
-	public void setAddBinaryPlaces(boolean addBinaryPlaces) {
-		lastAddBinaryPlaces = addBinaryPlaces;
-		this.addBinaryPlaces = addBinaryPlaces;
+	public void setAddEquivalencePlaces(boolean addBinaryPlaces) {
+		lastAddEquivalencePlaces = addBinaryPlaces;
+		this.addEquivalencePlaces = addBinaryPlaces;
 	}
 
 //	public int getPercentage() {

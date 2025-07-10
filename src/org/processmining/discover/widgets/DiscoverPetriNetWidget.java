@@ -127,24 +127,24 @@ public class DiscoverPetriNetWidget extends JPanel {
 		reduceRestrictedBox.setVisible(reduceBox.isSelected());
 		add(reduceRestrictedBox, "1, 3");
 
-		final JCheckBox addUnaryPlacesBox = SlickerFactory.instance().createCheckBox("Add valid marked unary places",
-				parameters.isAddUnaryPlaces());
-		addUnaryPlacesBox.addActionListener(new ActionListener() {
+		final JCheckBox addOccurrencePlacesBox = SlickerFactory.instance().createCheckBox("Add valid occurrence places",
+				parameters.isAddOccurrencePlaces());
+		addOccurrencePlacesBox.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
-				parameters.setAddUnaryPlaces(addUnaryPlacesBox.isSelected());
+				parameters.setAddOccurrencePlaces(addOccurrencePlacesBox.isSelected());
 			}
 
 		});
-		addUnaryPlacesBox.setOpaque(false);
-		add(addUnaryPlacesBox, "0, 5, 1, 5");
+		addOccurrencePlacesBox.setOpaque(false);
+		add(addOccurrencePlacesBox, "0, 5, 1, 5");
 
-		final JCheckBox addBinaryPlacesBox = SlickerFactory.instance().createCheckBox("Add valid unmarked binary places",
-				parameters.isAddBinaryPlaces());
+		final JCheckBox addBinaryPlacesBox = SlickerFactory.instance().createCheckBox("Add valid equivalence places",
+				parameters.isAddEquivalencePlaces());
 		addBinaryPlacesBox.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
-				parameters.setAddBinaryPlaces(addBinaryPlacesBox.isSelected());
+				parameters.setAddEquivalencePlaces(addBinaryPlacesBox.isSelected());
 			}
 
 		});
