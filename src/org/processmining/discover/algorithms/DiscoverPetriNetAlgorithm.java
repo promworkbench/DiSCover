@@ -636,11 +636,17 @@ public class DiscoverPetriNetAlgorithm {
 			postset.get(edge.getSource()).add(edge.getTarget());
 			preset.get(edge.getTarget()).add(edge.getSource());
 		}
+
+		List<List<String>> playOut = playOut(apn, preset, postset);
+		System.out.println("[DiscoverPetriNetAlgorithm] traces " + playOut);
+
 		for (String source : transitionMap.keySet()) {
 			for (String target : transitionMap.keySet()) {
 				if (!source.contentEquals(target)) {
 					int tokens = getEquivalenceTokens(source, target, log, parameters);
-					boolean sameMG = sameMarkedGraph(transitionMap.get(source), transitionMap.get(target), preset, postset);
+//					boolean sameMG = sameMarkedGraph(transitionMap.get(source), transitionMap.get(target), preset,
+//							postset);
+					boolean sameMG = areEquivalent(playOut, source, target);
 					if (tokens != -1 && !sameMG) {
 						equivalencePlaces.add(new Pair<Pair<String, String>, Integer>(
 								new Pair<String, String>(source, target), tokens));
@@ -695,43 +701,44 @@ public class DiscoverPetriNetAlgorithm {
 				+ " milliseconds.");
 	}
 
-	private boolean sameMarkedGraph(Transition source, Transition target, Map<PetrinetNode, Set<PetrinetNode>> preset, Map<PetrinetNode, Set<PetrinetNode>> postset) {
-		Set<PetrinetNode> seen = new HashSet<PetrinetNode>();
-		Set<PetrinetNode> toDo = new HashSet<PetrinetNode>();
-		toDo.add(source);
-		while (!toDo.isEmpty()) {
-			PetrinetNode node = toDo.iterator().next();
-			if (node == target) {
-				return true;
-			}
-			toDo.remove(node);
-			seen.add(node);
-			if (node instanceof Place) {
-				if (preset.get(node).size() == 1 && postset.get(node).size() == 1) {
-					PetrinetNode preNode = preset.get(node).iterator().next();
-					if (!seen.contains(preNode)) {
-						toDo.add(preNode);
-					}
-					PetrinetNode postNode = postset.get(node).iterator().next();
-					if (!seen.contains(postNode)) {
-						toDo.add(postNode);
-					}
-				}
-			} else {
-				for (PetrinetNode preNode : preset.get(node)) {
-					if (!seen.contains(preNode)) {
-						toDo.add(preNode);
-					}
-				}
-				for (PetrinetNode postNode : postset.get(node)) {
-					if (!seen.contains(postNode)) {
-						toDo.add(postNode);
-					}
-				}
-			}
-		}
-		return false;
-	}
+//	private boolean sameMarkedGraph(Transition source, Transition target, Map<PetrinetNode, Set<PetrinetNode>> preset,
+//			Map<PetrinetNode, Set<PetrinetNode>> postset) {
+//		Set<PetrinetNode> seen = new HashSet<PetrinetNode>();
+//		Set<PetrinetNode> toDo = new HashSet<PetrinetNode>();
+//		toDo.add(source);
+//		while (!toDo.isEmpty()) {
+//			PetrinetNode node = toDo.iterator().next();
+//			if (node == target) {
+//				return true;
+//			}
+//			toDo.remove(node);
+//			seen.add(node);
+//			if (node instanceof Place) {
+//				if (preset.get(node).size() == 1 && postset.get(node).size() == 1) {
+//					PetrinetNode preNode = preset.get(node).iterator().next();
+//					if (!seen.contains(preNode)) {
+//						toDo.add(preNode);
+//					}
+//					PetrinetNode postNode = postset.get(node).iterator().next();
+//					if (!seen.contains(postNode)) {
+//						toDo.add(postNode);
+//					}
+//				}
+//			} else {
+//				for (PetrinetNode preNode : preset.get(node)) {
+//					if (!seen.contains(preNode)) {
+//						toDo.add(preNode);
+//					}
+//				}
+//				for (PetrinetNode postNode : postset.get(node)) {
+//					if (!seen.contains(postNode)) {
+//						toDo.add(postNode);
+//					}
+//				}
+//			}
+//		}
+//		return false;
+//	}
 
 //	private boolean isPlace(String source, String target, XLog log, DiscoverPetriNetParameters parameters) {
 //		if (!parameters.isAddBinaryPlaces()) {
@@ -859,4 +866,131 @@ public class DiscoverPetriNetAlgorithm {
 //			}
 //		}
 //	}
+
+	private List<List<String>> playOut(AcceptingPetriNet apn, Map<PetrinetNode, Set<PetrinetNode>> preset,
+			Map<PetrinetNode, Set<PetrinetNode>> postset) {
+		List<List<String>> traces = new ArrayList<List<String>>();
+		List<String> trace = new ArrayList<String>();
+		Marking marking = new Marking(apn.getInitialMarking());
+		Random rand = new Random();
+		while (traces.size() < 1000) {
+			if (apn.getFinalMarkings().contains(marking)) {
+				// Reached final marking, is accepting trace. Add and start a new trace (if
+				// needed).
+				traces.add(trace);
+				System.out.println("[DicoverPetriNetAlgorithm] Added trace " + traces.size() + ": " + trace);
+				marking = new Marking(apn.getInitialMarking());
+				trace = new ArrayList<String>();
+				continue;
+			}
+			List<Transition> enabled = getEnabled(apn, marking, preset);
+			if (enabled.isEmpty()) {
+				// Reached a deadlock (?) Start a new trace.
+				marking = new Marking(apn.getInitialMarking());
+				trace = new ArrayList<String>();
+				continue;
+			}
+			if (trace.size() > 1000) {
+				// Trace way too long, perhaps final marking became unreachable. Start a new
+				// trace.
+				marking = new Marking(apn.getInitialMarking());
+				trace = new ArrayList<String>();
+				continue;
+			}
+			Transition transition = enabled.get(rand.nextInt(enabled.size()));
+			for (PetrinetNode node : preset.get(transition)) {
+				Place place = (Place) node;
+				if (marking.occurrences(place) > 0) {
+					marking.remove(place);
+				} else {
+					for (PetrinetNode node2 : preset.get(place)) {
+						Transition transition2 = (Transition) node2;
+						if (transition2.isInvisible() && !transition2.getLabel().equals(ActivityAlphabet.START)
+								&& !transition2.getLabel().equals(ActivityAlphabet.END)) {
+							// Is routing transition. Has single input, check that place for tokens.
+							PetrinetNode node3 = preset.get(transition2).iterator().next();
+							Place place3 = (Place) node3;
+							if (marking.occurrences(place3) > 0) {
+								marking.remove(place3);
+							}
+						}
+					}
+				}
+			}
+			if (!transition.getLabel().equals(ActivityAlphabet.START)
+					&& !transition.getLabel().equals(ActivityAlphabet.END)) {
+				trace.add(transition.getLabel());
+			}
+			for (PetrinetNode node : postset.get(transition)) {
+				Place place = (Place) node;
+				marking.add(place);
+			}
+		}
+		return traces;
+	}
+
+	private List<Transition> getEnabled(AcceptingPetriNet apn, Marking marking,
+			Map<PetrinetNode, Set<PetrinetNode>> preset) {
+//		System.out.println("[DicoverPetriNetAlgorithm] Checking marking " + marking);		
+		List<Transition> enabled = new ArrayList<Transition>();
+		for (Transition transition : apn.getNet().getTransitions()) {
+			if (transition.isInvisible() && !transition.getLabel().equals(ActivityAlphabet.START)
+					&& !transition.getLabel().equals(ActivityAlphabet.END)) {
+				continue;
+			}
+//			System.out.println("[DicoverPetriNetAlgorithm] Checking transition " + transition.getLabel());		
+			boolean allMarked = true;
+			for (PetrinetNode node : preset.get(transition)) {
+				if (!allMarked) {
+					continue;
+				}
+				Place place = (Place) node;
+				if (marking.occurrences(place) > 0) {
+					// Place contains a token.
+				} else {
+					// Place does not contain a token. Check input places of input routing
+					// transitions
+					allMarked = false;
+					for (PetrinetNode node2 : preset.get(place)) {
+						Transition transition2 = (Transition) node2;
+//						System.out.println("[DicoverPetriNetAlgorithm] Checking input transition " + transition2.getLabel());		
+						if (transition2.isInvisible() && !transition2.getLabel().equals(ActivityAlphabet.START)
+								&& !transition2.getLabel().equals(ActivityAlphabet.END)) {
+							PetrinetNode node3 = preset.get(transition2).iterator().next();
+							Place place3 = (Place) node3;
+//							System.out.println("[DicoverPetriNetAlgorithm] Checking input place " + place3.getLabel());		
+							if (marking.occurrences(place3) > 0) {
+								// Found a marked input place of a routing transition.
+								allMarked = true;
+							}
+						}
+					}
+				}
+			}
+			if (allMarked) {
+				enabled.add(transition);
+			}
+		}
+//		System.out.println("[DicoverPetriNetAlgorithm] Enabled " + enabled);		
+		return enabled;
+	}
+	
+	private boolean areEquivalent(List<List<String>> playOut, String source, String target) {
+		for (List<String> trace : playOut) {
+			int countSource = 0;
+			int countTarget = 0;
+			for (String activity : trace) {
+				if (activity.equals(source)) {
+					countSource++;
+				}
+				if (activity.equals(target)) {
+					countTarget++;
+				}
+			}
+			if (countSource != countTarget) {
+				return false;
+			}
+		}
+		return true;
+	}
 }
