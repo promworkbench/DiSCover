@@ -1,6 +1,6 @@
 
 					<packages>
-						<package name="DiSCover" version="6.15.48" os="all" url="DiSCover/DiSCover-6.15.48-all.zip" desc="Discover S-Cover" org="Eindhoven University of Technology" license="GPL" author="H.M.W. Verbeek" auto="false" hasPlugins="true" logo="prom_subtitle_hat_300.png">
+						<package name="DiSCover" version="6.15.49" os="all" url="DiSCover/DiSCover-6.15.49-all.zip" desc="Discover S-Cover" org="Eindhoven University of Technology" license="GPL" author="H.M.W. Verbeek" auto="false" hasPlugins="true" logo="prom_subtitle_hat_300.png">
 				    	<dependency org="prom" name="ProM-Plugins" rev="latest" changing="true" transitive="true" />
     	<dependency org="prom" name="BasicUtils" rev="latest" changing="true" transitive="true" />
     	<dependency org="prom" name="Widgets" rev="latest" changing="true" transitive="true" />
