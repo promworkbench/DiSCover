@@ -512,11 +512,11 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	}
 
 	public int getNofThreads() {
-		lastNofThreads = nofThreads;
 		return nofThreads;
 	}
 
 	public void setNofThreads(int nofThreads) {
+		lastNofThreads = nofThreads;
 		this.nofThreads = nofThreads;
 	}
 

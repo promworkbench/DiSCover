@@ -1001,9 +1001,11 @@ public class DiscoverPetriNetAlgorithm {
 	}
 	
 	private boolean areEquivalent(List<List<String>> playOut, String source, String target) {
+		System.out.println("[DiscoverPetriNetAlgorithm] Number of traces: " + playOut.size());
 		for (List<String> trace : playOut) {
 			int countSource = 0;
 			int countTarget = 0;
+			System.out.println("[DiscoverPetriNetAlgorithm] Trace: " + trace);
 			for (String activity : trace) {
 				if (activity.equals(source)) {
 					countSource++;
