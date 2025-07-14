@@ -34,7 +34,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 	 * @param parameters The given parameter settings
 	 */
 	public DiscoverPetriNetWidget(final DiscoverPetriNetParameters parameters) {
-		double size[][] = { { 30, TableLayoutConstants.FILL }, { 30, 30, 30, 30, 30, 30, 30, TableLayoutConstants.FILL } };
+		double size[][] = { { 30, TableLayoutConstants.FILL }, { 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, TableLayoutConstants.FILL } };
 		setLayout(new TableLayout(size));
 
 
@@ -139,11 +139,56 @@ public class DiscoverPetriNetWidget extends JPanel {
 		addOccurrencePlacesBox.setOpaque(false);
 		add(addOccurrencePlacesBox, "0, 5, 1, 5");
 
+		// Slider for the number of traces to play out.
+		final NiceSlider nofTracesSlider = SlickerFactory.instance().createNiceIntegerSlider(
+				"Number of traces per thread to play out", 0, 1000, parameters.getNofTraces(), Orientation.HORIZONTAL);
+		nofTracesSlider.addChangeListener(new ChangeListener() {
+
+			public void stateChanged(ChangeEvent e) {
+				int value = nofTracesSlider.getSlider().getValue();
+				parameters.setNofTraces(value);
+			}
+		});
+		nofTracesSlider.setPreferredSize(new Dimension(100, 30));
+		nofTracesSlider.setVisible(parameters.isAddEquivalencePlaces());
+		add(nofTracesSlider, "1, 8");
+
+		// Slider for the maximal length of a trace during play out.
+		final NiceSlider maxTraceLengthSlider = SlickerFactory.instance().createNiceIntegerSlider(
+				"Maximal length of trace during play out", 0, 1000, parameters.getMaxTraceLength(), Orientation.HORIZONTAL);
+		maxTraceLengthSlider.addChangeListener(new ChangeListener() {
+
+			public void stateChanged(ChangeEvent e) {
+				int value = maxTraceLengthSlider.getSlider().getValue();
+				parameters.setMaxTraceLength(value);
+			}
+		});
+		maxTraceLengthSlider.setPreferredSize(new Dimension(100, 30));
+		maxTraceLengthSlider.setVisible(parameters.isAddEquivalencePlaces());
+		add(maxTraceLengthSlider, "1, 9");
+
+		// Slider for the maximal length of a trace during play out.
+		final NiceSlider nofThreadsSlider = SlickerFactory.instance().createNiceIntegerSlider(
+				"Number of threads to use for play out", 0, 100, parameters.getNofThreads(), Orientation.HORIZONTAL);
+		nofThreadsSlider.addChangeListener(new ChangeListener() {
+
+			public void stateChanged(ChangeEvent e) {
+				int value = nofThreadsSlider.getSlider().getValue();
+				parameters.setNofThreads(value);
+			}
+		});
+		nofThreadsSlider.setPreferredSize(new Dimension(100, 30));
+		nofThreadsSlider.setVisible(parameters.isAddEquivalencePlaces());
+		add(nofThreadsSlider, "1, 7");
+
 		final JCheckBox addBinaryPlacesBox = SlickerFactory.instance().createCheckBox("Add valid equivalence places",
 				parameters.isAddEquivalencePlaces());
 		addBinaryPlacesBox.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
+				nofTracesSlider.setVisible(addBinaryPlacesBox.isSelected());
+				maxTraceLengthSlider.setVisible(addBinaryPlacesBox.isSelected());
+				nofThreadsSlider.setVisible(addBinaryPlacesBox.isSelected());
 				parameters.setAddEquivalencePlaces(addBinaryPlacesBox.isSelected());
 			}
 

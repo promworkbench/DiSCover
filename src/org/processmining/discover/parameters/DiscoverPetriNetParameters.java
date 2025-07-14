@@ -77,6 +77,12 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private boolean addOccurrencePlaces;
 	
 	private boolean addEquivalencePlaces;
+	
+	private int nofTraces;
+	
+	private int maxTraceLength;
+	
+	private int nofThreads;
 
 	/**
 	 * The safety threshold to use.
@@ -138,6 +144,9 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static boolean lastShowGraph = false;
 	private static boolean lastAddOccurrencePlaces = false;	
 	private static boolean lastAddEquivalencePlaces = false;
+	private static int lastNofTraces = 1000;
+	private static int lastMaxTraceLength = 1000;
+	private static int lastNofThreads = 6;
 
 	/**
 	 * Creates default parameter settings.
@@ -171,6 +180,9 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		setActivitySets(null, false);
 		setAllActivitySets(null, false);
 		setMatrixCollection(null, false);
+		setNofTraces(lastNofTraces);
+		setMaxTraceLength(lastMaxTraceLength);
+		setNofThreads(lastNofThreads);
 	}
 	
 	/*
@@ -479,6 +491,33 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	public void setAddEquivalencePlaces(boolean addBinaryPlaces) {
 		lastAddEquivalencePlaces = addBinaryPlaces;
 		this.addEquivalencePlaces = addBinaryPlaces;
+	}
+
+	public int getNofTraces() {
+		return nofTraces;
+	}
+
+	public void setNofTraces(int nofTraces) {
+		lastNofTraces = nofTraces;
+		this.nofTraces = nofTraces;
+	}
+
+	public int getMaxTraceLength() {
+		return maxTraceLength;
+	}
+
+	public void setMaxTraceLength(int maxTraceLength) {
+		lastMaxTraceLength = maxTraceLength;
+		this.maxTraceLength = maxTraceLength;
+	}
+
+	public int getNofThreads() {
+		lastNofThreads = nofThreads;
+		return nofThreads;
+	}
+
+	public void setNofThreads(int nofThreads) {
+		this.nofThreads = nofThreads;
 	}
 
 //	public int getPercentage() {

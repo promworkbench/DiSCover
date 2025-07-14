@@ -637,8 +637,33 @@ public class DiscoverPetriNetAlgorithm {
 			preset.get(edge.getTarget()).add(edge.getSource());
 		}
 
-		List<List<String>> playOut = playOut(apn, preset, postset);
-		System.out.println("[DiscoverPetriNetAlgorithm] traces " + playOut);
+		List<List<String>> playOut = new ArrayList<List<String>>();
+		List<Thread> threads = new ArrayList<Thread>();
+		
+		for (int i = 0; i < parameters.getNofThreads(); i++) {
+			Thread myThread = new Thread() {
+				public void run() {
+					List<List<String>> playOutThread = playOut(apn, preset, postset, parameters);
+					add(playOutThread);
+				}
+				private synchronized void add(List<List<String>> playOutThread) {
+					playOut.addAll(playOutThread);
+				}
+			};
+			threads.add(myThread);
+			myThread.start();
+		}
+		for (int i = 0; i < parameters.getNofThreads(); i++) {
+			try {
+				threads.get(i).join();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+//		List<List<String>> playOut = playOut(apn, preset, postset, parameters);
+//		System.out.println("[DiscoverPetriNetAlgorithm] traces " + playOut);
 
 		for (String source : transitionMap.keySet()) {
 			for (String target : transitionMap.keySet()) {
@@ -868,12 +893,12 @@ public class DiscoverPetriNetAlgorithm {
 //	}
 
 	private List<List<String>> playOut(AcceptingPetriNet apn, Map<PetrinetNode, Set<PetrinetNode>> preset,
-			Map<PetrinetNode, Set<PetrinetNode>> postset) {
+			Map<PetrinetNode, Set<PetrinetNode>> postset, DiscoverPetriNetParameters parameters) {
 		List<List<String>> traces = new ArrayList<List<String>>();
 		List<String> trace = new ArrayList<String>();
 		Marking marking = new Marking(apn.getInitialMarking());
 		Random rand = new Random();
-		while (traces.size() < 1000) {
+		while (traces.size() < parameters.getNofTraces()) {
 			if (apn.getFinalMarkings().contains(marking)) {
 				// Reached final marking, is accepting trace. Add and start a new trace (if
 				// needed).
@@ -890,7 +915,7 @@ public class DiscoverPetriNetAlgorithm {
 				trace = new ArrayList<String>();
 				continue;
 			}
-			if (trace.size() > 1000) {
+			if (trace.size() > parameters.getMaxTraceLength()) {
 				// Trace way too long, perhaps final marking became unreachable. Start a new
 				// trace.
 				marking = new Marking(apn.getInitialMarking());
