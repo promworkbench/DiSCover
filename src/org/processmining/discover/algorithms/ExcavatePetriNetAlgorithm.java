@@ -343,7 +343,7 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 
 					if (apn.getNet().getTransitions().size() > xParameters.getMaxNofTransitions()) {
 						System.out.println("[DiscoverPetriNetPlugin] Discarded thresholds " + abs + " and " + rel
-								+ " for replay due to too many transitions.");
+								+ " for replay due to too many ("+ apn.getNet().getTransitions().size() + ") transitions.");
 						continue;
 					}
 

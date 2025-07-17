@@ -170,7 +170,7 @@ public class ExcavatePetriNetWidget extends JPanel implements ListSelectionListe
 		threadSlider.setPreferredSize(new Dimension(100, 30));
 		add(threadSlider, "3, 7, 4, 7");
 		
-		final NiceSlider tranSlider = SlickerFactory.instance().createNiceIntegerSlider("Maximal number of transitions", 0, 100,
+		final NiceSlider tranSlider = SlickerFactory.instance().createNiceIntegerSlider("Maximal number of transitions", 0, 1000,
 				parameters.getMaxNofTransitions(), Orientation.HORIZONTAL);
 		tranSlider.addChangeListener(new ChangeListener() {
 

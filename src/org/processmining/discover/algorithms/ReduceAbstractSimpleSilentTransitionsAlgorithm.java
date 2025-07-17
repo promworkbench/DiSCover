@@ -54,6 +54,10 @@ public abstract class ReduceAbstractSimpleSilentTransitionsAlgorithm {
 	}
 
 	public void applyInPlace(PluginContext context, AcceptingPetriNet apn) {
+//		int i = apn.getNet().getTransitions().size();
+//		if (i <= 100) {
+//			return;
+//		}
 		Map<PetrinetNode, Set<PetrinetNode>> preset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
 		Map<PetrinetNode, Set<PetrinetNode>> postset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
 		for (PetrinetNode node : apn.getNet().getNodes()) {
@@ -67,6 +71,20 @@ public abstract class ReduceAbstractSimpleSilentTransitionsAlgorithm {
 		List<Transition> simpleSilentTransitions = new ArrayList<Transition>();
 		for (Transition transition : apn.getNet().getTransitions()) {
 			if (transition.isInvisible() && preset.get(transition).size() == 1 && postset.get(transition).size() == 1) {
+				Place prePlace = (Place) preset.get(transition).iterator().next();
+				if (apn.getInitialMarking().contains(prePlace)) {
+					continue;
+				}
+				Place postPlace = (Place) postset.get(transition).iterator().next();
+				boolean ok = true;
+				for (Marking finalMarking: apn.getFinalMarkings()) {
+					if (finalMarking.contains(postPlace)) {
+						ok = false;
+					}
+				}
+				if (!ok) {
+					continue;
+				}
 				if (isOK(transition, preset, postset)) {
 					simpleSilentTransitions.add(transition);
 				}
@@ -84,7 +102,6 @@ public abstract class ReduceAbstractSimpleSilentTransitionsAlgorithm {
 		for (Place place : apn.getNet().getPlaces()) {
 			reduced.put(place, place);
 		}
-//		int i = -8;
 		for (Transition transition : simpleSilentTransitions) {
 			System.out.println("[ReduceSimpleSilentTransitionsAlgorithm Reducing " + transition);
 			Place prePlace = reduced.get(preset.get(transition).iterator().next());
@@ -151,7 +168,7 @@ public abstract class ReduceAbstractSimpleSilentTransitionsAlgorithm {
 				apn.getFinalMarkings().add(finalMarking);
 			}
 //			i--;
-//			if (i == 0) {
+//			if (i <= 100) {
 //				return;
 //			}
 		}

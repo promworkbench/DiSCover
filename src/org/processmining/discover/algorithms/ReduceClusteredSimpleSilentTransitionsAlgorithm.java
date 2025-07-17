@@ -115,6 +115,22 @@ public class ReduceClusteredSimpleSilentTransitionsAlgorithm {
 				}
 				if (placeToKeep != null && placeToRemove != null) {
 					System.out.println("[ReduceSimpleSilentTransitionsClusterAlgorithm] Reducing " + placeToRemove + " to " + placeToKeep);
+					boolean ok = true;
+					if (apn.getInitialMarking().contains(placeToKeep)) {
+						ok = false;
+					} else if (apn.getInitialMarking().contains(placeToRemove)) {
+						ok = false;
+					}
+					for (Marking finalMarking : apn.getFinalMarkings()) {
+						if (finalMarking.contains(placeToKeep)) {
+							ok = false;
+						} else if (finalMarking.contains(placeToRemove)) {
+							ok = false;
+						}
+					}
+					if (!ok) {
+						continue;
+					}
 					if (placeToKeep == placeToRemove) {
 						// Transitions also share same input place. Schedule to remove the transition to remove.
 						transitionsToRemove.add(transitionToRemove);
