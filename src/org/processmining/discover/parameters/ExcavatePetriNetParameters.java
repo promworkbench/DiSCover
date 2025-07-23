@@ -27,23 +27,25 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 	private int timeoutMillis;
 //	private boolean preferContainAll; // Whether to keep all activities while filtering the log.
 
-	/*
-	 * Use dummy values. The constructor will then use the default values.
+	/**
+	 * Parameter settings selected last by the user.
+	 * 
+	 * EV 2025-07-23: Updated due to results of PDC 2024
 	 */
 	private XEventClassifier lastClassifier = null;
 	private static List<Integer> lastAbsValues = null;
 	private static List<Integer> lastRelValues = null;
-	private static double lastFitnessFactor = -1.0;
-	private static double lastPrecisionFactor = -1.0;
-	private static double lastSimplicityFactor = -1.0;
-	private static double lastSizeFactor = -1.0;
-	private static double lastCoverageFactor = -1.0;
-	private static int lastNofThreads = -1;
-	private static int lastMaxNofTransitions = -1;
+	private static double lastFitnessFactor = 1.0;
+	private static double lastPrecisionFactor = 0.05;
+	private static double lastSimplicityFactor = 0.02;
+	private static double lastSizeFactor = 0.02;
+	private static double lastCoverageFactor = 0.02;
+	private static int lastNofThreads = 4;
+	private static int lastMaxNofTransitions = 200;
 	private static boolean lastPreferWFnet = true;
-	private static int lastDiscoveryPerc = 80;
+	private static int lastDiscoveryPerc = 90;
 	private static boolean lastUseRecursiveExclusion = false;
-	private static int lastTimeoutMillis = 60 * 1000;
+	private static int lastTimeoutMillis = 100 * 1000;
 //	private static boolean lastPreferContainAll = true;
 
 	public ExcavatePetriNetParameters(XLog log) {
@@ -58,45 +60,23 @@ public class ExcavatePetriNetParameters implements ClassifierParameter{
 		classifier = lastClassifier;
 		if (lastAbsValues == null) {
 			lastAbsValues = new ArrayList<Integer>();
-			for (int i = 0; i < 6; i++) {
-				lastAbsValues.add(i);
-			}
+			lastAbsValues.add(1);
+			lastAbsValues.add(2);
+			lastAbsValues.add(5);
 		}
 		absValues = new ArrayList<Integer>(lastAbsValues);
 		if (lastRelValues == null) {
 			lastRelValues = new ArrayList<Integer>();
-			for (int i = 0; i < 6; i++) {
-				lastRelValues.add(i);
-			}
+			lastRelValues.add(1);
+			lastRelValues.add(2);
 		}
 		relValues = new ArrayList<Integer>(lastRelValues);
-		if (lastFitnessFactor < 0.0) {
-			lastFitnessFactor = 0.5;
-		}
 		fitnessFactor = lastFitnessFactor;
-		if (lastPrecisionFactor < 0.0) {
-			lastPrecisionFactor = 0.55;
-		}
 		precisionFactor = lastPrecisionFactor;
-		if (lastSimplicityFactor < 0.0) {
-			lastSimplicityFactor = 0.3;
-		}
 		simplicityFactor = lastSimplicityFactor;
-		if (lastSizeFactor < 0.0) {
-			lastSizeFactor = 0.3;
-		}
 		sizeFactor = lastSizeFactor;
-		if (lastCoverageFactor < 0.0) {
-			lastCoverageFactor = 0.9;
-		}
 		coverageFactor = lastCoverageFactor;
-		if (lastNofThreads < 0) {
-			lastNofThreads = 6;
-		}
 		nofThreads = lastNofThreads;
-		if (lastMaxNofTransitions < 0) {
-			lastMaxNofTransitions = 100;
-		}
 		maxNofTransitions = lastMaxNofTransitions;
 		preferWFnet = lastPreferWFnet;
 		setDiscoveryPerc(lastDiscoveryPerc);

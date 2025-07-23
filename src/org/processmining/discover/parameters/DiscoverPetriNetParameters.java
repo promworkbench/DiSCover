@@ -123,6 +123,8 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	
 	/**
 	 * Parameter settings selected last by the user.
+	 * 
+	 * EV 2025-07-23: Updated due to results of PDC 2024
 	 */
 	private static boolean lastMerge = true;
 	private static boolean lastReduce = true;
@@ -130,10 +132,10 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static boolean lastReduceRestricted = false;
 	private static boolean lastVetoNoise = false;
 	private static boolean lastFilterLog = true;
-	private static int lastAbsoluteThreshold = 1; // These seem reasonable values.
+	private static int lastAbsoluteThreshold = 0; // These seem reasonable values.
 	private static int lastAbsoluteThreshold2 = 0; 
 	private static int lastRelativeThreshold = 1;
-	private static int lastRelativeThreshold2 = 0;
+	private static int lastRelativeThreshold2 = 1;
 	private static int lastSafetyThreshold = 95;
 	private static int lastSafetyThreshold2 = 95;
 //	private static int lastPercentage = 0;
@@ -142,11 +144,11 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static boolean lastUseILP = false;
 	private static boolean lastUseILP2 = true;
 	private static boolean lastShowGraph = false;
-	private static boolean lastAddOccurrencePlaces = false;	
-	private static boolean lastAddEquivalencePlaces = false;
-	private static int lastNofTraces = 1000;
-	private static int lastMaxTraceLength = 1000;
-	private static int lastNofThreads = 6;
+	private static boolean lastAddOccurrencePlaces = true;	
+	private static boolean lastAddEquivalencePlaces = true;
+	private static int lastNofTraces = 250;
+	private static int lastMaxTraceLength = 100;
+	private static int lastNofThreads = 4;
 
 	/**
 	 * Creates default parameter settings.
