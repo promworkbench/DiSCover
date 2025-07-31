@@ -99,6 +99,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	 */
 	private int safetyThreshold2;
 	
+	private int maxNofRoutingTransitions;
 	/**
 	 * The percentage threshold for concurrent pairs 
 	 * A concurrent pair is ignored it its score does not exceed this percentage of the maximal score.
@@ -149,6 +150,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static int lastNofTraces = 250;
 	private static int lastMaxTraceLength = 100;
 	private static int lastNofThreads = 4;
+	private static int lastMaxNofRoutingTransitions = -100;
 
 	/**
 	 * Creates default parameter settings.
@@ -185,6 +187,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		setNofTraces(lastNofTraces);
 		setMaxTraceLength(lastMaxTraceLength);
 		setNofThreads(lastNofThreads);
+		setMaxNofRoutingTransitions(lastMaxNofRoutingTransitions);
 	}
 	
 	/*
@@ -520,6 +523,15 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	public void setNofThreads(int nofThreads) {
 		lastNofThreads = nofThreads;
 		this.nofThreads = nofThreads;
+	}
+
+	public int getMaxNofRoutingTransitions() {
+		return maxNofRoutingTransitions;
+	}
+
+	public void setMaxNofRoutingTransitions(int maxNofRoutingTransitions) {
+		lastMaxNofRoutingTransitions = maxNofRoutingTransitions;
+		this.maxNofRoutingTransitions = maxNofRoutingTransitions;
 	}
 
 //	public int getPercentage() {

@@ -251,41 +251,46 @@ public class DiscoverPetriNetAlgorithm {
 					+ (System.currentTimeMillis() - time) + " milliseconds.");
 		}
 
-		int nofA = 0;
-		int nofI = 0;
-		for (Transition t : apn.getNet().getTransitions()) {
-			if (!t.isInvisible() || t.getLabel().equals(ActivityAlphabet.START)
-					|| t.getLabel().equals(ActivityAlphabet.END)) {
-				nofA++;
-			} else {
-				nofI++;
-			}
-		}
-		// Let's try to aim for less silent transitions then other transitions.
-		while (nofI > nofA) {
-			ReduceUsingMurataRulesAlgorithm redAlgorithm = new ReduceUsingMurataRulesAlgorithm();
-			ReduceUsingMurataRulesParameters redParameters = new ReduceUsingMurataRulesParameters();
-			System.out.println("[DiscoverPetriNetAlgorithm] Reducing clusters");
-			reduceSilentClusters(apn);
-			System.out.println("[DiscoverPetriNetAlgorithm] Reducing using rules...");
-			apn = redAlgorithm.apply(context, apn, redParameters);
-			int nofA2 = 0;
-			int nofI2 = 0;
+		if (parameters.getMaxNofRoutingTransitions() > 0) {
+			int nofNonRoutingTransitions = 0;
+			int nofRoutingTransitions = 0;
 			for (Transition t : apn.getNet().getTransitions()) {
 				if (!t.isInvisible() || t.getLabel().equals(ActivityAlphabet.START)
 						|| t.getLabel().equals(ActivityAlphabet.END)) {
-					nofA2++;
+					nofNonRoutingTransitions++;
 				} else {
-					nofI2++;
+					nofRoutingTransitions++;
 				}
 			}
-			if (nofA2 == nofA && nofI2 == nofI) {
-				// No reductions possible anymore. 
-				nofI = -1;
-			} else {
-				// Some reductions were done, try next iteration.
-				nofA = nofA2;
-				nofI = nofI2;
+			// Let's try to aim for less silent transitions then other transitions.
+			while (nofRoutingTransitions > parameters.getMaxNofRoutingTransitions()) {
+				ReduceUsingMurataRulesAlgorithm redAlgorithm = new ReduceUsingMurataRulesAlgorithm();
+				ReduceUsingMurataRulesParameters redParameters = new ReduceUsingMurataRulesParameters();
+				System.out.println("[DiscoverPetriNetAlgorithm] Reducing clusters");
+				reduceSilentClusters(apn, parameters);
+				System.out.println("[DiscoverPetriNetAlgorithm] Reducing using rules...");
+				apn = redAlgorithm.apply(context, apn, redParameters);
+				int nofNonRoutingTransitions2 = 0;
+				int nofRoutingTransitions2 = 0;
+				for (Transition t : apn.getNet().getTransitions()) {
+					if (!t.isInvisible() || t.getLabel().equals(ActivityAlphabet.START)
+							|| t.getLabel().equals(ActivityAlphabet.END)) {
+						nofNonRoutingTransitions2++;
+					} else {
+						nofRoutingTransitions2++;
+					}
+				}
+				if (nofNonRoutingTransitions2 == nofNonRoutingTransitions
+						&& nofRoutingTransitions2 == nofRoutingTransitions) {
+					// No reductions possible anymore.
+					System.out.println("[DiscoverPetriNetAlgorithm] No more reductions possible");
+					nofRoutingTransitions = -1;
+				} else {
+					// Some reductions were done, try next iteration.
+					nofNonRoutingTransitions = nofNonRoutingTransitions2;
+					nofRoutingTransitions = nofRoutingTransitions2;
+				}
+				System.out.println("[DiscoverPetriNetAlgorithm] Continuing with " + nofRoutingTransitions + " routing transitions");
 			}
 		}
 //		fixEnhancements(context, apn, parameters);
@@ -1069,7 +1074,15 @@ public class DiscoverPetriNetAlgorithm {
 		return true;
 	}
 
-	private void reduceSilentClusters(AcceptingPetriNet apn) {
+	private void reduceSilentClusters(AcceptingPetriNet apn, DiscoverPetriNetParameters parameters) {
+		int nofRoutingTransitions = 0;
+		for (Transition t : apn.getNet().getTransitions()) {
+			if (!t.isInvisible() || t.getLabel().equals(ActivityAlphabet.START)
+					|| t.getLabel().equals(ActivityAlphabet.END)) {
+			} else {
+				nofRoutingTransitions++;
+			}
+		}
 		Map<PetrinetNode, Set<PetrinetNode>> preset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
 		Map<PetrinetNode, Set<PetrinetNode>> postset = new HashMap<PetrinetNode, Set<PetrinetNode>>();
 		for (PetrinetNode node : apn.getNet().getNodes()) {
@@ -1082,108 +1095,115 @@ public class DiscoverPetriNetAlgorithm {
 		}
 		Set<Place> places = new HashSet<Place>();
 		Set<List<Transition>> clusters = new HashSet<List<Transition>>();
-		for (Transition t1 : apn.getNet().getTransitions()) {
-			if (!t1.isInvisible() || t1.getLabel().equals(ActivityAlphabet.START)
-					|| t1.getLabel().equals(ActivityAlphabet.END)) {
-				continue;
-			}
-			Place pre_t1 = (Place) preset.get(t1).iterator().next();
-			Place post_t1 = (Place) postset.get(t1).iterator().next();
-			if (pre_t1 == post_t1) {
-				continue;
-			}
-			if (places.contains(pre_t1) || places.contains(post_t1)) {
-				continue;
-			}
-			for (PetrinetNode n2 : postset.get(pre_t1)) {
-				Transition t2 = (Transition) n2;
-				if (t2 == t1) {
+		if (nofRoutingTransitions > parameters.getMaxNofRoutingTransitions()) {
+			for (Transition t1 : apn.getNet().getTransitions()) {
+				if (!t1.isInvisible() || t1.getLabel().equals(ActivityAlphabet.START)
+						|| t1.getLabel().equals(ActivityAlphabet.END)) {
 					continue;
 				}
-				if (!t2.isInvisible() || t2.getLabel().equals(ActivityAlphabet.START)
-						|| t2.getLabel().equals(ActivityAlphabet.END)) {
+				Place pre_t1 = (Place) preset.get(t1).iterator().next();
+				Place post_t1 = (Place) postset.get(t1).iterator().next();
+				if (pre_t1 == post_t1) {
 					continue;
 				}
-				Place post_t2 = (Place) postset.get(t2).iterator().next();
-				if (post_t2 == pre_t1 || post_t2 == post_t1) {
+				if (places.contains(pre_t1) || places.contains(post_t1)) {
 					continue;
 				}
-				if (places.contains(post_t2)) {
-					continue;
-				}
-				for (PetrinetNode n3 : preset.get(post_t1)) {
-					Transition t3 = (Transition) n3;
-					if (t3 == t2 || t3 == t1) {
+				for (PetrinetNode n2 : postset.get(pre_t1)) {
+					Transition t2 = (Transition) n2;
+					if (t2 == t1) {
 						continue;
 					}
-					if (!t3.isInvisible() || t3.getLabel().equals(ActivityAlphabet.START)
-							|| t3.getLabel().equals(ActivityAlphabet.END)) {
+					if (!t2.isInvisible() || t2.getLabel().equals(ActivityAlphabet.START)
+							|| t2.getLabel().equals(ActivityAlphabet.END)) {
 						continue;
 					}
-					Place pre_t3 = (Place) preset.get(t3).iterator().next();
-					if (pre_t3 == pre_t1 || pre_t3 == post_t1 || pre_t3 == post_t2) {
+					Place post_t2 = (Place) postset.get(t2).iterator().next();
+					if (post_t2 == pre_t1 || post_t2 == post_t1) {
 						continue;
 					}
-					if (places.contains(pre_t3)) {
+					if (places.contains(post_t2)) {
 						continue;
 					}
-					for (PetrinetNode n4 : postset.get(pre_t3)) {
-						Transition t4 = (Transition) n4;
-						if (t4 == t3 || t4 == t2 || t4 == t1) {
+					for (PetrinetNode n3 : preset.get(post_t1)) {
+						Transition t3 = (Transition) n3;
+						if (t3 == t2 || t3 == t1) {
 							continue;
 						}
-						if (!t4.isInvisible() || t4.getLabel().equals(ActivityAlphabet.START)
-								|| t4.getLabel().equals(ActivityAlphabet.END)) {
+						if (!t3.isInvisible() || t3.getLabel().equals(ActivityAlphabet.START)
+								|| t3.getLabel().equals(ActivityAlphabet.END)) {
 							continue;
 						}
-						if (postset.get(t4).iterator().next() != post_t2) {
+						Place pre_t3 = (Place) preset.get(t3).iterator().next();
+						if (pre_t3 == pre_t1 || pre_t3 == post_t1 || pre_t3 == post_t2) {
 							continue;
 						}
-						List<Transition> cluster = new ArrayList<Transition>();
-						cluster.add(t1);
-						cluster.add(t2);
-						cluster.add(t3);
-						cluster.add(t4);
-						clusters.add(cluster);
-						places.add(pre_t1);
-						places.add(post_t1);
-						places.add(post_t2);
-						places.add(pre_t3);
+						if (places.contains(pre_t3)) {
+							continue;
+						}
+						for (PetrinetNode n4 : postset.get(pre_t3)) {
+							Transition t4 = (Transition) n4;
+							if (t4 == t3 || t4 == t2 || t4 == t1) {
+								continue;
+							}
+							if (!t4.isInvisible() || t4.getLabel().equals(ActivityAlphabet.START)
+									|| t4.getLabel().equals(ActivityAlphabet.END)) {
+								continue;
+							}
+							if (postset.get(t4).iterator().next() != post_t2) {
+								continue;
+							}
+							List<Transition> cluster = new ArrayList<Transition>();
+							cluster.add(t1);
+							cluster.add(t2);
+							cluster.add(t3);
+							cluster.add(t4);
+							clusters.add(cluster);
+							places.add(pre_t1);
+							places.add(post_t1);
+							places.add(post_t2);
+							places.add(pre_t3);
+						}
 					}
 				}
 			}
-		}
-		for (List<Transition> cluster : clusters) {
-			System.out.println("[DiscoverPetriNetAlgorithm] Reducing " + cluster);
-			Transition t1 = cluster.get(0);
-			Place p1 = (Place) preset.get(t1).iterator().next();
-			Place p2 = (Place) postset.get(t1).iterator().next();
-			Transition t2 = cluster.get(3);
-			Place p3 = (Place) preset.get(t2).iterator().next();
-			Place p4 = (Place) postset.get(t2).iterator().next();
-			// Remove transitions (and edges connected to them)
-			apn.getNet().removeTransition(cluster.get(1));
-			apn.getNet().removeTransition(cluster.get(2));
-			apn.getNet().removeTransition(cluster.get(3));
-			// Reroute arcs from p3/p4 to p1/p2
-			for (PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode> edge : apn.getNet().getEdges()) {
-				if (edge.getSource() == t1 || edge.getTarget() == t1) {
-					continue;
+			for (List<Transition> cluster : clusters) {
+				System.out.println("[DiscoverPetriNetAlgorithm] Reducing " + cluster);
+				Transition t1 = cluster.get(0);
+				Place p1 = (Place) preset.get(t1).iterator().next();
+				Place p2 = (Place) postset.get(t1).iterator().next();
+				Transition t2 = cluster.get(3);
+				Place p3 = (Place) preset.get(t2).iterator().next();
+				Place p4 = (Place) postset.get(t2).iterator().next();
+				// Remove transitions (and edges connected to them)
+				apn.getNet().removeTransition(cluster.get(1));
+				apn.getNet().removeTransition(cluster.get(2));
+				apn.getNet().removeTransition(cluster.get(3));
+				// Reroute arcs from p3/p4 to p1/p2
+				for (PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode> edge : apn.getNet().getEdges()) {
+					if (edge.getSource() == t1 || edge.getTarget() == t1) {
+						continue;
+					}
+					if (edge.getSource() == p3) {
+						apn.getNet().addArc(p1, (Transition) edge.getTarget());
+					} else if (edge.getSource() == p4) {
+						apn.getNet().addArc(p2, (Transition) edge.getTarget());
+					}
+					if (edge.getTarget() == p3) {
+						apn.getNet().addArc((Transition) edge.getSource(), p1);
+					} else if (edge.getTarget() == p4) {
+						apn.getNet().addArc((Transition) edge.getSource(), p2);
+					}
 				}
-				if (edge.getSource() == p3) {
-					apn.getNet().addArc(p1, (Transition) edge.getTarget());
-				} else if (edge.getSource() == p4) {
-					apn.getNet().addArc(p2, (Transition) edge.getTarget());
-				}
-				if (edge.getTarget() == p3) {
-					apn.getNet().addArc((Transition) edge.getSource(), p1);
-				} else if (edge.getTarget() == p4) {
-					apn.getNet().addArc((Transition) edge.getSource(), p2);
+				// Remove places (and edges connected to them)
+				apn.getNet().removePlace(p3);
+				apn.getNet().removePlace(p4);
+				nofRoutingTransitions -= 3;
+				if (nofRoutingTransitions <= parameters.getMaxNofRoutingTransitions()) {
+					System.out.println("[DiscoverPetriNetAlgorithm] Reduced to " + nofRoutingTransitions + " routing transitions");
+					return;
 				}
 			}
-			// Remove places (and edges connected to them)
-			apn.getNet().removePlace(p3);
-			apn.getNet().removePlace(p4);
 		}
 	}
 }

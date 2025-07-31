@@ -34,7 +34,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 	 * @param parameters The given parameter settings
 	 */
 	public DiscoverPetriNetWidget(final DiscoverPetriNetParameters parameters) {
-		double size[][] = { { 30, TableLayoutConstants.FILL }, { 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, TableLayoutConstants.FILL } };
+		double size[][] = { { 30, TableLayoutConstants.FILL }, { 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, TableLayoutConstants.FILL } };
 		setLayout(new TableLayout(size));
 
 
@@ -196,6 +196,32 @@ public class DiscoverPetriNetWidget extends JPanel {
 		addBinaryPlacesBox.setOpaque(false);
 		add(addBinaryPlacesBox, "0, 6, 1, 6");
 
+
+		final NiceSlider nofRoutingTransitionsSlider = SlickerFactory.instance().createNiceIntegerSlider(
+				"Target number of routing transitions", 1, 1000, Math.abs(parameters.getMaxNofRoutingTransitions()), Orientation.HORIZONTAL);
+		nofRoutingTransitionsSlider.addChangeListener(new ChangeListener() {
+
+			public void stateChanged(ChangeEvent e) {
+				int value = nofRoutingTransitionsSlider.getSlider().getValue();
+				parameters.setMaxNofRoutingTransitions(value);
+			}
+		});
+		nofRoutingTransitionsSlider.setPreferredSize(new Dimension(100, 30));
+		nofRoutingTransitionsSlider.setVisible(parameters.getMaxNofRoutingTransitions() > 0);
+		add(nofRoutingTransitionsSlider, "1, 11");
+
+		final JCheckBox nofRoutingTransitionsBox = SlickerFactory.instance().createCheckBox("Reduce routing transitions",
+				parameters.getMaxNofRoutingTransitions() > 0);
+		nofRoutingTransitionsBox.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				nofRoutingTransitionsSlider.setVisible(nofRoutingTransitionsBox.isSelected());
+				parameters.setMaxNofRoutingTransitions(-parameters.getMaxNofRoutingTransitions());
+			}
+
+		});
+		nofRoutingTransitionsBox.setOpaque(false);
+		add(nofRoutingTransitionsBox, "0, 10, 1, 10");
 
 		// Check box for majority
 //		final JCheckBox majorityBox = SlickerFactory.instance().createCheckBox("Use veto for noise",
