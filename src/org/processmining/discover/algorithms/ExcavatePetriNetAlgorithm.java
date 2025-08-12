@@ -558,9 +558,13 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		if (xParameters.getFitnessFactor() == 0.0) {
 			return -1.0;
 		}
-		double mlf = (double) replay.getInfo().get(PNRepResult.MOVELOGFITNESS);
-		double mmf = (double) replay.getInfo().get(PNRepResult.MOVEMODELFITNESS);
-		return mlf + mmf == 0.0 ? 0.0 : 2 * mlf * mmf / (mlf + mmf);
+		try {
+			double mlf = (double) replay.getInfo().get(PNRepResult.MOVELOGFITNESS);
+			double mmf = (double) replay.getInfo().get(PNRepResult.MOVEMODELFITNESS);
+			return mlf + mmf == 0.0 ? 0.0 : 2 * mlf * mmf / (mlf + mmf);
+		} catch (Exception e) {
+			return 0.0;
+		}
 	}
 
 	private double getPrecisionPow(PNRepResult replay, AcceptingPetriNet apn, ExcavatePetriNetParameters xParameters) {
@@ -571,15 +575,15 @@ public class ExcavatePetriNetAlgorithm extends DiscoverPetriNetAlgorithm {
 		if (xParameters.getPrecisionFactor() == 0.0) {
 			return -1.0;
 		}
-		EventBasedPrecisionParameters pars = new EventBasedPrecisionParameters(apn);
-		pars.setShowInfo(true);
-		EventBasedPrecisionAlgorithm alg = new EventBasedPrecisionAlgorithm();
 		try {
+			EventBasedPrecisionParameters pars = new EventBasedPrecisionParameters(apn);
+			pars.setShowInfo(true);
+			EventBasedPrecisionAlgorithm alg = new EventBasedPrecisionAlgorithm();
 			// EventBasedPrecision precision = alg.apply(null, replay, apn, pars);
 			// System.out.println("[ExcavatePetriNetALgorithm]\n" +
 			// precision.toHTMLString(false));
 			return alg.apply(null, replay, apn, pars).getPrecision();
-		} catch (IllegalTransitionException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			return 0.0;
 		}
