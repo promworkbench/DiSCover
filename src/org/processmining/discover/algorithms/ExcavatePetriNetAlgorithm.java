@@ -45,8 +45,8 @@ import org.processmining.plugins.petrinet.replayer.algorithms.costbasedcomplete.
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.petrinet.replayresult.PNRepResultImpl;
 import org.processmining.plugins.replayer.replayresult.SyncReplayResult;
-import org.processmining.precision.algorithms.EventBasedPrecisionAlgorithm;
-import org.processmining.precision.parameters.EventBasedPrecisionParameters;
+import org.processmining.discover.algorithms.EventBasedPrecisionAlgorithm;
+import org.processmining.discover.parameters.EventBasedPrecisionParameters;
 
 import nl.tue.alignment.Replayer;
 import nl.tue.alignment.ReplayerParameters;
