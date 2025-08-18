@@ -141,7 +141,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static int lastSafetyThreshold2 = 95;
 //	private static int lastPercentage = 0;
 	private static int lastMode = ActivitySets.MODE_ALL;
-	private static int LastNofSComponents = 20; // Seems more than enough.
+	private static int LastNofSComponents = 10; // Seems more than enough.
 	private static boolean lastUseILP = false;
 	private static boolean lastUseILP2 = true;
 	private static boolean lastShowGraph = false;
@@ -150,7 +150,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static int lastNofTraces = 250;
 	private static int lastMaxTraceLength = 100;
 	private static int lastNofThreads = 4;
-	private static int lastMaxNofRoutingTransitions = -100;
+	private static int lastMaxNofRoutingTransitions = 50;
 
 	/**
 	 * Creates default parameter settings.

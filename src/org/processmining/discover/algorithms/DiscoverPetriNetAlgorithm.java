@@ -686,7 +686,7 @@ public class DiscoverPetriNetAlgorithm {
 			preset.get(edge.getTarget()).add(edge.getSource());
 		}
 
-		List<List<String>> playOut = new ArrayList<List<String>>();
+		List<List<String>> playOutTemp = new ArrayList<List<String>>();
 		List<Thread> threads = new ArrayList<Thread>();
 
 		for (int i = 0; i < parameters.getNofThreads(); i++) {
@@ -697,7 +697,7 @@ public class DiscoverPetriNetAlgorithm {
 				}
 
 				private synchronized void add(List<List<String>> playOutThread) {
-					playOut.addAll(playOutThread);
+					playOutTemp.addAll(playOutThread);
 				}
 			};
 			threads.add(myThread);
@@ -711,6 +711,11 @@ public class DiscoverPetriNetAlgorithm {
 				e.printStackTrace();
 			}
 		}
+		/*
+		 * This creation of new list seems silly, but on some servers we got
+		 * ConcurrentModificationExceptions on the list as assembled by the threads.
+		 */
+		List<List<String>> playOut = new ArrayList<List<String>>(playOutTemp);
 
 //		List<List<String>> playOut = playOut(apn, preset, postset, parameters);
 //		System.out.println("[DiscoverPetriNetAlgorithm] traces " + playOut);
