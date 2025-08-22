@@ -721,7 +721,13 @@ public class DiscoverPetriNetAlgorithm {
 //		System.out.println("[DiscoverPetriNetAlgorithm] traces " + playOut);
 
 		for (String source : transitionMap.keySet()) {
+			if (!isFirst(transitionMap.get(source), preset, postset)) {
+				continue;
+			}
 			for (String target : transitionMap.keySet()) {
+				if (!isFirst(transitionMap.get(target), preset, postset)) {
+					continue;
+				}
 				if (!source.contentEquals(target)) {
 					int tokens = getEquivalenceTokens(source, target, log, parameters);
 //					boolean sameMG = sameMarkedGraph(transitionMap.get(source), transitionMap.get(target), preset,
@@ -781,6 +787,30 @@ public class DiscoverPetriNetAlgorithm {
 				+ " milliseconds.");
 	}
 
+	/*
+	 * Returns whether the activity transition is not preceded by an activity transition that occurs equally often.
+	 */
+	private boolean isFirst(Transition transition, Map<PetrinetNode, Set<PetrinetNode>> preset, Map<PetrinetNode, Set<PetrinetNode>> postset) {
+		for (PetrinetNode input1 : preset.get(transition)) {
+			if (postset.get(input1).size() == 1) {
+				Set<PetrinetNode> inputs3 = new HashSet<PetrinetNode>();
+				for (PetrinetNode input2 : preset.get(input1)) {
+					inputs3.add(preset.get(input2).iterator().next());
+				}
+				if (inputs3.size() == 1) {
+					PetrinetNode input3 = inputs3.iterator().next();
+					if (preset.get(input3).size() == 1) {
+						Transition t4 = (Transition) preset.get(input3).iterator().next();
+						if (!t4.getLabel().equals(ActivityAlphabet.START) && postset.get(input3).equals(preset.get(input1))) {
+							return false;
+						}
+					}
+				}
+			}
+		}
+		return true;		
+	}
+	
 //	private boolean sameMarkedGraph(Transition source, Transition target, Map<PetrinetNode, Set<PetrinetNode>> preset,
 //			Map<PetrinetNode, Set<PetrinetNode>> postset) {
 //		Set<PetrinetNode> seen = new HashSet<PetrinetNode>();
