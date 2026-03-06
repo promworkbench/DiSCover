@@ -34,7 +34,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 	 * @param parameters The given parameter settings
 	 */
 	public DiscoverPetriNetWidget(final DiscoverPetriNetParameters parameters) {
-		double size[][] = { { 30, TableLayoutConstants.FILL }, { 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, TableLayoutConstants.FILL } };
+		double size[][] = { { 30, TableLayoutConstants.FILL }, { 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, TableLayoutConstants.FILL } };
 		setLayout(new TableLayout(size));
 
 
@@ -151,7 +151,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 		});
 		nofTracesSlider.setPreferredSize(new Dimension(100, 30));
 		nofTracesSlider.setVisible(parameters.isAddEquivalencePlaces());
-		add(nofTracesSlider, "1, 8");
+		add(nofTracesSlider, "1, 9");
 
 		// Slider for the maximal length of a trace during play out.
 		final NiceSlider maxTraceLengthSlider = SlickerFactory.instance().createNiceIntegerSlider(
@@ -165,7 +165,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 		});
 		maxTraceLengthSlider.setPreferredSize(new Dimension(100, 30));
 		maxTraceLengthSlider.setVisible(parameters.isAddEquivalencePlaces());
-		add(maxTraceLengthSlider, "1, 9");
+		add(maxTraceLengthSlider, "1, 10");
 
 		// Slider for the maximal length of a trace during play out.
 		final NiceSlider nofThreadsSlider = SlickerFactory.instance().createNiceIntegerSlider(
@@ -179,13 +179,28 @@ public class DiscoverPetriNetWidget extends JPanel {
 		});
 		nofThreadsSlider.setPreferredSize(new Dimension(100, 30));
 		nofThreadsSlider.setVisible(parameters.isAddEquivalencePlaces());
-		add(nofThreadsSlider, "1, 7");
+		add(nofThreadsSlider, "1, 8");
+
+		// Slider for the maximal number of equivalence tokens.
+		final NiceSlider nofTokensSlider = SlickerFactory.instance().createNiceIntegerSlider(
+				"Number of threads to use for play out", 0, 100, parameters.getMaxEquivalenceTokens(), Orientation.HORIZONTAL);
+		nofTokensSlider.addChangeListener(new ChangeListener() {
+
+			public void stateChanged(ChangeEvent e) {
+				int value = nofTokensSlider.getSlider().getValue();
+				parameters.setMaxEquivalenceTokens(value);
+			}
+		});
+		nofTokensSlider.setPreferredSize(new Dimension(100, 30));
+		nofTokensSlider.setVisible(parameters.isAddEquivalencePlaces());
+		add(nofTokensSlider, "1, 7");
 
 		final JCheckBox addBinaryPlacesBox = SlickerFactory.instance().createCheckBox("Add valid equivalence places",
 				parameters.isAddEquivalencePlaces());
 		addBinaryPlacesBox.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
+				nofTokensSlider.setVisible(addBinaryPlacesBox.isSelected());
 				nofTracesSlider.setVisible(addBinaryPlacesBox.isSelected());
 				maxTraceLengthSlider.setVisible(addBinaryPlacesBox.isSelected());
 				nofThreadsSlider.setVisible(addBinaryPlacesBox.isSelected());
@@ -208,7 +223,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 		});
 		nofRoutingTransitionsSlider.setPreferredSize(new Dimension(100, 30));
 		nofRoutingTransitionsSlider.setVisible(parameters.getMaxNofRoutingTransitions() > 0);
-		add(nofRoutingTransitionsSlider, "1, 11");
+		add(nofRoutingTransitionsSlider, "1, 12");
 
 		final JCheckBox nofRoutingTransitionsBox = SlickerFactory.instance().createCheckBox("Reduce routing transitions",
 				parameters.getMaxNofRoutingTransitions() > 0);
@@ -221,7 +236,7 @@ public class DiscoverPetriNetWidget extends JPanel {
 
 		});
 		nofRoutingTransitionsBox.setOpaque(false);
-		add(nofRoutingTransitionsBox, "0, 10, 1, 10");
+		add(nofRoutingTransitionsBox, "0, 11, 1, 11");
 
 		// Check box for majority
 //		final JCheckBox majorityBox = SlickerFactory.instance().createCheckBox("Use veto for noise",

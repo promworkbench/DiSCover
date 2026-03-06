@@ -78,6 +78,8 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	
 	private boolean addEquivalencePlaces;
 	
+	private int maxEquivalenceTokens;
+	
 	private int nofTraces;
 	
 	private int maxTraceLength;
@@ -147,6 +149,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static boolean lastShowGraph = false;
 	private static boolean lastAddOccurrencePlaces = true;	
 	private static boolean lastAddEquivalencePlaces = true;
+	private static int lastMaxEquivalenceTokens = 100;
 	private static int lastNofTraces = 250;
 	private static int lastMaxTraceLength = 100;
 	private static int lastNofThreads = 4;
@@ -176,6 +179,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 		setShowGraph(lastShowGraph);
 		setAddOccurrencePlaces(lastAddOccurrencePlaces);
 		setAddEquivalencePlaces(lastAddEquivalencePlaces);
+		setMaxEquivalenceTokens(lastMaxEquivalenceTokens);
 		setClassifier(null, false);
 		setActivities(null, false);
 		setAlphabet(null, false);
@@ -532,6 +536,15 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	public void setMaxNofRoutingTransitions(int maxNofRoutingTransitions) {
 		lastMaxNofRoutingTransitions = maxNofRoutingTransitions;
 		this.maxNofRoutingTransitions = maxNofRoutingTransitions;
+	}
+
+	public int getMaxEquivalenceTokens() {
+		return maxEquivalenceTokens;
+	}
+
+	public void setMaxEquivalenceTokens(int maxEquivalenceTokens) {
+		lastMaxEquivalenceTokens = maxEquivalenceTokens;
+		this.maxEquivalenceTokens = maxEquivalenceTokens;
 	}
 
 //	public int getPercentage() {

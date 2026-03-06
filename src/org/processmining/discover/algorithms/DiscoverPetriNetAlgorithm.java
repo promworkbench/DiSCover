@@ -290,7 +290,8 @@ public class DiscoverPetriNetAlgorithm {
 					nofNonRoutingTransitions = nofNonRoutingTransitions2;
 					nofRoutingTransitions = nofRoutingTransitions2;
 				}
-				System.out.println("[DiscoverPetriNetAlgorithm] Continuing with " + nofRoutingTransitions + " routing transitions");
+				System.out.println("[DiscoverPetriNetAlgorithm] Continuing with " + nofRoutingTransitions
+						+ " routing transitions");
 			}
 		}
 //		fixEnhancements(context, apn, parameters);
@@ -728,14 +729,21 @@ public class DiscoverPetriNetAlgorithm {
 				if (!isFirst(transitionMap.get(target), preset, postset)) {
 					continue;
 				}
-				if (!source.contentEquals(target)) {
-					int tokens = getEquivalenceTokens(source, target, log, parameters);
-//					boolean sameMG = sameMarkedGraph(transitionMap.get(source), transitionMap.get(target), preset,
-//							postset);
+				if (source.compareTo(target) < 0) {
 					boolean sameMG = areEquivalent(playOut, source, target);
-					if (tokens != -1 && !sameMG) {
+					if (!sameMG) {
+						int stTokens = getEquivalenceTokens(source, target, log, parameters);
+						if (stTokens == -1 || stTokens > parameters.getMaxEquivalenceTokens()) {
+							continue;
+						}
+						int tsTokens = getEquivalenceTokens(target, source, log, parameters);
+						if (tsTokens == -1 || tsTokens > parameters.getMaxEquivalenceTokens()) {
+							continue;
+						}
 						equivalencePlaces.add(new Pair<Pair<String, String>, Integer>(
-								new Pair<String, String>(source, target), tokens));
+								new Pair<String, String>(source, target), stTokens));
+						equivalencePlaces.add(new Pair<Pair<String, String>, Integer>(
+								new Pair<String, String>(target, source), tsTokens));
 					}
 				}
 			}
@@ -788,9 +796,11 @@ public class DiscoverPetriNetAlgorithm {
 	}
 
 	/*
-	 * Returns whether the activity transition is not preceded by an activity transition that occurs equally often.
+	 * Returns whether the activity transition is not preceded by an activity
+	 * transition that occurs equally often.
 	 */
-	private boolean isFirst(Transition transition, Map<PetrinetNode, Set<PetrinetNode>> preset, Map<PetrinetNode, Set<PetrinetNode>> postset) {
+	private boolean isFirst(Transition transition, Map<PetrinetNode, Set<PetrinetNode>> preset,
+			Map<PetrinetNode, Set<PetrinetNode>> postset) {
 		for (PetrinetNode input1 : preset.get(transition)) {
 			if (postset.get(input1).size() == 1) {
 				Set<PetrinetNode> inputs3 = new HashSet<PetrinetNode>();
@@ -801,16 +811,17 @@ public class DiscoverPetriNetAlgorithm {
 					PetrinetNode input3 = inputs3.iterator().next();
 					if (preset.get(input3).size() == 1) {
 						Transition t4 = (Transition) preset.get(input3).iterator().next();
-						if (!t4.getLabel().equals(ActivityAlphabet.START) && postset.get(input3).equals(preset.get(input1))) {
+						if (!t4.getLabel().equals(ActivityAlphabet.START)
+								&& postset.get(input3).equals(preset.get(input1))) {
 							return false;
 						}
 					}
 				}
 			}
 		}
-		return true;		
+		return true;
 	}
-	
+
 //	private boolean sameMarkedGraph(Transition source, Transition target, Map<PetrinetNode, Set<PetrinetNode>> preset,
 //			Map<PetrinetNode, Set<PetrinetNode>> postset) {
 //		Set<PetrinetNode> seen = new HashSet<PetrinetNode>();
@@ -1235,7 +1246,8 @@ public class DiscoverPetriNetAlgorithm {
 				apn.getNet().removePlace(p4);
 				nofRoutingTransitions -= 3;
 				if (nofRoutingTransitions <= parameters.getMaxNofRoutingTransitions()) {
-					System.out.println("[DiscoverPetriNetAlgorithm] Reduced to " + nofRoutingTransitions + " routing transitions");
+					System.out.println(
+							"[DiscoverPetriNetAlgorithm] Reduced to " + nofRoutingTransitions + " routing transitions");
 					return;
 				}
 			}
