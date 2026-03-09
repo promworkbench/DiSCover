@@ -42,8 +42,8 @@ public class ReplayPetriNetAlgorithm {
 		int missing = 0;
 		int consumed = 0; 
 		int remaining = 0;
-		int produced = 1; // Initial token
-
+		int produced = 0; 
+		
 		boolean hasPerfectFitness() {
 			return missing == 0 && remaining == 0;
 		}
@@ -106,6 +106,7 @@ public class ReplayPetriNetAlgorithm {
 
 		for (XTrace trace : log) {
 			ReplayResult result = new ReplayResult();
+			result.produced = initialMarking.size();
 			// Replay the trace.
 			Marking marking = replay(trace, classifier, apn.getNet(), initialMarking, result);
 			// Clean up, that is, go to the best-fitting final marking.
