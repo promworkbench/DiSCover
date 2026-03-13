@@ -49,7 +49,11 @@ public class ReplayPetriNetAlgorithm {
 		}
 
 		double getFitness() {
-			return 1.0 - ((0.5 * missing) / consumed) - ((0.5 * remaining) / produced);
+			/*
+			 * Use +1 to favor traces with more consumed and produced tokens even if the
+			 * trace fits perfectly. 
+			 */
+			return 1.0 - ((0.5 * (missing+1)) / consumed) - ((0.5 * (remaining+1)) / produced);
 		}
 	};
 
