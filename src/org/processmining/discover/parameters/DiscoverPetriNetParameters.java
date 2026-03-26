@@ -149,7 +149,7 @@ public class DiscoverPetriNetParameters implements ClassifierParameter {
 	private static boolean lastShowGraph = false;
 	private static boolean lastAddOccurrencePlaces = true;	
 	private static boolean lastAddEquivalencePlaces = true;
-	private static int lastMaxEquivalenceTokens = 100;
+	private static int lastMaxEquivalenceTokens = 1; // Seems to be a better choice than 100;
 	private static int lastNofTraces = 250;
 	private static int lastMaxTraceLength = 100;
 	private static int lastNofThreads = 4;

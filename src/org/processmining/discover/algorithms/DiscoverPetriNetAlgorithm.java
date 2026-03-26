@@ -269,7 +269,11 @@ public class DiscoverPetriNetAlgorithm {
 				System.out.println("[DiscoverPetriNetAlgorithm] Reducing clusters");
 				reduceSilentClusters(apn, parameters);
 				System.out.println("[DiscoverPetriNetAlgorithm] Reducing using rules...");
-				apn = redAlgorithm.apply(context, apn, redParameters);
+				try {
+					apn = redAlgorithm.apply(context, apn, redParameters);
+				} catch (Exception e) {
+					// Ignore
+				}
 				int nofNonRoutingTransitions2 = 0;
 				int nofRoutingTransitions2 = 0;
 				for (Transition t : apn.getNet().getTransitions()) {
