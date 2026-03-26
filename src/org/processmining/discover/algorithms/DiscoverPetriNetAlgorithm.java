@@ -272,7 +272,9 @@ public class DiscoverPetriNetAlgorithm {
 				try {
 					apn = redAlgorithm.apply(context, apn, redParameters);
 				} catch (Exception e) {
-					// Ignore
+					// Stop reductions.
+					nofRoutingTransitions = -1;
+					continue;
 				}
 				int nofNonRoutingTransitions2 = 0;
 				int nofRoutingTransitions2 = 0;
