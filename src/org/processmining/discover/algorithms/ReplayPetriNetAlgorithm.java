@@ -1,5 +1,6 @@
 package org.processmining.discover.algorithms;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -114,7 +115,7 @@ public class ReplayPetriNetAlgorithm {
 			// Replay the trace.
 			Marking marking = replay(trace, classifier, apn.getNet(), initialMarking, result);
 			// Clean up, that is, go to the best-fitting final marking.
-			marking = cleanUp(marking, finalMarkings, result);
+			marking = cleanUp(marking, finalMarkings, result, apn.getNet().getTransitions());
 			XAttributeBoolean isPosAttribute = XFactoryRegistry.instance().currentDefault()
 					.createAttributeBoolean("pdc:isPos", result.hasPerfectFitness(), null);
 			trace.getAttributes().put("pdc:isPos", isPosAttribute);
@@ -241,7 +242,7 @@ public class ReplayPetriNetAlgorithm {
 		return newMarking;
 	}
 
-	Marking cleanUp(Marking marking, Set<Marking> finalMarkings, ReplayResult result) {
+	Marking cleanUp(Marking marking, Set<Marking> finalMarkings, ReplayResult result, Collection<Transition> transitions) {
 		Marking bestFinalMarking = null;
 		ReplayResult bestResult = null;
 		for (Marking finalMarking : finalMarkings) {
@@ -254,6 +255,23 @@ public class ReplayPetriNetAlgorithm {
 			newResult.consumed = result.consumed + finalMarking.size();
 			newResult.remaining = result.remaining + remainingMarking.size();
 			newResult.produced = result.produced;
+			/*
+			 * Check for invisible transitions that can fix a pair of remaining and missing tokens.
+			 */
+			for (Transition transition : transitions) {
+				if (transition.isInvisible() && preset.get(transition).size() == 1 && postset.get(transition).size() == 1) {
+					Place inputPlace = (Place) preset.get(transition).iterator().next();
+					Place outputPlace = (Place) postset.get(transition).iterator().next();
+					if (remainingMarking.contains(inputPlace) && missingMarking.contains(outputPlace)) {
+						remainingMarking.remove(inputPlace);
+						missingMarking.remove(outputPlace);
+						newResult.remaining--;
+						newResult.consumed++;
+						newResult.missing--;
+						newResult.produced++;
+					}
+				}
+			}
 			if (bestFinalMarking == null) {
 				bestFinalMarking = finalMarking;
 				bestResult = newResult;
