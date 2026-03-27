@@ -256,7 +256,7 @@ public class ReplayPetriNetAlgorithm {
 			newResult.remaining = result.remaining + remainingMarking.size();
 			newResult.produced = result.produced;
 			/*
-			 * Check for invisible transitions that can fix a pair of remaining and missing tokens.
+			 * Firing some invisible transitions may be necessary to reach a final marking.
 			 */
 			for (Transition transition : transitions) {
 				if (transition.isInvisible() && preset.get(transition).size() == 1 && postset.get(transition).size() == 1) {
